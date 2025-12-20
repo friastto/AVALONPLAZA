@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface MasterDataService {
     List<MasterDataResponseDto> saveAll(List<MasterDataRequestCreateDto> masterDataRequestList);
+    MasterDataResponseDto findByNameShort(String nameShort);
+
 }

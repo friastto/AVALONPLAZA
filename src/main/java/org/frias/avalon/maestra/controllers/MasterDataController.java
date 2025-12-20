@@ -29,4 +29,9 @@ public class MasterDataController {
             return ResponseEntity.ok(mdservice.saveAll(mdrequest));
 
     }
+
+    @PostMapping("/search/v1")
+    public MasterDataResponseDto saveAll(@RequestParam String shortName) {
+        return mdservice.findByNameShort(shortName);
+    }
 }

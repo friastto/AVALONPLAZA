@@ -11,7 +11,7 @@ import java.math.RoundingMode;
 public class PromoGlobal implements PromotionStrategy {
 
     @Override
-    public BigDecimal apply(BigDecimal basePrice, Promotion promo) {
+    public BigDecimal applyDiscount(BigDecimal basePrice, Promotion promo) {
 
         BigDecimal discount = basePrice.multiply(promo.getDiscount()) // 100 * 15.5 = 1550
                 .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP); // 1550 / 100 = 15.50

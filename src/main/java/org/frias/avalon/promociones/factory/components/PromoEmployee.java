@@ -14,7 +14,7 @@ public class PromoEmployee implements PromotionStrategy {
 
 
     @Override
-    public BigDecimal apply(BigDecimal basePrice, Promotion promo) {
+    public BigDecimal applyDiscount(BigDecimal basePrice, Promotion promo) {
         BigDecimal discount = basePrice.multiply(FIXED_RATE);
         return basePrice.subtract(discount).setScale(2, RoundingMode.HALF_UP);
     }

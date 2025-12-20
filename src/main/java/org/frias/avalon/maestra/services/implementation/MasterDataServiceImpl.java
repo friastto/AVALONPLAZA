@@ -1,5 +1,6 @@
 package org.frias.avalon.maestra.services.implementation;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.maestra.dtos.MasterDataRequestCreateDto;
 import org.frias.avalon.maestra.dtos.MasterDataResponseDto;
 import org.frias.avalon.maestra.entities.MasterData;
@@ -32,6 +33,7 @@ public class MasterDataServiceImpl implements MasterDataService {
 
         masterDataRequestList.forEach(masterDataRequest -> {
 
+
             MasterData masterData = new MasterData();
             masterData.setShortName(masterDataRequest.shortName());
             masterData.setFullName(masterDataRequest.fullName());
@@ -53,5 +55,12 @@ public class MasterDataServiceImpl implements MasterDataService {
                    .stream()
                    .map(masterDataMapperService::toDto)
                    .collect(Collectors.toList());
+    }
+
+    @Override
+    public MasterDataResponseDto findByNameShort(String nameShort) {
+
+        return masterDataMapperService.toDto(mdRepository.findByShortName(nameShort)
+                .orElseThrow(() -> new EntityNotFoundException("no se encuentra la maestra en el sistema") ));
     }
 }
