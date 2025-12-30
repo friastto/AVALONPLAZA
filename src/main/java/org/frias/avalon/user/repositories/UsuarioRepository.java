@@ -40,5 +40,5 @@ SELECT u FROM User u
         WHERE p.numberid = :numberId 
         AND u.statusId.shortName =   'ACT'
     """)
-    List<String> findRolesByPersonNumberId(@Param("numberId") String numberId);
+    List<String>findRolesByPersonNumberId(@Param("numberId") String numberId);
 }

@@ -19,7 +19,7 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public Person findByNumberId(String numberId) {
         return personaRepository.findByNumberid(numberId)
-                .orElseThrow(() -> new EntityNotFoundException("Cliente No registrado en el sistema"));
+                .orElseThrow(() -> new EntityNotFoundException("No registrado en el sistema : "+numberId));
 
     }
 }

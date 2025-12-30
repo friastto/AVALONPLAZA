@@ -94,11 +94,14 @@ private final String gramos= "GR";
 
 
 
-        if (UNIDADES_PESABLES.contains(promo.getPromoTypeId().getShortName())) {
+        if (UNIDADES_PESABLES.contains(medida)) {
 
             BigDecimal cant = convertFactoryService.convertTo(cantidad,medida,false);
 
             subtotalSinDescuento = priceCalculator.calcularTotalPorPeso(precioBase,medida,cant);
+
+
+
 
         }
 
@@ -121,6 +124,7 @@ private final String gramos= "GR";
     }
 
     private DiscountTempResult precioRegular(BigDecimal precio, String cant) {
+
 
         return new DiscountTempResult(BigDecimal.ZERO, "Precio Regular", precio.multiply(new BigDecimal(cant)));
     }

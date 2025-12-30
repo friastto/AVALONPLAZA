@@ -15,6 +15,8 @@ public record SaleDetailResponseDto(
 
     BigDecimal unitPrice,
 
+
+
     BigDecimal subTotal,
 
     ProductResponseDetailDto product

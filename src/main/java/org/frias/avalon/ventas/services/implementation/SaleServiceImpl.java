@@ -1,5 +1,6 @@
 package org.frias.avalon.ventas.services.implementation;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.Producto.entities.Product;
 import org.frias.avalon.Producto.services.interfaces.ProductoService;
 import org.frias.avalon.exeptions.InsufficientStockException;
@@ -27,16 +28,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class SaleServiceImpl implements SaleService {
 
     private final ProductoService productoService;
-    private final PromotionFactoryService promotionFactoryService;
     private final SaleRepository saleRepository;
 
     private final UsuarioRepository usuarioRepository;
@@ -51,9 +48,9 @@ public class SaleServiceImpl implements SaleService {
     private final Set<String> unitMasaPesable = Set.of("KG","LB","GR");
 
     private final SalesMapperService salesMapperService;
-    public SaleServiceImpl(ProductoService productoService, PromotionFactoryService promotionFactoryService, SaleRepository saleRepository, UsuarioRepository usuarioRepository, PersonaRepository personaRepository, PersonService personaService, MasterDataSalesService masterDataSalesService, ConvertFactoryService convertFactoryService, DiscountPathRoleFactory priceCalculator, SalesMapperService salesMapperService) {
+
+    public SaleServiceImpl(ProductoService productoService, SaleRepository saleRepository, UsuarioRepository usuarioRepository, PersonaRepository personaRepository, PersonService personaService, MasterDataSalesService masterDataSalesService, ConvertFactoryService convertFactoryService, DiscountPathRoleFactory priceCalculator, SalesMapperService salesMapperService) {
         this.productoService = productoService;
-        this.promotionFactoryService = promotionFactoryService;
         this.saleRepository = saleRepository;
         this.usuarioRepository = usuarioRepository;
         this.personaService = personaService;
@@ -71,7 +68,18 @@ public class SaleServiceImpl implements SaleService {
     @Override
     public SalesResponseDto salesProccesor(SaleRequest saleRequest) {
 
-        Person customer = personaService.findByNumberId(saleRequest.customerId());
+        Person customer;
+
+        try{
+            customer = personaService.findByNumberId(saleRequest.customerId());
+
+
+        }catch(EntityNotFoundException ex){
+            String CUSTOMER_GENERIC_ID = "999";
+            customer = personaService.findByNumberId(CUSTOMER_GENERIC_ID);
+        }
+
+
 
         User employee = usuarioRepository.findById(saleRequest.enployeeId()).orElseThrow();
 
@@ -85,6 +93,7 @@ public class SaleServiceImpl implements SaleService {
         Sale saleEntity = new Sale();
 
         saleEntity.setCustomerId(customer);
+
         saleEntity.setEnployeeId(employee);
         saleEntity.setPaymentMethodId(metodPay);
 
@@ -94,6 +103,7 @@ public class SaleServiceImpl implements SaleService {
 
         List<String> roles = usuarioRepository.findRolesByPersonNumberId(saleRequest.customerId());
 
+       // String descripcionDetalils;
        List<SaleDetail> details = new ArrayList<>();
         for (SaleDetailRequest sd : saleRequest.saleDetails()){
 
@@ -123,9 +133,15 @@ public class SaleServiceImpl implements SaleService {
 
             sdEntity.setProduct(productEntity);
 
-            DiscountTempResult subTotal = priceCalculator.calculate(productEntity,roles, quantityCleaned);
+
             DiscountTempResult precioUnitario = priceCalculator.calculate(productEntity,roles, "1");
 
+            DiscountTempResult subTotal = priceCalculator.calculate(productEntity,roles, quantityCleaned);
+
+            System.out.println("\n****************************\n" +
+                    subTotal.description()
+                    +
+            "\n****************************\n");
             sdEntity.setQuantity(cantRequired);
 
             sdEntity.setUnitPrice(precioUnitario.priceFinal());

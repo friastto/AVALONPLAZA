@@ -22,13 +22,8 @@ public class SalesController {
 
     @PostMapping("/save")
     public SalesResponseDto saveSale(@RequestBody SaleRequest saleRequest) {
-        try {
-            return saleService.salesProccesor(saleRequest);
-        }catch(Exception e) {
-         e.printStackTrace();
-return null;
-        }
 
+            return saleService.salesProccesor(saleRequest);
     }
 
 

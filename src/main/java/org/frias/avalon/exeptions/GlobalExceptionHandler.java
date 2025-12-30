@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.security.spec.InvalidKeySpecException;
+import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -52,7 +53,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidation(MethodArgumentNotValidException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(e.getBindingResult().getFieldError().getDefaultMessage());
+                .body(Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage());
     }
 
     // 4. Petición HTTP no soportada
@@ -73,7 +74,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<String> handleNullPointer(NullPointerException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error interno: objeto nulo");
+                .body("Error interno: objeto nulo "+e.getMessage());
     }
 
     // 7. IllegalArgumentException

@@ -16,7 +16,6 @@ public class PriceCalculatorImple implements PriceCalculator {
     ) {
         BigDecimal precioPorGramo = calcularPrecioPorGramo(precioBase, unidadMedida);
 
-        // total = precioPorGramo × gramosVendidos
         return precioPorGramo.multiply(gramosVendidos)
                 .setScale(2, RoundingMode.HALF_UP);
     }
@@ -43,7 +42,7 @@ public class PriceCalculatorImple implements PriceCalculator {
 
         return precioBase.divide(
                 factor,
-                2,
+                10,
                 RoundingMode.HALF_UP
         );
     }
