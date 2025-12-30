@@ -1,7 +1,8 @@
-package org.frias.avalon.promociones.factory.components;
+package org.frias.avalon.promociones.factory.oters.components;
 
+import org.frias.avalon.promociones.dtos.DiscountTempResult;
 import org.frias.avalon.promociones.entities.Promotion;
-import org.frias.avalon.promociones.factory.interfaz.PromotionStrategy;
+import org.frias.avalon.promociones.factory.oters.interfaz.PromotionStrategy;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -14,9 +15,15 @@ public class PromoEmployee implements PromotionStrategy {
 
 
     @Override
-    public BigDecimal applyDiscount(BigDecimal basePrice, Promotion promo) {
+    public DiscountTempResult applyDiscount(BigDecimal basePrice, Promotion promo) {
         BigDecimal discount = basePrice.multiply(FIXED_RATE);
-        return basePrice.subtract(discount).setScale(2, RoundingMode.HALF_UP);
+
+        return new DiscountTempResult(
+                promo.getDiscount(),
+                "PROMO_EMPLEADO",
+                basePrice.subtract(discount).setScale(2, RoundingMode.HALF_UP)
+
+        );
     }
 
     @Override

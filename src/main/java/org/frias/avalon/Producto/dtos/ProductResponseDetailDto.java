@@ -13,7 +13,9 @@ public record ProductResponseDetailDto(
 
         String description,
 
-        String medida
+        String medida,
+
+        BigDecimal price
 
 ){
 }

@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 public record SaleDetailResponseDto(
     Long id,
 
-    Integer quantity,
+    String quantity,
 
     BigDecimal unitPrice,
 

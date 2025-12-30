@@ -1,8 +1,9 @@
-package org.frias.avalon.promociones.factory;
+package org.frias.avalon.promociones.factory.oters;
 
 import org.frias.avalon.Producto.entities.Product;
+import org.frias.avalon.promociones.dtos.DiscountTempResult;
 import org.frias.avalon.promociones.entities.Promotion;
-import org.frias.avalon.promociones.factory.interfaz.PromotionStrategy;
+import org.frias.avalon.promociones.factory.oters.interfaz.PromotionStrategy;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,10 +26,13 @@ public class PromotionFactoryImpl implements PromotionFactoryService {
 
 
     @Override
-    public BigDecimal getFinalPrice(Product product, Boolean isEmployee) {
+    public DiscountTempResult getFinalPrice(Product product, Boolean isEmployee) {
 
         if (product.getPromotions() == null || product.getPromotions().isEmpty()) {
-        return product.getPrice();
+        return new DiscountTempResult(
+                BigDecimal.ZERO,
+                "No promotions found",
+                product.getPrice());
     }
 
         return product.getPromotions().stream()
@@ -42,7 +46,10 @@ public class PromotionFactoryImpl implements PromotionFactoryService {
                 })
                 .findFirst()
                 .map(p -> strategies.get(p.getPromoTypeId().getShortName()).applyDiscount(product.getPrice(), p))
-                .orElse(product.getPrice());
+                .orElse(new DiscountTempResult(
+                        BigDecimal.ZERO,
+                        "No promotions found",
+                        product.getPrice()));
     }
 
 }

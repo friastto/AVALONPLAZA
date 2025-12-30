@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -24,8 +25,20 @@ SELECT u FROM User u
             JOIN MasterData padre ON rol.parentId = subPadre.id 
             WHERE u.person.numberid = :doc 
             AND padre.shortName = 'TYPE_EMPLOYEE' 
-            AND u.person.statusId.shortName = 'ACTIVE'
+            AND u.person.statusId.shortName = 'ACT'
              """)// Asumiendo que el status está en Person
     Optional<User> findActiveEmployeeByNumberId(@Param("doc") String doc);
 
+
+    /*
+    busca en la base de atos los roles que tiene asociado esa persona
+     */
+    @Query("""
+        SELECT u.rolId.shortName 
+        FROM User u 
+        JOIN u.person p 
+        WHERE p.numberid = :numberId 
+        AND u.statusId.shortName =   'ACT'
+    """)
+    List<String> findRolesByPersonNumberId(@Param("numberId") String numberId);
 }

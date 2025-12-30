@@ -16,8 +16,6 @@ public record SalesResponseDto(
 
         BigDecimal amountReturned,
 
-        BigDecimal change,
-
         String paymentMethod,
 
         String enployeeName,

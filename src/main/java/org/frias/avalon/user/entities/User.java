@@ -32,7 +32,7 @@ public class User {
     @Column(name = "hash_password", nullable = false)
     private String hashPassword;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "person_id", foreignKey = @ForeignKey(name = "fk_user_personsId"))
     private Person person;
 

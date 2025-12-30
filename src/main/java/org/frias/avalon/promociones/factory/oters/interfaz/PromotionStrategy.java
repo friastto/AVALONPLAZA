@@ -1,10 +1,11 @@
-package org.frias.avalon.promociones.factory.interfaz;
+package org.frias.avalon.promociones.factory.oters.interfaz;
 
+import org.frias.avalon.promociones.dtos.DiscountTempResult;
 import org.frias.avalon.promociones.entities.Promotion;
 
 import java.math.BigDecimal;
 
 public interface PromotionStrategy {
-    BigDecimal applyDiscount(BigDecimal basePrice, Promotion promo);
+    DiscountTempResult applyDiscount(BigDecimal basePrice, Promotion promo);
     String getPromotionType(); // Para identificarla (ej: "PERCENTAGE", "FIXED")
 }
