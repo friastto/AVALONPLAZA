@@ -39,7 +39,7 @@ public class SinDescuento implements Strategy {
 
             BigDecimal cant = convertFactoryService.convertTo(quantity,p.getUnit().getShortName(),false);
 
-            subtotalSinDescuento = priceCalculator.calcularTotalPorPeso(priceBruto,p.getUnit().getShortName(),cant);
+            subtotalSinDescuento = priceCalculator.calculatePriceXWeight(priceBruto,p.getUnit().getShortName(),cant);
         }
 
         // 5. Retornar tu Record con la descripción de tu MasterData

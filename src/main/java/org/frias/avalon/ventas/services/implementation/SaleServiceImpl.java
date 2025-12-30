@@ -173,6 +173,11 @@ public class SaleServiceImpl implements SaleService {
         saleEntity.setAmountReturned(saleEntity.getTotal().subtract(saleEntity.getAmountReceived()));
         saleEntity.setStatusId(status);
 
+        if (saleRequest.amountReceived().compareTo(valueTotalSale) < 0) {
+            throw new RuntimeException("El monto recibido ($" + saleRequest.amountReceived() +
+                    ") es insuficiente para cubrir el total ($ " + valueTotalSale + ")");
+        }
+
         return salesMapperService.toResponseDto(saleRepository.save(saleEntity));
     }
 

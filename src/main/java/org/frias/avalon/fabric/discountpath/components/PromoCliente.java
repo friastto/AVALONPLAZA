@@ -98,7 +98,7 @@ private final String gramos= "GR";
 
             BigDecimal cant = convertFactoryService.convertTo(cantidad,medida,false);
 
-            subtotalSinDescuento = priceCalculator.calcularTotalPorPeso(precioBase,medida,cant);
+            subtotalSinDescuento = priceCalculator.calculatePriceXWeight(precioBase,medida,cant);
 
 
 
