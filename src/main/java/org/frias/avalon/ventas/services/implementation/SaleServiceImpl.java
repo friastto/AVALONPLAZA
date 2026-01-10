@@ -80,31 +80,29 @@ public class SaleServiceImpl implements SaleService {
         }
 
 
-
         User employee = usuarioRepository.findById(saleRequest.enployeeId()).orElseThrow();
 
         MasterData metodPay = masterDataSalesService.findById(saleRequest.metodoPagoId());
 
-
         MasterData status = masterDataSalesService.searchShortName("COM");
-
-
 
         Sale saleEntity = new Sale();
 
         saleEntity.setCustomerId(customer);
 
         saleEntity.setEnployeeId(employee);
+
         saleEntity.setPaymentMethodId(metodPay);
 
-
         saleEntity.setAmountReceived(saleRequest.amountReceived());
+
         saleEntity.setSaleDateAt(LocalDateTime.now());
 
         List<String> roles = usuarioRepository.findRolesByPersonNumberId(saleRequest.customerId());
 
        // String descripcionDetalils;
        List<SaleDetail> details = new ArrayList<>();
+
         for (SaleDetailRequest sd : saleRequest.saleDetails()){
 
            String quantityCleaned = sd.quantity().contains(",")||sd.quantity().contains(".")
@@ -115,11 +113,21 @@ public class SaleServiceImpl implements SaleService {
 
             Integer cantRequired;
 
-            if (!unitMasaPesable.contains(productEntity.getUnit().getShortName()) && (sd.quantity().contains(".")||sd.quantity().contains(",")))
-                throw new IllegalArgumentException("la cantidad ingresada no corresponde a la unidad de medida del producto : "+productEntity.getUnit().getShortName());
+            if (!unitMasaPesable.contains(productEntity.getUnit().getShortName())
+                    && (sd.quantity().contains(".")||sd.quantity().contains(","))
+            )
+                throw new IllegalArgumentException(
+                        "la cantidad ingresada no corresponde a la unidad de medida del producto : "
+                                + productEntity.getUnit().getShortName()
+                );
 
             if(unitMasaPesable.contains(productEntity.getUnit().getShortName())) {
-                cantRequired = convertFactoryService.convertTo(quantityCleaned, productEntity.getUnit().getShortName(), false).intValue();
+
+                cantRequired = convertFactoryService.convertTo(
+                        quantityCleaned
+                        , productEntity.getUnit().getShortName()
+                        , false
+                ).intValue();
             }else {
                 cantRequired = Integer.valueOf(sd.quantity());
             }
@@ -153,7 +161,7 @@ public class SaleServiceImpl implements SaleService {
             sdEntity.setSale(saleEntity);
             sdEntity.setProduct(productEntity);
 
-            System.out.println("se redujo el stock de "+productEntity.getName() + " cantActual ( " + productEntity.getStock()+" - "+cantRequired +" = "+(productEntity.getStock()-cantRequired)+" )");
+            System.out.println("se redujo el stock de "+productEntity.getName() + " cantActual ( " + productEntity.getStock()+" - "+cantRequired +" = "+(productEntity.getStock()-cantRequired)+" ) \n");
 
             productEntity.setStock(productEntity.getStock() - cantRequired);
 
