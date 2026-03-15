@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.frias.avalon.maestra.entities.MasterData;
 import org.frias.avalon.person.entity.Person;
-import org.frias.avalon.user.entities.User;
+import org.frias.avalon.useravalon.entities.UserAvalon;
 import org.hibernate.annotations.UuidGenerator;
 
 
@@ -52,7 +52,7 @@ public class Sale {
 
     @ManyToOne(optional = false) // cada venta la realiza un empleado(cajero admin etc)
     @JoinColumn( nullable = false, foreignKey = @ForeignKey(name = "fk_sale_enployeeId"))
-    private User enployeeId;
+    private UserAvalon enployeeId;
 
 //    @ManyToOne
 //    @JoinColumn(name = "pedi_id", foreignKey = @ForeignKey(name = "fk_venta_pedido"))

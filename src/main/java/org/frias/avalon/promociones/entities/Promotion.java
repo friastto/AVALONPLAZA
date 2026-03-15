@@ -3,7 +3,9 @@ package org.frias.avalon.promociones.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.frias.avalon.Producto.entities.Product;
+import org.frias.avalon.Producto.modules.adminsaas.entities.Product;
+import org.frias.avalon.Producto.modules.adminsaas.entities.ProductCompany;
+import org.frias.avalon.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.frias.avalon.maestra.entities.MasterData;
 
 import java.math.BigDecimal;
@@ -26,6 +28,15 @@ public class Promotion {
     @JoinColumn(name = "product_id", nullable = false)
     @JsonIgnore
     private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_outlet_id", nullable = false)
+    @JsonIgnore
+    private ProductOutlet productOutlet;
+
+    @ManyToOne
+    @JoinColumn(name = "product_company_id")
+    private ProductCompany productCompany;
 
     @Column(name = "discount", precision = 5, scale = 2, nullable = false)
     private BigDecimal discount; // Más corto que "discountPercentage"

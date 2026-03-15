@@ -1,0 +1,30 @@
+name: Avalon Quality Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and Test with Maven
+        # Aquí es donde Hibernate verifica que tus entidades coincidan con la DB
+        # Y corren tus cálculos de ventas (libras, gramos, etc)
+        run: mvn clean verify 
+
+      - name: Deploy to Render
+        # Solo se ejecuta si el paso anterior (Tests) fue exitoso
+        if: success()
+        run: curl ${{ secrets.RENDER_DEPLOY_HOOK }}

@@ -1,0 +1,18 @@
+package org.frias.avalon.Producto.modules.adminsaas.repositories;
+
+import org.frias.avalon.Producto.modules.adminsaas.entities.Product;
+import org.frias.avalon.empresasucursal.tenant.config.TenantAware;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@TenantAware
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {
+
+
+    Optional<Product> findByName(String sku);
+
+
+}

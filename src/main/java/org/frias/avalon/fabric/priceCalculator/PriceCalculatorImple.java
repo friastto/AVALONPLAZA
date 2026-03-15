@@ -9,20 +9,20 @@ import java.math.RoundingMode;
 public class PriceCalculatorImple implements PriceCalculator {
 
     @Override
-    public  BigDecimal calcularTotalPorPeso(
-            BigDecimal precioBase,
-            String unidadMedida,
-            BigDecimal gramosVendidos
+    public  BigDecimal calculatePriceXWeight(
+            BigDecimal basePrice,
+            String unit,
+            BigDecimal requiredGram
     ) {
-        BigDecimal precioPorGramo = calcularPrecioPorGramo(precioBase, unidadMedida);
+        BigDecimal priceGram = calculatePriceGram(basePrice, unit);
 
-        return precioPorGramo.multiply(gramosVendidos)
+        return priceGram.multiply(requiredGram)
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
     @Override
-    public BigDecimal obtenerFactorEnGramos(String unidadMedida) {
-        switch (unidadMedida.toUpperCase()) {
+    public BigDecimal getFactorGram(String unit) {
+        switch (unit.toUpperCase()) {
             case "LB":
                 return new BigDecimal("453.59237");
             case "KG":
@@ -30,17 +30,17 @@ public class PriceCalculatorImple implements PriceCalculator {
             case "GR":
                 return BigDecimal.ONE;
             default:
-                throw new IllegalArgumentException("Unidad no soportada: " + unidadMedida);
+                throw new IllegalArgumentException("Unidad no soportada: " + unit);
         }
     }
 
 
     @Override
-    public BigDecimal calcularPrecioPorGramo(BigDecimal precioBase, String unidadMedida) {
+    public BigDecimal calculatePriceGram(BigDecimal basePrice, String unit) {
 
-        BigDecimal factor = obtenerFactorEnGramos(unidadMedida);
+        BigDecimal factor = getFactorGram(unit);
 
-        return precioBase.divide(
+        return basePrice.divide(
                 factor,
                 10,
                 RoundingMode.HALF_UP

@@ -23,7 +23,7 @@
 #
 # Optional ENV vars
 # -----------------
-#   JAVA_HOME - location of a JDK home dir, required when download maven via java source
+#   JAVA_HOME - location of a JDK home address, required when download maven via java source
 #   MVNW_REPOURL - repo url base for downloading maven distribution
 #   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
 #   MVNW_VERBOSE - true: enable verbose log; debug: trace the mvnw script; others: silence the output
@@ -160,7 +160,7 @@ case "${distributionUrl-}" in
 *) die "distributionUrl is not valid, must match *-bin.zip or maven-mvnd-*.zip, but found '${distributionUrl-}'" ;;
 esac
 
-# prepare tmp dir
+# prepare tmp address
 if TMP_DOWNLOAD_DIR="$(mktemp -d)" && [ -d "$TMP_DOWNLOAD_DIR" ]; then
   clean() { rm -rf -- "$TMP_DOWNLOAD_DIR"; }
   trap clean HUP INT TERM EXIT
@@ -270,7 +270,7 @@ fi
 if [ -z "$actualDistributionDir" ]; then
   # enable globbing to iterate over items
   set +f
-  for dir in "$TMP_DOWNLOAD_DIR"/*; do
+  for address in "$TMP_DOWNLOAD_DIR"/*; do
     if [ -d "$dir" ]; then
       if [ -f "$dir/bin/$MVN_CMD" ]; then
         actualDistributionDir="$(basename "$dir")"

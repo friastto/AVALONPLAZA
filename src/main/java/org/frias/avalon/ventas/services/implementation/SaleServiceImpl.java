@@ -1,8 +1,10 @@
 package org.frias.avalon.ventas.services.implementation;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.frias.avalon.Producto.entities.Product;
-import org.frias.avalon.Producto.services.interfaces.ProductoService;
+import org.frias.avalon.Producto.modules.adminoulet.repository.ProductoOutletRepository;
+import org.frias.avalon.Producto.modules.adminsaas.entities.Product;
+import org.frias.avalon.Producto.modules.adminsaas.entities.ProductOutlet;
+import org.frias.avalon.Producto.modules.adminsaas.services.interfaces.ProductoService;
 import org.frias.avalon.exeptions.InsufficientStockException;
 import org.frias.avalon.fabric.convertermasa.factory.ConvertFactoryService;
 import org.frias.avalon.fabric.discountpath.DiscountPathRoleFactory;
@@ -12,9 +14,8 @@ import org.frias.avalon.person.entity.Person;
 import org.frias.avalon.person.repository.PersonaRepository;
 import org.frias.avalon.person.services.interfaces.PersonService;
 import org.frias.avalon.promociones.dtos.DiscountTempResult;
-import org.frias.avalon.promociones.factory.oters.PromotionFactoryService;
-import org.frias.avalon.user.entities.User;
-import org.frias.avalon.user.repositories.UsuarioRepository;
+import org.frias.avalon.useravalon.entities.UserAvalon;
+import org.frias.avalon.useravalon.repositories.UserRepository;
 import org.frias.avalon.ventas.dtos.SaleDetailRequest;
 import org.frias.avalon.ventas.dtos.SaleRequest;
 import org.frias.avalon.ventas.dtos.SalesResponseDto;
@@ -35,8 +36,9 @@ public class SaleServiceImpl implements SaleService {
 
     private final ProductoService productoService;
     private final SaleRepository saleRepository;
+    private final ProductoOutletRepository productoOutletRepository;
 
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
 
     private final PersonService personaService;
 
@@ -49,10 +51,11 @@ public class SaleServiceImpl implements SaleService {
 
     private final SalesMapperService salesMapperService;
 
-    public SaleServiceImpl(ProductoService productoService, SaleRepository saleRepository, UsuarioRepository usuarioRepository, PersonaRepository personaRepository, PersonService personaService, MasterDataSalesService masterDataSalesService, ConvertFactoryService convertFactoryService, DiscountPathRoleFactory priceCalculator, SalesMapperService salesMapperService) {
+    public SaleServiceImpl(ProductoService productoService, SaleRepository saleRepository, ProductoOutletRepository productoOutletRepository, UserRepository userRepository, PersonaRepository personaRepository, PersonService personaService, MasterDataSalesService masterDataSalesService, ConvertFactoryService convertFactoryService, DiscountPathRoleFactory priceCalculator, SalesMapperService salesMapperService) {
         this.productoService = productoService;
         this.saleRepository = saleRepository;
-        this.usuarioRepository = usuarioRepository;
+        this.productoOutletRepository = productoOutletRepository;
+        this.userRepository = userRepository;
         this.personaService = personaService;
         this.masterDataSalesService = masterDataSalesService;
 
@@ -80,53 +83,66 @@ public class SaleServiceImpl implements SaleService {
         }
 
 
-
-        User employee = usuarioRepository.findById(saleRequest.enployeeId()).orElseThrow();
+        UserAvalon employee = userRepository.findById(saleRequest.enployeeId()).orElseThrow();
 
         MasterData metodPay = masterDataSalesService.findById(saleRequest.metodoPagoId());
 
-
         MasterData status = masterDataSalesService.searchShortName("COM");
-
-
 
         Sale saleEntity = new Sale();
 
         saleEntity.setCustomerId(customer);
 
         saleEntity.setEnployeeId(employee);
+
         saleEntity.setPaymentMethodId(metodPay);
 
-
         saleEntity.setAmountReceived(saleRequest.amountReceived());
+
         saleEntity.setSaleDateAt(LocalDateTime.now());
 
-        List<String> roles = usuarioRepository.findRolesByPersonNumberId(saleRequest.customerId());
+        List<String> roles = userRepository.findRolesByPersonNumberId(saleRequest.customerId());
 
        // String descripcionDetalils;
        List<SaleDetail> details = new ArrayList<>();
+
         for (SaleDetailRequest sd : saleRequest.saleDetails()){
 
            String quantityCleaned = sd.quantity().contains(",")||sd.quantity().contains(".")
             ? sd.quantity().replace(",",".")
                    : sd.quantity();
 
-            Product productEntity = productoService.searchById(sd.productId());
+            ProductOutlet productOutlet = productoOutletRepository.findByProductIdAndOutletId(
+                    sd.productId(), 1L).orElseThrow(() -> new EntityNotFoundException("Product not found")
+            );
+
+
+                     Product productEntity = productOutlet.getCompanyProduct().getProduct();
 
             Integer cantRequired;
 
-            if (!unitMasaPesable.contains(productEntity.getUnit().getShortName()) && (sd.quantity().contains(".")||sd.quantity().contains(",")))
-                throw new IllegalArgumentException("la cantidad ingresada no corresponde a la unidad de medida del producto : "+productEntity.getUnit().getShortName());
+            if (!unitMasaPesable.contains(productEntity.getUnit().getShortName())
+                    && (sd.quantity().contains(".")||sd.quantity().contains(","))
+            )
+                throw new IllegalArgumentException(
+                        "la cantidad ingresada no corresponde a la unidad de medida del producto : "
+                                + productEntity.getUnit().getShortName()
+                );
 
             if(unitMasaPesable.contains(productEntity.getUnit().getShortName())) {
-                cantRequired = convertFactoryService.convertTo(quantityCleaned, productEntity.getUnit().getShortName(), false).intValue();
+
+                cantRequired = convertFactoryService.convertTo(
+                        quantityCleaned
+                        , productEntity.getUnit().getShortName()
+                        , false
+                ).intValue();
             }else {
                 cantRequired = Integer.valueOf(sd.quantity());
             }
 
-          if (productEntity.getStock() < cantRequired)
+          if (productOutlet.getStock() < cantRequired)
               throw new InsufficientStockException(
-                      "Stock insuficiente *code :" + productEntity.getSku()+ " *name: " + productEntity.getName()
+                      "Stock insuficiente *code :" + productEntity.getBarcodes().get(1)+ " *name: " + productEntity.getName()
               );
 
             SaleDetail sdEntity = new SaleDetail();
@@ -134,9 +150,9 @@ public class SaleServiceImpl implements SaleService {
             sdEntity.setProduct(productEntity);
 
 
-            DiscountTempResult precioUnitario = priceCalculator.calculate(productEntity,roles, "1");
+            DiscountTempResult precioUnitario = priceCalculator.calculate(productOutlet,roles, "1");
 
-            DiscountTempResult subTotal = priceCalculator.calculate(productEntity,roles, quantityCleaned);
+            DiscountTempResult subTotal = priceCalculator.calculate(productOutlet,roles, quantityCleaned);
 
             System.out.println("\n****************************\n" +
                     subTotal.description()
@@ -153,9 +169,9 @@ public class SaleServiceImpl implements SaleService {
             sdEntity.setSale(saleEntity);
             sdEntity.setProduct(productEntity);
 
-            System.out.println("se redujo el stock de "+productEntity.getName() + " cantActual ( " + productEntity.getStock()+" - "+cantRequired +" = "+(productEntity.getStock()-cantRequired)+" )");
+            System.out.println("se redujo el stock de "+productEntity.getName() + " cantActual ( " + productOutlet.getStock()+" - "+cantRequired +" = "+(productOutlet.getStock()-cantRequired)+" ) \n");
 
-            productEntity.setStock(productEntity.getStock() - cantRequired);
+            productOutlet.setStock(productOutlet.getStock() - cantRequired);
 
             details.add(sdEntity);
 
@@ -172,6 +188,11 @@ public class SaleServiceImpl implements SaleService {
 
         saleEntity.setAmountReturned(saleEntity.getTotal().subtract(saleEntity.getAmountReceived()));
         saleEntity.setStatusId(status);
+
+        if (saleRequest.amountReceived().compareTo(valueTotalSale) < 0) {
+            throw new RuntimeException("El monto recibido ($" + saleRequest.amountReceived() +
+                    ") es insuficiente para cubrir el total ($ " + valueTotalSale + ")");
+        }
 
         return salesMapperService.toResponseDto(saleRepository.save(saleEntity));
     }

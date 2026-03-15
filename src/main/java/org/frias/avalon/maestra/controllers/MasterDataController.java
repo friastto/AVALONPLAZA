@@ -1,14 +1,13 @@
 package org.frias.avalon.maestra.controllers;
 
 
+import jakarta.validation.Valid;
 import org.frias.avalon.maestra.dtos.MasterDataRequestCreateDto;
 import org.frias.avalon.maestra.dtos.MasterDataResponseDto;
 import org.frias.avalon.maestra.services.interfaces.MasterDataService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -24,7 +23,12 @@ public class MasterDataController {
 
 
     @PostMapping("/saveAll")
-    public ResponseEntity<List<MasterDataResponseDto>> saveAll(@RequestBody List<MasterDataRequestCreateDto> mdrequest) {
+    public ResponseEntity<List<MasterDataResponseDto>> saveAll(@Valid  @RequestBody List<MasterDataRequestCreateDto> mdrequest) {
+
+        System.out.println("pk1 : "+ mdrequest.toString()
+
+
+        );
 
             return ResponseEntity.ok(mdservice.saveAll(mdrequest));
 
@@ -32,6 +36,6 @@ public class MasterDataController {
 
     @PostMapping("/search/v1")
     public MasterDataResponseDto saveAll(@RequestParam String shortName) {
-        return mdservice.findByNameShort(shortName);
+        return mdservice.findByNameShortDto(shortName);
     }
 }

@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.frias.avalon.Producto.entities.Product;
+import org.frias.avalon.Producto.modules.adminsaas.entities.Product;
 
 
 import java.math.BigDecimal;
@@ -37,5 +37,11 @@ public class SaleDetail {
     @ManyToOne(optional = false)
     @JoinColumn(name = "prod_id")
     private Product product;
+
+    // --- NUEVOS CAMPOS DE TRAZABILIDAD ---
+
+    private String scannedBarcode; // El código exacto que disparó la venta
+
+    private String productNameSnapshot; // El nombre del producto al momento de vender
 
 }

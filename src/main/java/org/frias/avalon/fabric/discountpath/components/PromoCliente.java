@@ -1,6 +1,7 @@
 package org.frias.avalon.fabric.discountpath.components;
 
-import org.frias.avalon.Producto.entities.Product;
+import org.frias.avalon.Producto.modules.adminsaas.entities.Product;
+import org.frias.avalon.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.frias.avalon.fabric.convertermasa.factory.ConvertFactoryService;
 import org.frias.avalon.fabric.discountpath.interfaces.Strategy;
 import org.frias.avalon.fabric.priceCalculator.PriceCalculator;
@@ -28,15 +29,15 @@ private final String gramos= "GR";
     }
 
     @Override
-    public DiscountTempResult calculatePrice(Product p, String quantity) {
+    public DiscountTempResult calculatePrice(ProductOutlet productOutlet, String quantity) {
 
-        BigDecimal precioBase = p.getPrice();
+        BigDecimal precioBase = productOutlet.getLocalPrice();
 
     BigDecimal cant = new BigDecimal(quantity);
 
-    String medida = p.getUnit().getShortName();
+    String medida =productOutlet.getCompanyProduct().getProduct().getUnit().getShortName();
 
-        return p.getPromotions().stream()
+        return productOutlet.getPromotions().stream()
                 .filter(Promotion::estaActiva)
                 .findFirst()
                 .map(promo -> {
@@ -98,7 +99,7 @@ private final String gramos= "GR";
 
             BigDecimal cant = convertFactoryService.convertTo(cantidad,medida,false);
 
-            subtotalSinDescuento = priceCalculator.calcularTotalPorPeso(precioBase,medida,cant);
+            subtotalSinDescuento = priceCalculator.calculatePriceXWeight(precioBase,medida,cant);
 
 
 

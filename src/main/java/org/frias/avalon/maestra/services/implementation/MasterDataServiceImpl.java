@@ -12,6 +12,7 @@ import org.frias.avalon.maestra.services.interfaces.MasterDataService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,35 +36,40 @@ public class MasterDataServiceImpl implements MasterDataService,
     @Override
     public List<MasterDataResponseDto> saveAll(List<MasterDataRequestCreateDto> masterDataRequestList) {
 
+        MasterData statusActive = mdRepository.findByShortNameAndStatusActive(statusActiveShortName)
+                .orElseThrow(() -> new RuntimeException("Error Crítico: El estado ACTIVO no existe en MasterData"));
 
-        masterDataRequestList.forEach(masterDataRequest -> {
-
+List<MasterData>  savedEntities = new ArrayList<>();
+        for (MasterDataRequestCreateDto request : masterDataRequestList) {
 
             MasterData masterData = new MasterData();
-            masterData.setShortName(masterDataRequest.shortName());
-            masterData.setFullName(masterDataRequest.fullName());
 
-            if(masterDataRequest.parentShortName() != null) {
+            masterData.setShortName(request.shortName());
+            masterData.setFullName(request.fullName());
+            masterData.setStatusId(statusActive.getId());
 
-               masterData.setParentId(mdRepository.findByShortNameAndStatusActive(masterDataRequest.parentShortName()).get().getId());
-         }
+            if (request.parentShortName() != null) {
+                MasterData parent = mdRepository.findByShortNameAndStatusActive(request.parentShortName())
+                        .orElseThrow(() -> new RuntimeException("No se encontró el padre: " + request.parentShortName()));
 
-            masterData.setStatusId(mdRepository.findByShortNameAndStatusActive(statusActiveShortName).get().getId());
-
-
+                masterData.setParentId(parent.getId());
+            }
 
             mdRepository.save(masterData);
+            // 3. Guardar y limpiar para que esté disponible para el siguiente hijo en el bucle
+            savedEntities.add(mdRepository.save(masterData));
 
-        });
+            mdRepository.flush(); // Fuerza a que el ID esté disponible inmediatamente
 
-           return   mdRepository.findAll()
-                   .stream()
-                   .map(masterDataMapperService::toDto)
-                   .collect(Collectors.toList());
+        };
+
+           return   savedEntities.stream()
+                .map(masterDataMapperService::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public MasterDataResponseDto findByNameShort(String nameShort) {
+    public MasterDataResponseDto findByNameShortDto(String nameShort) {
 
         return masterDataMapperService.toDto(mdRepository.findByShortNameAndStatusActive(nameShort)
                 .orElseThrow(() -> new EntityNotFoundException("el tipo de componente {*" +nameShort +"*} no disponible ") ));
@@ -85,11 +91,13 @@ public class MasterDataServiceImpl implements MasterDataService,
 
     }
 
+
+
     @Override
     public MasterData searchShortName(String shortName) {
 
         return masterDataRepository.findByShortNameAndStatusActive(shortName)
-                .orElseThrow(() -> new EntityNotFoundException("no se puede establecer el estado de lav enta como finalizado"));
+                .orElseThrow(() -> new EntityNotFoundException("no se puede establecer el tipo"));
 
     }
 

@@ -1,6 +1,7 @@
 package org.frias.avalon.fabric.discountpath.components;
 
-import org.frias.avalon.Producto.entities.Product;
+import org.frias.avalon.Producto.modules.adminsaas.entities.Product;
+import org.frias.avalon.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.frias.avalon.fabric.convertermasa.factory.ConvertFactoryService;
 import org.frias.avalon.fabric.discountpath.interfaces.Strategy;
 import org.frias.avalon.fabric.priceCalculator.PriceCalculator;
@@ -28,18 +29,20 @@ public class SinDescuento implements Strategy {
     }
 
     @Override
-    public DiscountTempResult calculatePrice(Product p, String quantity) {
-            BigDecimal priceBruto = p.getPrice();
+    public DiscountTempResult calculatePrice(ProductOutlet productOutlet, String quantity) {
 
-        BigDecimal subtotalSinDescuento = priceBruto.multiply(new BigDecimal(quantity));
+        BigDecimal precioBase = productOutlet.getLocalPrice();
+
+        BigDecimal subtotalSinDescuento = precioBase.multiply(new BigDecimal(quantity));
+
+        String unit = productOutlet.getCompanyProduct().getProduct().getUnit().getShortName();
 
 
+        if (UNIDADES_PESABLES.contains(unit)) {
 
-        if (UNIDADES_PESABLES.contains(p.getUnit().getShortName())) {
+            BigDecimal cant = convertFactoryService.convertTo(quantity,unit,false);
 
-            BigDecimal cant = convertFactoryService.convertTo(quantity,p.getUnit().getShortName(),false);
-
-            subtotalSinDescuento = priceCalculator.calcularTotalPorPeso(priceBruto,p.getUnit().getShortName(),cant);
+            subtotalSinDescuento = priceCalculator.calculatePriceXWeight(precioBase,unit,cant);
         }
 
         // 5. Retornar tu Record con la descripción de tu MasterData

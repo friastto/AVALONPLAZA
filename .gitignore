@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Secretos y variables de entorno
+.env
+
+# Archivos de configuración con datos sensibles
+src/main/resources/application-local.properties
+

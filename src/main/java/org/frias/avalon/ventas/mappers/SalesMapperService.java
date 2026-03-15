@@ -1,6 +1,6 @@
 package org.frias.avalon.ventas.mappers;
 
-import org.frias.avalon.Producto.dtos.ProductResponseDetailDto;
+import org.frias.avalon.Producto.modules.adminsaas.dtos.ProductResponseDetailDto;
 import org.frias.avalon.fabric.convertermasa.factory.ConvertFactoryService;
 import org.frias.avalon.ventas.dtos.SaleDetailResponseDto;
 import org.frias.avalon.ventas.dtos.SalesResponseDto;
@@ -63,11 +63,11 @@ public class SalesMapperService {
                 detail.getSubTotal(), // El subtotal ya con descuentos aplicados
                 new ProductResponseDetailDto(
                         detail.getProduct().getId(),
-                        detail.getProduct().getSku(),
+                        detail.getScannedBarcode(),
                         detail.getProduct().getName(),
                         detail.getProduct().getDescription(),
                         detail.getProduct().getUnit().getShortName()
-                        , detail.getProduct().getPrice()
+                        , detail.getUnitPrice()
 
                 )
         );

@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.security.spec.InvalidKeySpecException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 @RestControllerAdvice
@@ -42,11 +45,22 @@ public class GlobalExceptionHandler {
                 .body(e.getMessage());
     }
 
-    // 2. Violación de integridad (FK, UNIQUE, NOT NULL)
+    /*// 2. Violación de integridad (FK, UNIQUE, NOT NULL)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<String> handleDataIntegrity(DataIntegrityViolationException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(e.getMessage());
+    }
+
+     */
+    // 2.Maneja específicamente errores de duplicados o integridad (SQL), Violación de integridad (FK, UNIQUE, NOT NULL)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Object> handleDataIntegrity(DataIntegrityViolationException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", "Error de integridad: El registro ya existe o faltan datos obligatorios." + ex.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
     // 3. Validación de Bean Validation

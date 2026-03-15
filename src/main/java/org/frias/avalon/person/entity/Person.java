@@ -38,6 +38,9 @@ public class Person {
     @JoinColumn(name = "sex_id", foreignKey = @ForeignKey(name = "fk_person_masterdata_sexId"))
     private MasterData sexId;
 
+    private Long phoneNumber;
+
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "status_id", foreignKey = @ForeignKey(name = "fk_person_masterdata_statusID"))
     private MasterData statusId;

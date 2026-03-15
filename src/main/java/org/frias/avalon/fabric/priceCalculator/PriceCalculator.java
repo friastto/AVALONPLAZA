@@ -5,9 +5,9 @@ import java.math.BigDecimal;
 
 public interface PriceCalculator {
 
-    BigDecimal calcularTotalPorPeso(BigDecimal precioBase, String unidadMedida, BigDecimal gramosVendidos);
+    BigDecimal calculatePriceXWeight(BigDecimal precioBase, String unidadMedida, BigDecimal gramosVendidos);
 
-    BigDecimal obtenerFactorEnGramos(String unidadMedida);
+    BigDecimal getFactorGram(String unidadMedida);
 
-    BigDecimal calcularPrecioPorGramo(BigDecimal precioBase, String unidadMedida);
+    BigDecimal calculatePriceGram(BigDecimal precioBase, String unidadMedida);
 }

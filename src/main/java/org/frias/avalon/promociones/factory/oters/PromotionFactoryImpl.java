@@ -1,6 +1,7 @@
 package org.frias.avalon.promociones.factory.oters;
 
-import org.frias.avalon.Producto.entities.Product;
+import org.frias.avalon.Producto.modules.adminsaas.entities.Product;
+import org.frias.avalon.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.frias.avalon.promociones.dtos.DiscountTempResult;
 import org.frias.avalon.promociones.entities.Promotion;
 import org.frias.avalon.promociones.factory.oters.interfaz.PromotionStrategy;
@@ -26,16 +27,16 @@ public class PromotionFactoryImpl implements PromotionFactoryService {
 
 
     @Override
-    public DiscountTempResult getFinalPrice(Product product, Boolean isEmployee) {
+    public DiscountTempResult getFinalPrice(ProductOutlet productOutlet, Boolean isEmployee) {
 
-        if (product.getPromotions() == null || product.getPromotions().isEmpty()) {
+        if (productOutlet.getPromotions() == null || productOutlet.getPromotions().isEmpty()) {
         return new DiscountTempResult(
                 BigDecimal.ZERO,
                 "No promotions found",
-                product.getPrice());
+                productOutlet.getLocalPrice());
     }
 
-        return product.getPromotions().stream()
+        return productOutlet.getPromotions().stream()
                 .filter(Promotion::estaActiva)
                 .filter(p -> {
                     String typeCode = p.getPromoTypeId().getShortName();
@@ -45,11 +46,11 @@ public class PromotionFactoryImpl implements PromotionFactoryService {
                     return typeCode.equals("PROMO_GLOBAL") ;//|| typeCode.equals("BLACK_FRIDAY");
                 })
                 .findFirst()
-                .map(p -> strategies.get(p.getPromoTypeId().getShortName()).applyDiscount(product.getPrice(), p))
+                .map(p -> strategies.get(p.getPromoTypeId().getShortName()).applyDiscount(productOutlet.getLocalPrice(), p))
                 .orElse(new DiscountTempResult(
                         BigDecimal.ZERO,
                         "No promotions found",
-                        product.getPrice()));
+                        productOutlet.getLocalPrice()));
     }
 
 }
