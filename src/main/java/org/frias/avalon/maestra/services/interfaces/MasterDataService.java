@@ -12,4 +12,6 @@ public interface MasterDataService {
     MasterData findById(Long id);
     MasterData searchShortName(String shortName);
 
+    MasterData getRootBranch(Long id, String rootShortName);
+    boolean isFromHierarchy(Long id, String branchName);
 }

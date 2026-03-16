@@ -8,7 +8,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.frias.avalon.empresasucursal.tenant.tenantcontex.TenantContext;
 import org.frias.avalon.jwt.util.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,11 +22,16 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUtils jwtUtils;
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private final JwtUtils jwtUtils;
+
+
+    private final CustomUserDetailsService userDetailsService;
+
+    public JwtAuthenticationFilter(JwtUtils jwtUtils, CustomUserDetailsService userDetailsService) {
+        this.jwtUtils = jwtUtils;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -36,6 +43,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String jwt = authHeader.substring(7); // quitamos "Bearer "
 
+               /* if (jwtUtils.validateToken(jwt)) {
+                    System.out.println("✅ TOKEN VALIDADO CORRECTAMENTE PARA: " + jwtUtils.extractUsername(jwt));
+
+                } else {
+                    System.out.println("EL TOKEN NO ES VÁLIDO O ESTÁ EXPIRADO");
+                }*/
                 // 2. Validamos el token antes de hacer nada más
                 if (jwtUtils.validateToken(jwt)) {
 
@@ -45,15 +58,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     Long companyId = jwtUtils.extractParent(jwt,"empresa_Id");
                     Long outletId = jwtUtils.extractParent(jwt,"outlet_Id");
+
                     // 4. Si no hay una autenticación activa en el contexto
-                    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+
+                    if (username != null && (currentAuth == null || currentAuth instanceof AnonymousAuthenticationToken)) {
 
                         // 5. Creamos autoridad desde el rol del token
                         List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + rol));
 
                         // 6. Creamos autenticación con username y autoridad (sin password ni detalles)
                         UsernamePasswordAuthenticationToken auth =
-                                new UsernamePasswordAuthenticationToken(username, null, authorities);
+                                new UsernamePasswordAuthenticationToken(username, jwt, authorities);
 
                         // 7. Registramos la autenticación en el contexto de seguridad
                         SecurityContextHolder.getContext().setAuthentication(auth);

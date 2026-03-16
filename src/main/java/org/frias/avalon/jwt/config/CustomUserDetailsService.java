@@ -16,8 +16,12 @@ import java.util.Collections;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository usuarioRepository;
+
+    private final UserRepository usuarioRepository;
+
+    public CustomUserDetailsService(UserRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
+    }
 
 
     // Spring Security llama este método automáticamente para autenticar

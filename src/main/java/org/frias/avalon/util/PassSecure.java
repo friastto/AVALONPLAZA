@@ -34,7 +34,7 @@ public class PassSecure {
     public static String hashPassword(
             String password
             , String salt
-    ) throws InvalidKeySpecException
+    )
     {
         try {
 
@@ -65,7 +65,7 @@ public class PassSecure {
                     String pwdHash = hashPassword(password, salt);
                     return pwdHash.equals(expectedHash);
 
-                } catch (InvalidKeySpecException e) {
+                } catch (RuntimeException e) {
                     throw new RuntimeException("credenciales invalidas");
 
                 }

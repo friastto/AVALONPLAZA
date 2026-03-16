@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -12,13 +13,19 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthFilter;
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthFilter;
+
+
+    private final CustomUserDetailsService userDetailsService;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomUserDetailsService userDetailsService) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Bean
     @Profile("!test") // 👈 seguridad activa solo si NO es perfil test
@@ -26,8 +33,15 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable) // Deshabilitamos CSRF para APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/userAvalon/save").permitAll() // login público
-                        .requestMatchers("/userAvalon/validateCredentials").permitAll()
+                        .requestMatchers("/auth-avalon").permitAll()
+                        .requestMatchers("/user/create").permitAll() // cualquiera puede crearse un usuario
+
+                        .requestMatchers("/userAvalon/**").hasAnyRole("ADMINTI") // login público
+
+
+
+
+                        .requestMatchers("/company/save").permitAll()
                         .requestMatchers("/company/**").hasAnyRole("ADMINTI","ADMIN")
                         .requestMatchers("/outlet/**").hasAnyRole("ADMINTI","ADMIN","GERGEN")
                         .requestMatchers("/masterData/**").permitAll()

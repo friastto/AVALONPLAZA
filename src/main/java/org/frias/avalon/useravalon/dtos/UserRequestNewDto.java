@@ -6,6 +6,7 @@ public record UserRequestNewDto(
 
     String userName,
     String password,
+    Long role,
 
     PersonRequestNewDto personId
 

@@ -2,7 +2,8 @@ package org.frias.avalon.useravalon.dtos;
 
 public record UserLinkPersonRequestDto(
         String userName,
-                                       String password,
+       String password,
+       Long roleId,
 
-                                       Long personId) {
+       Long personId) {
 }

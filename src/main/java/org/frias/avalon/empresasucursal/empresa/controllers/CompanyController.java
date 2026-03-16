@@ -23,6 +23,7 @@ public class CompanyController {
 
         return companyService.save(companyNewDto);
     }
+
     @GetMapping("/outlets")
     public CompanyResponseDto searchOutlets() {
 

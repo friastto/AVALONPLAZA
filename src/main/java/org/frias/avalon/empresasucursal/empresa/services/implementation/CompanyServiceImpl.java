@@ -104,6 +104,13 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    public Company findById(Long id) {
+
+        return companyRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No se encontro la empresa"));
+
+    }
+
+    @Override
     public CompanyResponseDto searchCompanyAndOutlets(Long id) {
 
         return companyMapper.toDto(searchCompany(id));

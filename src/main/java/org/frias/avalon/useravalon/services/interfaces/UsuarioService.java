@@ -12,9 +12,9 @@ public interface UsuarioService {
     UserAvalon searchByUserName(String userName);
     UserAvalon getUserEmployeeStatus(String numberId);
 
-    UserResponseDto saveUserAndPerson(UserRequestNewDto userCreate);
+    Boolean saveUserAndPerson(UserRequestNewDto userCreate);
 
-    UserResponseDto saveUserAndCreateLinkPerson(UserLinkPersonRequestDto userCreate) throws InvalidKeySpecException;
+    Boolean saveUserAndCreateLinkPerson(UserLinkPersonRequestDto userCreate) throws InvalidKeySpecException;
 
 
 }

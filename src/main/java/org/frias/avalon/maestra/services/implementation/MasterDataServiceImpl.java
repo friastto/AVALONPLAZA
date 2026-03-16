@@ -101,4 +101,37 @@ List<MasterData>  savedEntities = new ArrayList<>();
 
     }
 
+    @Override
+    public MasterData getRootBranch(Long id, String rootShortName) {
+
+
+        MasterData current = findById(id);
+
+        if (current == null) return null;
+
+        // CASO BASE: Si el padre es 'ROL' (la raíz de todo),
+        // entonces 'current' es la rama principal (ej: ADMIN o GERENTE o DIREC)
+        MasterData parent = (current.getParentId() != null)
+                ? findById(current.getParentId())
+                : null;
+
+        if (parent != null && parent.getShortName().equals(rootShortName)) {
+            return current;
+        }
+
+        // Si no tiene padre, él mismo es la raíz
+        if (current.getParentId() == null) {
+            return current;
+        }
+
+        // Seguimos escalando
+        return getRootBranch(current.getParentId(), rootShortName);
+    }
+
+
+    @Override
+    public boolean isFromHierarchy(Long id, String branchName) {
+        MasterData result = getRootBranch(id, branchName);
+        return result != null && result.getShortName().equals(branchName);
+    }
 }

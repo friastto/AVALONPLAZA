@@ -28,4 +28,5 @@ public interface MasterDataRepository extends JpaRepository<MasterData, Long> {
    Optional< MasterData> findByIdAndStatusActive(Long id);
 
 
+
 }
