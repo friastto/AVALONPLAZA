@@ -35,14 +35,15 @@ public class ProductOutletServiceImpl implements ProductOutletService {
 
         Long outLetId = TenantContext.getTenantOutletId();
 
-        System.out.println("****************" +
-                " el outlet id es " + outLetId+ " " +
-                "*****************");
+        return getProductCatalogToOutlet(outLetId);
+    }
+
+    @Override
+    public List<ProductOutletResponseDto> getProductCatalogToOutlet(Long id) {
 
         List<ProductOutlet> productOutlets = productoOutletRepository.findAllByOutletIdWithHierarchy(
-                                                    outLetId
-                                            );
-
+                id
+        );
 
         return productOutlets.stream()
                 .map(productOutletMapperService::toDto)

@@ -26,7 +26,7 @@ public class ProductoMapperServiceImpl implements ProductoMapperService {
                 p.getCategory().getFullName(),
                 p.getUnit().getShortName(),
                 "0 : UND or 0.0 : MASA",
-                "N/A"
+                p.getImageUrl()
         );
 
     }

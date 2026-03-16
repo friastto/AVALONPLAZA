@@ -1,6 +1,7 @@
 package org.frias.avalon.empresasucursal.sucursal.controllers;
 
 
+import org.frias.avalon.Producto.modules.adminsaas.dtos.ProductResponseDto;
 import org.frias.avalon.empresasucursal.sucursal.dtos.OutletRequestNewDto;
 import org.frias.avalon.empresasucursal.sucursal.dtos.OutletResponseDto;
 import org.frias.avalon.empresasucursal.sucursal.entities.Outlet;
@@ -29,5 +30,8 @@ private final ServiceSucursal serviceSucursal;
     public OutletResponseDto add(@RequestBody OutletRequestNewDto outletDto) {
         return serviceSucursal.save(outletDto);
     }
+
+
+
 
 }

@@ -9,4 +9,5 @@ public interface ProductOutletService {
 
 
     List<ProductOutletResponseDto> getAllProductCatalog();
+    List<ProductOutletResponseDto> getProductCatalogToOutlet(Long id);
 }
