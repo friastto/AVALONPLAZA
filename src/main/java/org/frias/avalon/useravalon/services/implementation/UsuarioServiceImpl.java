@@ -3,7 +3,7 @@ package org.frias.avalon.useravalon.services.implementation;
 import jakarta.persistence.EntityExistsException;
 import org.frias.avalon.empresasucursal.empresa.services.interfaces.CompanyService;
 import org.frias.avalon.empresasucursal.tenant.tenantcontex.TenantContext;
-import org.frias.avalon.jwt.util.JwtUtils;
+import org.frias.avalon.core.jwt.util.JwtUtils;
 import org.frias.avalon.maestra.entities.MasterData;
 import org.frias.avalon.maestra.services.interfaces.MasterDataService;
 import org.frias.avalon.person.entity.Person;

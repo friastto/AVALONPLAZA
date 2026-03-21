@@ -1,15 +1,13 @@
 package org.frias.avalon.fabric.discountpath;
 
-import org.frias.avalon.Producto.modules.adminsaas.entities.Product;
-import org.frias.avalon.Producto.modules.adminsaas.entities.ProductOutlet;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.frias.avalon.fabric.convertermasa.factory.ConvertFactoryService;
 import org.frias.avalon.fabric.discountpath.components.DescuentoEmpleado;
 import org.frias.avalon.fabric.discountpath.components.PromoCliente;
 import org.frias.avalon.fabric.discountpath.components.SinDescuento;
-import org.frias.avalon.promociones.dtos.DiscountTempResult;
+import org.frias.avalon.domain.inventory.promo.dtos.DiscountTempResult;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Service

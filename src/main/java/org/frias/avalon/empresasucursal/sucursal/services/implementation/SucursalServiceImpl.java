@@ -2,19 +2,21 @@ package org.frias.avalon.empresasucursal.sucursal.services.implementation;
 
 
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.frias.avalon.empresasucursal.empresa.entities.Company;
 import org.frias.avalon.empresasucursal.empresa.services.interfaces.CompanyService;
 import org.frias.avalon.empresasucursal.sucursal.dtos.OutletRequestNewDto;
 import org.frias.avalon.empresasucursal.sucursal.dtos.OutletResponseDto;
+import org.frias.avalon.empresasucursal.sucursal.dtos.OutletsRequestMap;
 import org.frias.avalon.empresasucursal.sucursal.entities.Outlet;
 import org.frias.avalon.empresasucursal.sucursal.mappers.OutletMapper;
 import org.frias.avalon.empresasucursal.sucursal.repositories.OutletRepository;
 import org.frias.avalon.empresasucursal.sucursal.services.interfaces.ServiceSucursal;
 import org.frias.avalon.empresasucursal.tenant.config.TenantAware;
 import org.frias.avalon.empresasucursal.tenant.tenantcontex.TenantContext;
-import org.frias.avalon.jwt.util.JwtUtils;
+import org.frias.avalon.core.jwt.util.JwtUtils;
 import org.frias.avalon.maestra.entities.MasterData;
-import org.frias.avalon.maestra.repositories.MasterDataRepository;
 import org.frias.avalon.maestra.services.interfaces.MasterDataService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,8 @@ public class SucursalServiceImpl implements ServiceSucursal {
     private final ApplicationContext applicationContext;
     private final JwtUtils jwtUtils;
     private final CompanyService companyService;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public SucursalServiceImpl(OutletRepository outletRepository, OutletMapper outletMapper, MasterDataService masterDataService, ApplicationContext applicationContext, JwtUtils jwtUtils, CompanyService companyService) {
         this.outletRepository = outletRepository;
@@ -91,5 +95,23 @@ public class SucursalServiceImpl implements ServiceSucursal {
 
     }
 
+    @Override
+    public List<OutletResponseDto> searchNearbyStores(OutletsRequestMap outletsRequestMap) {
+
+            List<Outlet> outlets = outletRepository.searchNearbyStores(
+                    outletsRequestMap.query(),
+                    outletsRequestMap.lat(),
+                    outletsRequestMap.lng(),
+                    outletsRequestMap.radius()
+            );
+
+            if (outlets.isEmpty()) {
+                return List.of(); // nunca retornar null
+
+            }
+                return outlets.stream()
+                        .map(outletMapper::toDto)
+                        .toList();
+            }
 
 }

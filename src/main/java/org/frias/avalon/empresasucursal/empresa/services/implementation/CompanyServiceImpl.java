@@ -3,6 +3,12 @@ package org.frias.avalon.empresasucursal.empresa.services.implementation;
 import jakarta.persistence.EntityExistsException;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.frias.avalon.domain.inventory.Producto.modules.admincompany.services.interfaces.ProductoCompanyService;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseDto;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.Product;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductCompany;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.mappers.ProductoMapperService;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.services.interfaces.ProductoService;
 import org.frias.avalon.empresasucursal.empresa.dtos.CompanyRequestNewDto;
 import org.frias.avalon.empresasucursal.empresa.dtos.CompanyResponseDto;
 import org.frias.avalon.empresasucursal.empresa.entities.Company;
@@ -32,6 +38,7 @@ public class CompanyServiceImpl implements CompanyService {
         this.companyRepository = companyRepository;
         this.maestraRepository = maestraRepository;
         this.companyMapper = companyMapper;
+
     }
 
     @Transactional
@@ -121,10 +128,13 @@ public class CompanyServiceImpl implements CompanyService {
         return companyMapper.toDto(searchCompany());
     }
 
+
+
     public Company searchCompany(Long id) {
         return companyRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No se encuentran registros de la compañia en la base de datos"));
     }
 
+    @Override
     public Company searchCompany() {
 
         return searchCompany(TenantContext.getTenantId());

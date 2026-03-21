@@ -23,7 +23,7 @@ public class UserController {
 
     // Este método reemplaza al de los dos controladores anteriores
     @PostMapping("/link-user-to-person")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ADMINTI','GERGEN')")
+    //@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ADMINTI','ROLE_GERGEN')")
     public ResponseEntity<Boolean> addNewUserlinkToPerson(@RequestBody UserLinkPersonRequestDto dto) throws InvalidKeySpecException {
         usuarioService.saveUserAndCreateLinkPerson(dto);
         return ResponseEntity.ok(true);

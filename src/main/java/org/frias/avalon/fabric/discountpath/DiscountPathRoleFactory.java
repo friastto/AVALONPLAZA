@@ -1,10 +1,8 @@
 package org.frias.avalon.fabric.discountpath;
 
-import org.frias.avalon.Producto.modules.adminsaas.entities.Product;
-import org.frias.avalon.Producto.modules.adminsaas.entities.ProductOutlet;
-import org.frias.avalon.promociones.dtos.DiscountTempResult;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
+import org.frias.avalon.domain.inventory.promo.dtos.DiscountTempResult;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 public interface DiscountPathRoleFactory {

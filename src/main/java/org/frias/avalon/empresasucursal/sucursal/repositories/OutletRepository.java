@@ -23,4 +23,24 @@ public interface OutletRepository extends JpaRepository<Outlet, Long> {
         select o from Outlet o where o.empresaId = :empresaId
         """)
     List<Outlet> findAllOuletsByEmpresa(@Param("empresaId") Long empresaId);
+
+    @Query("""
+        select o from Outlet o where(
+            6371 * acos(
+                cos(radians(:lat)) *
+                cos(radians(o.latitude)) *
+                cos(radians(o.longitude) - radians(:lng)) +
+                sin(radians(:lat)) *
+                sin(radians(o.latitude))
+            )
+        ) <= :radius
+        AND LOWER(o.name) LIKE LOWER(CONCAT('%', :query, '%'))
+    """)
+    List<Outlet> searchNearbyStores(
+            @Param("query") String query,
+            @Param("lat") double lat,
+            @Param("lng") double lng,
+            @Param("radius") double radius
+    );
+
 }

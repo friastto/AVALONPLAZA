@@ -121,5 +121,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(e.getMessage());
     }
-
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<String> handleAll(BusinessException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
 }

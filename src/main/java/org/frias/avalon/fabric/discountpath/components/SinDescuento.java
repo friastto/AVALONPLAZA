@@ -1,11 +1,10 @@
 package org.frias.avalon.fabric.discountpath.components;
 
-import org.frias.avalon.Producto.modules.adminsaas.entities.Product;
-import org.frias.avalon.Producto.modules.adminsaas.entities.ProductOutlet;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.frias.avalon.fabric.convertermasa.factory.ConvertFactoryService;
 import org.frias.avalon.fabric.discountpath.interfaces.Strategy;
 import org.frias.avalon.fabric.priceCalculator.PriceCalculator;
-import org.frias.avalon.promociones.dtos.DiscountTempResult;
+import org.frias.avalon.domain.inventory.promo.dtos.DiscountTempResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

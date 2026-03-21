@@ -1,10 +1,9 @@
 package org.frias.avalon.empresasucursal.sucursal.controllers;
 
 
-import org.frias.avalon.Producto.modules.adminsaas.dtos.ProductResponseDto;
 import org.frias.avalon.empresasucursal.sucursal.dtos.OutletRequestNewDto;
 import org.frias.avalon.empresasucursal.sucursal.dtos.OutletResponseDto;
-import org.frias.avalon.empresasucursal.sucursal.entities.Outlet;
+import org.frias.avalon.empresasucursal.sucursal.dtos.OutletsRequestMap;
 import org.frias.avalon.empresasucursal.sucursal.services.interfaces.ServiceSucursal;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,12 +25,20 @@ private final ServiceSucursal serviceSucursal;
     public List<OutletResponseDto> getAll() {
         return serviceSucursal.getAll();
  }
+
     @PostMapping("/add")
     public OutletResponseDto add(@RequestBody OutletRequestNewDto outletDto) {
         return serviceSucursal.save(outletDto);
     }
 
 
+    @PostMapping("/nearby")
+    public List<OutletResponseDto> getOutletsNerby(@RequestBody OutletsRequestMap outletDto) {
+        System.out.println(outletDto.toString());
+
+
+        return serviceSucursal.searchNearbyStores(outletDto);
+    }
 
 
 }
