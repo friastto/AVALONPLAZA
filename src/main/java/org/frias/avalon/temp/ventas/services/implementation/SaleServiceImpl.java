@@ -1,0 +1,201 @@
+package org.frias.avalon.temp.ventas.services.implementation;
+
+import jakarta.persistence.EntityNotFoundException;
+import org.frias.avalon.temp.inventory.Producto.modules.adminoulet.repository.ProductoOutletRepository;
+import org.frias.avalon.temp.inventory.Producto.modules.adminsaas.entities.Product;
+import org.frias.avalon.temp.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
+import org.frias.avalon.temp.inventory.Producto.modules.adminsaas.services.interfaces.ProductoService;
+import org.frias.avalon.temp.exeptions.InsufficientStockException;
+import org.frias.avalon.temp.fabric.convertermasa.factory.ConvertFactoryService;
+import org.frias.avalon.temp.fabric.discountpath.DiscountPathRoleFactory;
+import org.frias.avalon.domain.masterdata.entities.MasterData;
+import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataSalesService;
+import org.frias.avalon.temp.person.entity.Person;
+import org.frias.avalon.temp.person.repository.PersonaRepository;
+import org.frias.avalon.temp.person.services.interfaces.PersonService;
+import org.frias.avalon.temp.inventory.promo.dtos.DiscountTempResult;
+import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
+import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepository;
+import org.frias.avalon.temp.ventas.dtos.SaleDetailRequest;
+import org.frias.avalon.temp.ventas.dtos.SaleRequest;
+import org.frias.avalon.temp.ventas.dtos.SalesResponseDto;
+import org.frias.avalon.temp.ventas.entities.Sale;
+import org.frias.avalon.temp.ventas.entities.SaleDetail;
+import org.frias.avalon.temp.ventas.mappers.SalesMapperService;
+import org.frias.avalon.temp.ventas.repositories.SaleRepository;
+import org.frias.avalon.temp.ventas.services.interfaces.SaleService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.*;
+
+@Service
+public class SaleServiceImpl implements SaleService {
+
+    private final ProductoService productoService;
+    private final SaleRepository saleRepository;
+    private final ProductoOutletRepository productoOutletRepository;
+
+    private final UserRepository userRepository;
+
+    private final PersonService personaService;
+
+    private final MasterDataSalesService masterDataSalesService;
+    private final ConvertFactoryService convertFactoryService;
+
+    private  final DiscountPathRoleFactory priceCalculator;
+
+    private final Set<String> unitMasaPesable = Set.of("KG","LB","GR");
+
+    private final SalesMapperService salesMapperService;
+
+    public SaleServiceImpl(ProductoService productoService, SaleRepository saleRepository, ProductoOutletRepository productoOutletRepository, UserRepository userRepository, PersonaRepository personaRepository, PersonService personaService, MasterDataSalesService masterDataSalesService, ConvertFactoryService convertFactoryService, DiscountPathRoleFactory priceCalculator, SalesMapperService salesMapperService) {
+        this.productoService = productoService;
+        this.saleRepository = saleRepository;
+        this.productoOutletRepository = productoOutletRepository;
+        this.userRepository = userRepository;
+        this.personaService = personaService;
+        this.masterDataSalesService = masterDataSalesService;
+
+        this.convertFactoryService = convertFactoryService;
+
+        this.priceCalculator = priceCalculator;
+        this.salesMapperService = salesMapperService;
+    }
+
+
+
+    @Transactional
+    @Override
+    public SalesResponseDto salesProccesor(SaleRequest saleRequest) {
+
+        Person customer;
+
+        try{
+            customer = personaService.findByNumberId(saleRequest.customerId());
+
+
+        }catch(EntityNotFoundException ex){
+            String CUSTOMER_GENERIC_ID = "999";
+            customer = personaService.findByNumberId(CUSTOMER_GENERIC_ID);
+        }
+
+
+        UserAvalon employee = userRepository.findById(saleRequest.enployeeId()).orElseThrow();
+
+        MasterData metodPay = masterDataSalesService.findById(saleRequest.metodoPagoId());
+
+        MasterData status = masterDataSalesService.searchByShortName("COM");
+
+        Sale saleEntity = new Sale();
+
+        saleEntity.setCustomerId(customer);
+
+        saleEntity.setEnployeeId(employee);
+
+        saleEntity.setPaymentMethodId(metodPay);
+
+        saleEntity.setAmountReceived(saleRequest.amountReceived());
+
+        saleEntity.setSaleDateAt(LocalDateTime.now());
+
+        List<String> roles = userRepository.findRolesByPersonNumberId(saleRequest.customerId());
+
+       // String descripcionDetalils;
+       List<SaleDetail> details = new ArrayList<>();
+
+        for (SaleDetailRequest sd : saleRequest.saleDetails()){
+
+           String quantityCleaned = sd.quantity().contains(",")||sd.quantity().contains(".")
+            ? sd.quantity().replace(",",".")
+                   : sd.quantity();
+
+            ProductOutlet productOutlet = productoOutletRepository.findByProductIdAndOutletId(
+                    sd.productId(), 1L).orElseThrow(() -> new EntityNotFoundException("Product not found")
+            );
+
+
+                     Product productEntity = productOutlet.getCompanyProduct().getProduct();
+
+            Integer cantRequired;
+
+            if (!unitMasaPesable.contains(productEntity.getUnit().getShortName())
+                    && (sd.quantity().contains(".")||sd.quantity().contains(","))
+            )
+                throw new IllegalArgumentException(
+                        "la cantidad ingresada no corresponde a la unidad de medida del producto : "
+                                + productEntity.getUnit().getShortName()
+                );
+
+            if(unitMasaPesable.contains(productEntity.getUnit().getShortName())) {
+
+                cantRequired = convertFactoryService.convertTo(
+                        quantityCleaned
+                        , productEntity.getUnit().getShortName()
+                        , false
+                ).intValue();
+            }else {
+                cantRequired = Integer.valueOf(sd.quantity());
+            }
+
+          if (productOutlet.getStock() < cantRequired)
+              throw new InsufficientStockException(
+                      "Stock insuficiente *code :" + productEntity.getBarcodes().get(1)+ " *name: " + productEntity.getName()
+              );
+
+            SaleDetail sdEntity = new SaleDetail();
+
+            sdEntity.setProduct(productEntity);
+
+
+            DiscountTempResult precioUnitario = priceCalculator.calculate(productOutlet,roles, "1");
+
+            DiscountTempResult subTotal = priceCalculator.calculate(productOutlet,roles, quantityCleaned);
+
+            System.out.println("\n****************************\n" +
+                    subTotal.description()
+                    +
+            "\n****************************\n");
+            sdEntity.setQuantity(cantRequired);
+
+            sdEntity.setUnitPrice(precioUnitario.priceFinal());
+
+            //System.out.println(precioUnitario.priceFinal());
+
+            sdEntity.setSubTotal(subTotal.priceFinal());
+
+            sdEntity.setSale(saleEntity);
+            sdEntity.setProduct(productEntity);
+
+            System.out.println("se redujo el stock de "+productEntity.getName() + " cantActual ( " + productOutlet.getStock()+" - "+cantRequired +" = "+(productOutlet.getStock()-cantRequired)+" ) \n");
+
+            productOutlet.setStock(productOutlet.getStock() - cantRequired);
+
+            details.add(sdEntity);
+
+        };
+
+        saleEntity.setDetails(details);
+
+        BigDecimal valueTotalSale = saleEntity.getDetails().stream()
+                .map(SaleDetail::getSubTotal)
+                .filter(Objects::nonNull) // Seguridad por si algún subtotal es null
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        saleEntity.setTotal(valueTotalSale);
+
+        saleEntity.setAmountReturned(saleEntity.getTotal().subtract(saleEntity.getAmountReceived()));
+        saleEntity.setStatusId(status);
+
+        if (saleRequest.amountReceived().compareTo(valueTotalSale) < 0) {
+            throw new RuntimeException("El monto recibido ($" + saleRequest.amountReceived() +
+                    ") es insuficiente para cubrir el total ($ " + valueTotalSale + ")");
+        }
+
+        return salesMapperService.toResponseDto(saleRepository.save(saleEntity));
+    }
+
+
+}
