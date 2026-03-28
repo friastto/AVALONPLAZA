@@ -3,10 +3,12 @@ package org.frias.avalon.domain.usergeneral.useravalon.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import org.frias.avalon.domain.company.entities.Company;
-import org.frias.avalon.temp.empresasucursal.sucursal.entities.Outlet;
-import org.frias.avalon.temp.empresasucursal.tenant.config.TenantEntity;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
-import org.frias.avalon.temp.person.entity.Person;
+import org.frias.avalon.domain.outlet.entities.Outlet;
+import org.frias.avalon.core.tenant.config.TenantEntity;
+import org.frias.avalon.domain.person.entity.Person;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users_Avalon")
@@ -49,6 +51,19 @@ public class UserAvalon extends TenantEntity {
     @ManyToOne
     @JoinColumn(name = "outlet_id", foreignKey = @ForeignKey(name = "fk_user_outletId"))
     private Outlet outletId;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
 }
 

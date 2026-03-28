@@ -42,9 +42,9 @@ public class MasterDataController {
 
 
     @GetMapping("/search/v2")
-    public MasterData getByAllWithStatusActive() {
+    public List<MasterData> getByAllWithStatusActive() {
 
-        return mdservice.searchByShortName(shortName);
+        return mdservice.getAllWithStatusActive();
     }
 
 }

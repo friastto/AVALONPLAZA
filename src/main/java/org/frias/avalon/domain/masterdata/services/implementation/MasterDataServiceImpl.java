@@ -59,7 +59,7 @@ public class MasterDataServiceImpl implements MasterDataService,
         for (MasterDataNewDto request : masterDataRequestList) {
 
             savedEntities.add(create(request));
-        };
+        }
 
         return   savedEntities;
     }

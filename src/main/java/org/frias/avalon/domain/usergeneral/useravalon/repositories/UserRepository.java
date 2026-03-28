@@ -1,8 +1,8 @@
 package org.frias.avalon.domain.usergeneral.useravalon.repositories;
 
 
-import org.frias.avalon.temp.empresasucursal.tenant.config.TenantAware;
 import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
+import org.frias.avalon.core.tenant.config.TenantAware;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,7 +18,7 @@ public interface UserRepository extends JpaRepository<UserAvalon, Long> {
     // Esta consulta busca el usuario por la identificación de la persona asociada
     // y verifica que el usuario esté activo.
 
-
+    List<UserAvalon> findAllByPersonId(Long personId);
 
     @Query("""
 SELECT u FROM UserAvalon u
@@ -43,4 +43,37 @@ SELECT u FROM UserAvalon u
         AND u.statusId.shortName =   'ACT'
     """)
     List<String>findRolesByPersonNumberId(@Param("numberId") String numberId);
+
+
+    @Query("""
+        SELECT u
+        FROM UserAvalon u 
+        JOIN u.companyId c
+        WHERE c.id = :id 
+        AND u.statusId.shortName =   'ACT'
+            ORDER BY u.userName ASC
+        
+    """)
+    List<UserAvalon>getAllEmployeesOnlyCompany(@Param("id") Long id);
+
+    @Query("""
+    SELECT u.userName 
+    FROM UserAvalon u 
+    WHERE u.outletId.id = :id 
+      AND u.statusId.shortName = 'ACT'
+    ORDER BY u.userName ASC
+""")
+    List<UserAvalon>getAllEmployeesOnlyOutlet(@Param("id") Long id);
+
+    @Query("""
+    SELECT u 
+    FROM UserAvalon u 
+    LEFT JOIN u.outletId o
+    JOIN u.companyId c
+    WHERE c.id = :id 
+      AND u.statusId.shortName = 'ACT'
+    ORDER BY o.id ASC NULLS FIRST, u.userName ASC
+""")
+    List<UserAvalon>getAllEmployesCompany(@Param("id") Long id);
+
 }

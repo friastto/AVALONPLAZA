@@ -2,31 +2,29 @@ package org.frias.avalon.domain.usergeneral.useravalon.services.implementation;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import org.frias.avalon.temp.jwt.util.JwtUtils;
-import org.frias.avalon.domain.company.A.CompanyService;
-import org.frias.avalon.temp.empresasucursal.tenant.tenantcontex.TenantContext;
-import org.frias.avalon.temp.features.auth.dtos.UserValidateCredentials;
-import org.frias.avalon.domain.usergeneral.useravalon.dtos.UserLinkPersonRequestDto;
-import org.frias.avalon.domain.usergeneral.useravalon.dtos.UserRequestNewDto;
-import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
-import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepository;
-import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.UsersService;
-import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.UsuarioServiceValidate;
+import org.frias.avalon.domain.company.facade.BaseTenantService;
+import org.frias.avalon.domain.company.services.interfaces.CompanyService;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataService;
-import org.frias.avalon.temp.person.entity.Person;
-import org.frias.avalon.temp.person.services.interfaces.PersonService;
-import org.frias.avalon.temp.util.PassSecure;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.frias.avalon.domain.usergeneral.useravalon.dtos.request.UserNewLinkPersonDto;
+import org.frias.avalon.domain.usergeneral.useravalon.dtos.request.UserNewDto;
+import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
+import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepository;
+import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.EmployeeService;
+import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.UsersService;
+import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.UsuarioServiceValidate;
+import org.frias.avalon.domain.usergeneral.auth.dtos.request.UserValidateCredentials;
+import org.frias.avalon.core.jwt.util.JwtUtils;
+import org.frias.avalon.domain.person.entity.Person;
+import org.frias.avalon.domain.person.services.interfaces.PersonService;
+import org.frias.avalon.core.util.PassSecure;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.List;
 
 @Service
-public class UsersServiceImpl implements UsersService, UsuarioServiceValidate {
+public class UsersServiceImpl extends BaseTenantService implements UsersService, UsuarioServiceValidate, EmployeeService {
 
 
     private final UserRepository userRepository;
@@ -54,18 +52,6 @@ public class UsersServiceImpl implements UsersService, UsuarioServiceValidate {
     }
 
     @Override
-    public UserAvalon getUserEmployeeStatus(String numberId) {
-
-        Optional<UserAvalon> user = userRepository.findActiveEmployeeByNumberId(numberId);
-
-
-        if (user.isPresent()) {
-            return user.get();
-        }
-        return null;
-    }
-
-    @Override
     public UserAvalon searchById(Long id) {
 
        return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("usuario no encontrado"));
@@ -73,7 +59,7 @@ public class UsersServiceImpl implements UsersService, UsuarioServiceValidate {
 
     @Transactional
     @Override
-    public UserAvalon saveUserAndPerson(UserRequestNewDto userCreate) {
+    public UserAvalon createUserAndPerson(UserNewDto userCreate) {
 
         // se construye la entidad Usuario
 
@@ -82,114 +68,102 @@ public class UsersServiceImpl implements UsersService, UsuarioServiceValidate {
                     throw new EntityExistsException("el nombre de usuario no esta disponible");
                 });
 
-        Person personEntity = personService.save(userCreate.personId());
+        Person personEntity = personService.save(userCreate.newPersonData());
 
-        return saveUserAndCreateLinkPerson(new UserLinkPersonRequestDto(
+        return createUserAndCreateLinkPerson(new UserNewLinkPersonDto(
                 userCreate.userName(),
                 userCreate.password(),
                 userCreate.role(),
-                personEntity.getId()
+                personEntity.getId(),
+                userCreate.companyId(),
+                userCreate.outletId()
         ));
 
     }
 
+    @Override
+    public UserAvalon create(UserNewLinkPersonDto request) {
+
+
+
+
+
+        return null;
+    }
+
     @Transactional
     @Override
-    public UserAvalon saveUserAndCreateLinkPerson(UserLinkPersonRequestDto userCreate) {
+    public UserAvalon createUserAndCreateLinkPerson(UserNewLinkPersonDto userCreate) {
+
+        // 1. OBTENCIÓN DE CONTEXTOS (Usando BaseTenantService)
+        Long idCompanyContext = getCompanyId();
+        String operatorRol = getRol();
+
+        // 2. DATOS DEL NUEVO USUARIO Y SU JERARQUÍA
+        MasterData rolNewUser = masterDataService.searchById(userCreate.roleId());
+        MasterData rolRootNew = masterDataService.getRootBranch(rolNewUser.getId(), "ROL");
+        String rootNewName = rolRootNew.getShortName();
 
         UserAvalon uEntity = new UserAvalon();
-        MasterData rolNewUser = null;
 
-        // 1. Obtener el contexto de seguridad actual
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        // Identificar si es un registro público (sin login)
-        boolean isAnonymous = auth == null ||
-                !auth.isAuthenticated() ||
-                auth instanceof AnonymousAuthenticationToken;
-
-        if (!isAnonymous) {
-
-            String token = (String) auth.getCredentials();
-
-            String operatorRolName = jwtUtils.extractRol(token);
-
-            Long idCompnayContext = TenantContext.getTenantId(); // Viene del Header X-Tenant-ID
-
-            if (operatorRolName != null) {
-
-                // Obtenemos el objeto del rol y su raíz jerárquica (ADMIN, DIREC, GERENTE, OPT, etc.)
-                MasterData rolOperator = masterDataService.searchByShortName(operatorRolName);
-
-                MasterData rolRootOperator = masterDataService.getRootBranch(rolOperator.getId(), "ROL");
-
-                String rootName = rolRootOperator.getShortName();
-
-                // Buscamos el rol que se quiere asignar al nuevo usuario
-                rolNewUser = masterDataService.searchById(userCreate.roleId());
-
-                MasterData rolRootNew = masterDataService.getRootBranch(rolNewUser.getId(), "ROL");
-
-                String rootNewName = rolRootNew.getShortName();
-
-                // --- MOTOR DE REGLAS DE JERARQUÍA (EL SWITCH INTELIGENTE) ---
-                switch (rootName) {
-
-                    case "ADMIN":
-                        // El ADMIN de Avalon (SaaS) opera con TenantId en NULL
-                        if (idCompnayContext == null) {
-                            uEntity.setCompanyId(null);
-                        } else {
-                            // Un ADMIN de una Company no puede crear otros ADMINS o Roles Master
-                            throw new SecurityException("Acceso denegado: Jerarquía insuficiente para crear este perfil.");
-                        }
-                        break;
-
-                    case "DIREC":
-                    case "GERENTE":
-                        // Validación: No pueden crear ADMINS, ni CLIENTES/USUARIOS globales
-                        if (rootNewName.equals("ADMIN") || rootNewName.equals("CLIENTE") || rootNewName.equals("USUARIO")) {
-                            throw new SecurityException("No tienes permiso para asignar roles fuera del ámbito de empresa.");
-                        }
-
-                        // Validación: Un GERENTE no puede crear un DIRECTOR
-                        if (rootName.equals("GERENTE") && rootNewName.equals("DIREC")) {
-                            throw new SecurityException("Un Gerente no puede crear un perfil de rango Superior (Directivo).");
-                        }
-
-                        // Sellar el usuario a la empresa del operador
-                        if (idCompnayContext != null) {
-                            uEntity.setCompanyId(companyService.findById(idCompnayContext));
-                        } else {
-                            // Si es Directivo de Avalon Staff (SaaS), puede crear staff global
-                            uEntity.setCompanyId(null);
-                        }
-                        break;
-
-                    case "OPT":
-                    case "CLIENTE":
-                    case "USUARIO":
-                        // Estos roles no tienen permitido crear a nadie por seguridad
-                        throw new SecurityException("Tu rol actual no permite la creación de nuevos usuarios.");
-
-                    default:
-                        // Caso de seguridad por defecto
-                        rolNewUser = masterDataService.searchByShortName("INVITADO");
-                        uEntity.setCompanyId(null);
-                }
-            }
-        } else {
-            // --- REGISTRO PÚBLICO (CASO B: Usuario que entra por la Web/App solo) ---
+        // 3. MOTOR DE REGLAS SIMPLIFICADO
+        if (operatorRol == null) {
+            // --- REGISTRO PÚBLICO / ANÓNIMO ---
             rolNewUser = masterDataService.searchByShortName("INVITADO");
-            uEntity.setCompanyId(null); // No pertenece a ninguna empresa hasta que compre
+            uEntity.setCompanyId(null);
+        }
+        else if (isMasterStaff()) {
+            // --- CASO STAFF AVALON (ROOT) ---
+            // Tú decides si el usuario es global (null) o de una empresa específica
+            uEntity.setCompanyId(userCreate.companyId() != null ?
+                    companyService.searchById(userCreate.companyId()) : null);
+        }
+        else if (idCompanyContext != null) {
+            // --- CASO EMPRESA CLIENTE (Gerentes/Directores) ---
+
+            // SEGURIDAD: Un cliente no puede crear roles del Staff de Avalon
+            if (ROLES_AVALON.contains(rootNewName)) {
+                throw new SecurityException("No puedes asignar roles de nivel Master (Avalon Staff).");
+            }
+
+            // JERARQUÍA: Un Gerente no puede crear un Director (Jerarquía Superior)
+            if ("GERENTE".equals(operatorRol) && "DIREC".equals(rootNewName)) {
+                throw new SecurityException("Jerarquía insuficiente: Un Gerente no puede crear Directivos.");
+            }
+
+            // SELLO DE TENANT: Hereda obligatoriamente la empresa del creador
+            uEntity.setCompanyId(companyService.searchById(idCompanyContext));
+        }
+        else {
+            throw new SecurityException("Tu rol actual (" + operatorRol + ") no tiene permisos de creación.");
+        }
+        // --- NUEVO: 4. VALIDACIÓN DE IDENTIDAD DUAL (REGLA DE ROBERTO) ---
+        // Buscamos todos los usuarios asociados a esa persona
+        List<UserAvalon> existingUsers = userRepository.findAllByPersonId(userCreate.personId());
+
+        for (UserAvalon u : existingUsers) {
+            Long userCompanyId = (u.getCompanyId() != null) ? u.getCompanyId().getId() : null;
+
+            // Caso A: Ya tiene usuario de empleado en esta misma empresa
+            if (idCompanyContext != null && idCompanyContext.equals(userCompanyId)) {
+                throw new EntityExistsException("Esta persona ya tiene un usuario de empleado en esta empresa (" + u.getUserName() + ").");
+            }
+
+            // Caso B: Ya es empleado de OTRA empresa (bloqueo por seguridad multi-tenant)
+            if (userCompanyId != null && !userCompanyId.equals(idCompanyContext)) {
+                throw new SecurityException("Esta persona ya está vinculada como empleado en otra organización.");
+            }
+
+            // NOTA: Si userCompanyId es NULL, es un INVITADO.
+            // El bucle lo ignora y permite que el flujo continúe para crear el nuevo usuario de empleado.
         }
 
-        // 2. Doble check de disponibilidad del nombre de usuario
+        // 4. VALIDACIONES DE INTEGRIDAD
         userRepository.findByUserName(userCreate.userName()).ifPresent(u -> {
-            throw new EntityExistsException("El nombre de usuario '" + userCreate.userName() + "' ya está en uso.");
+            throw new EntityExistsException("El nombre de usuario '" + userCreate.userName() + "' ya existe.");
         });
 
-        // 3. Construcción y persistencia de la entidad
+        // 5. CONSTRUCCIÓN Y PERSISTENCIA
         Person personEntity = personService.searchById(userCreate.personId());
 
         uEntity.setPerson(personEntity);
@@ -199,15 +173,13 @@ public class UsersServiceImpl implements UsersService, UsuarioServiceValidate {
         uEntity.setHashPassword(PassSecure.hashPassword(userCreate.password(), uEntity.getHashSalt()));
         uEntity.setStatusId(masterDataService.searchByShortName("ACT"));
 
-        try {
-            return userRepository.save(uEntity);
-
-        } catch (Exception e) {
-            // Aquí podrías agregar un log de error (e.getMessage())
-            return null;
-        }
+        return userRepository.save(uEntity);
     }
 
+
+
+
+    @Transactional
     @Override
     public UserAvalon clear(Long id) {
 
@@ -220,6 +192,7 @@ public class UsersServiceImpl implements UsersService, UsuarioServiceValidate {
         return userRepository.save(ua);
     }
 
+    @Transactional
     @Override
     public UserAvalon changeStatus(Long idUser,Long idStatus ) {
 
@@ -232,6 +205,8 @@ public class UsersServiceImpl implements UsersService, UsuarioServiceValidate {
         return userRepository.save(ua);
     }
 
+
+
     @Override
     public Boolean validateUser(UserValidateCredentials userValidateCredentials) {
 
@@ -242,6 +217,41 @@ public class UsersServiceImpl implements UsersService, UsuarioServiceValidate {
 
         return PassSecure.verifyPassword(userValidateCredentials.password(), user.getHashSalt(), user.getHashPassword());
     }
+
+
+    /**
+     * metodos del contexto de las empresas
+     * @param idCompany
+     * @return
+     */
+
+    @Override
+    public List<UserAvalon> getAllEmployeesOnlyCompany(Long idCompany) {
+
+        List<UserAvalon> userAvalonList = userRepository.getAllEmployeesOnlyCompany(idCompany);
+
+        return userAvalonList.isEmpty() ? userAvalonList: List.of();
+    }
+
+    @Override
+    public List<UserAvalon> getAllEmployeesOnlyOutlet(Long idOutlet) {
+
+        List<UserAvalon> userAvalonList = userRepository.getAllEmployeesOnlyOutlet(idOutlet);
+
+        return userAvalonList.isEmpty() ? userAvalonList: List.of();
+    }
+
+    @Override
+    public List<UserAvalon> getAll(Long idCompany) {
+
+        List<UserAvalon> userAvalonList = userRepository.getAllEmployesCompany(idCompany);
+
+        return userAvalonList.isEmpty() ? userAvalonList: List.of();
+    }
+
+
+
+
 
 }
 

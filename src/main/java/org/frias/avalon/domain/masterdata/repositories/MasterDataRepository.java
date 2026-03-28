@@ -23,7 +23,7 @@ public interface MasterDataRepository extends JpaRepository<MasterData, Long> {
     @Query("""
                select m from MasterData m
                where m.id = :id
-               and m.statusId = (select s.id from MasterData s where s.shortName = "ACT")   
+               and m.statusId = (select s.id from MasterData s where s.shortName = 'ACT')
             """)
     Optional<MasterData> findByIdAndStatusActive(Long id);
 

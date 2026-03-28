@@ -4,10 +4,10 @@ package org.frias.avalon.domain.company.entities;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
-import org.frias.avalon.temp.empresasucursal.sucursal.entities.Outlet;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
+import org.frias.avalon.domain.outlet.entities.Outlet;
 
-
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,9 +39,26 @@ public class Company {
     private MasterData status;
 
 
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
     @JsonManagedReference
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Outlet> outlets = new ArrayList<>();
+
+    public Company(Long id){ this.id = id; }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
 
     public void addSucursal(Outlet s) {
         s.setEmpresaId(this.id);
@@ -49,4 +66,6 @@ public class Company {
 
         outlets.add(s);
     }
+
+
 }

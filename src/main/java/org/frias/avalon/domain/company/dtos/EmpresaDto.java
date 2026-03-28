@@ -2,11 +2,6 @@ package org.frias.avalon.domain.company.dtos;
 
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import org.frias.avalon.temp.empresasucursal.sucursal.dtos.OutletRequestNewDto;
-
-import java.util.List;
 
 record EmpresaDto (
 
