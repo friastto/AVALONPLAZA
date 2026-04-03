@@ -42,6 +42,8 @@ public class Person {
 
     private Long phoneNumber;
 
+    private String email;
+
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "status_id", foreignKey = @ForeignKey(name = "fk_person_masterdata_statusID"))

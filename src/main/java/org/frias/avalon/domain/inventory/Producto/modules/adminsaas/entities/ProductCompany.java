@@ -11,6 +11,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,13 +42,15 @@ public class ProductCompany extends TenantEntity {
 
         // Personalización a nivel empresa
         private String customName;
+
         private String customDescription;
+
+        private BigDecimal customPrice;
+
         private String customImageUrl;
 
         @OneToMany(mappedBy = "productCompany", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
         private List<Promotion> promotions;
-
-
 
         // Sucursal que propuso el producto (si vino de una sucursal)
         @ManyToOne(fetch = FetchType.LAZY)
@@ -76,4 +79,7 @@ public class ProductCompany extends TenantEntity {
         protected void onUpdate() {
                 this.updatedAt = LocalDateTime.now();
         }
+
+        public void addBarcode(ProductBarcode bp){this.barcodes.add(bp); }
+
 }

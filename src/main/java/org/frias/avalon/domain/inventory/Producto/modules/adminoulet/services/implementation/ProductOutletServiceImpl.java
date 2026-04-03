@@ -1,5 +1,6 @@
 package org.frias.avalon.domain.inventory.Producto.modules.adminoulet.services.implementation;
 
+import org.frias.avalon.domain.company.facade.BaseTenantService;
 import org.frias.avalon.domain.outlet.dtos.request.OutletMap;
 import org.frias.avalon.domain.outlet.dtos.response.OutletsWhitProductMap;
 import org.frias.avalon.domain.outlet.entities.Outlet;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 
 @TenantAware
 @Service
-public class ProductOutletServiceImpl implements ProductOutletService {
+public class ProductOutletServiceImpl extends BaseTenantService implements ProductOutletService {
 
     private final ProductoOutletRepository productoOutletRepository;
     private final ProductoMapperService productoMapperService;
@@ -37,7 +38,7 @@ public class ProductOutletServiceImpl implements ProductOutletService {
     @Override
     public List<ProductOutletResponseDto> getAllProductCatalog() {
 
-        Long outLetId = TenantContext.getTenantOutletId();
+        Long outLetId = getValidatedOutletId();
 
         return getProductCatalogToOutlet(outLetId);
     }
@@ -45,9 +46,7 @@ public class ProductOutletServiceImpl implements ProductOutletService {
     @Override
     public List<ProductOutletResponseDto> getProductCatalogToOutlet(Long id) {
 
-        List<ProductOutlet> productOutlets = productoOutletRepository.findAllByOutletIdWithHierarchy(
-                id
-        );
+        List<ProductOutlet> productOutlets = productoOutletRepository.findAllByOutletIdWithHierarchy(id);
 
         return productOutlets.stream()
                 .map(productOutletMapperService::toDto)

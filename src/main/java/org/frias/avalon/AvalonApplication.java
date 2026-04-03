@@ -5,8 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 
 @SpringBootApplication
-// 👈 ASEGÚRATE QUE ESTE SEA EL PADRE DE TODO
-//@EnableAspectJAutoProxy
 public class AvalonApplication {
 
 	public static void main(String[] args) {

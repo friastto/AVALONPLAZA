@@ -74,8 +74,5 @@ public class ProductOutlet extends TenantEntity {
                 this.updatedAt = LocalDateTime.now();
         }
 
-
-
-
     // }
 }

@@ -6,27 +6,23 @@ import jakarta.validation.constraints.Pattern;
 
 import java.math.BigDecimal;
 
-public record ProductRequestCreate(
+public record ProductCompanyRequestCreate(
 
-        @NotBlank(message = "producto sin codigo de barras")
         String codeBar,
 
-        @NotBlank(message="producto sin nombre")
+        Long productId,
+
         String name,
 
-        @NotBlank(message = "producto sin descripcion")
         String desc,
 
-        @NotBlank(message = "producto sin precio")
         BigDecimal price,
 
-        @NotBlank(message = "producto sin categoria")
         Long categoryId,
 
-        @NotBlank(message = "producto sin unidad de medida")
-         Long unitId,
+        Long unitId,
 
-        @jakarta.validation.constraints.Pattern(
+        @Pattern(
                 regexp = "^[0-9]+([.,][0-9]+)?$",
                 message = "el Stock debe contener solo números y un punto o coma como decimal"
         )

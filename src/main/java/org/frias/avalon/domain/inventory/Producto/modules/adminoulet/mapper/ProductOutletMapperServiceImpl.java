@@ -5,6 +5,8 @@ import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.Pro
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 public class ProductOutletMapperServiceImpl implements ProductOutletMapperService {
 
@@ -22,7 +24,7 @@ public class ProductOutletMapperServiceImpl implements ProductOutletMapperServic
                 productOutlet.getLocalImageUrl() != null ? productOutlet.getLocalImageUrl() : productOutlet.getCompanyProduct().getProduct().getImageUrl(),
                 productOutlet.getCompanyProduct().getProduct().getCategory().getFullName(),
                 productOutlet.getCompanyProduct().getProduct().getUnit().getFullName(),
-                productOutlet.getLocalPrice(),
+                productOutlet.getLocalPrice() != null && productOutlet.getLocalPrice().compareTo(BigDecimal.ZERO) > 0 ? productOutlet.getLocalPrice(): productOutlet.getCompanyProduct().getCustomPrice(),
                 productOutlet.getStock(),
                 // Transformamos la lista de objetos Barcode a lista de Strings
                 productOutlet.getCompanyProduct().getBarcodes()

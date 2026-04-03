@@ -1,5 +1,6 @@
 package org.frias.avalon.domain.inventory.Producto.modules.adminoulet.controller;
 
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductCompanyRequestCreate;
 import org.frias.avalon.domain.outlet.dtos.request.OutletMap;
 import org.frias.avalon.domain.outlet.dtos.response.OutletsWhitProductMap;
 import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.ProductOutletResponseDto;
@@ -20,10 +21,10 @@ public class ProductOutletController {
         this.productOutletService = productOutletService;
     }
 
-@GetMapping("all")
-    public List<ProductOutletResponseDto> getAll() {
+@GetMapping("/all/catatalog/outlet/{id}")
+    public List<ProductOutletResponseDto> getAll(@PathVariable Long id) {
 
-        return productOutletService.getAllProductCatalog() ;
+        return productOutletService.getProductCatalogToOutlet(id) ;
 }
 
     @GetMapping("/catalog/{id}")
@@ -36,4 +37,10 @@ public class ProductOutletController {
     public List<OutletsWhitProductMap> getOutletsByProduct(@RequestBody OutletMap product) {
         return productOutletService.getOutletProductByNameProduct(product);
     }
+
+
+
+
+
+
 }

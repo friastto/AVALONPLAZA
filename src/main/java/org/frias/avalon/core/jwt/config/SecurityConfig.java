@@ -46,6 +46,7 @@ public class SecurityConfig {
 
 
                         .requestMatchers("/productOutlet/**").permitAll()
+
                         .requestMatchers("/masterData/**").permitAll()
                         /*
                         .requestMatchers("/master/create/bulk").permitAll() // crear tipos público

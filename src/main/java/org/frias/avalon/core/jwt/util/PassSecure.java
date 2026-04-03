@@ -31,7 +31,7 @@ public class PassSecure {
     }
 
     // Genera el hash de la contraseña con el salt
-    public static String hashPassword(String password, String salt) throws InvalidKeySpecException {
+    public static String hashPassword(String password, String salt) {
         try {
             PBEKeySpec spec = new PBEKeySpec(
                     password.toCharArray(),
@@ -42,6 +42,7 @@ public class PassSecure {
             SecretKeyFactory skf = SecretKeyFactory.getInstance(ALGORITHM);
             byte[] hash = skf.generateSecret(spec).getEncoded();
             return Base64.getEncoder().encodeToString(hash);
+
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new RuntimeException("Error al hashear la contraseña", e);
         }

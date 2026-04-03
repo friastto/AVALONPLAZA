@@ -28,7 +28,9 @@ public class ProductoController {
 
         return null ;//productoService.save(product);
 
-    }@GetMapping("/search/v2")
+    }
+
+    @GetMapping("/search/v2")
     public ProductResponseDto searchProduct(@RequestParam String codeBar) {
 
         return productoService.findByCodeBar(codeBar);
