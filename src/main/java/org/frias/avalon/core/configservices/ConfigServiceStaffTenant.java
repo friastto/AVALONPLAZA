@@ -1,7 +1,5 @@
 package org.frias.avalon.core.configservices;
 
-import org.frias.avalon.core.tenant.tenantcontex.TenantContext;
-
 public abstract class ConfigServiceStaffTenant {
    /* // 1. ¿Es del Staff de Avalon? (Los dueños)
     protected boolean isSaaSStaff() {

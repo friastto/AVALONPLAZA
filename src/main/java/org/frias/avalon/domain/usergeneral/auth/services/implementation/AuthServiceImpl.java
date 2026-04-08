@@ -1,13 +1,13 @@
 package org.frias.avalon.domain.usergeneral.auth.services.implementation;
 
 
-import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
-import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepository;
+import org.frias.avalon.core.jwt.util.JwtUtils;
+import org.frias.avalon.core.util.PassSecure;
 import org.frias.avalon.domain.usergeneral.auth.dtos.request.AuthRequest;
 import org.frias.avalon.domain.usergeneral.auth.dtos.response.AuthResponse;
 import org.frias.avalon.domain.usergeneral.auth.services.interfaces.AuthService;
-import org.frias.avalon.core.jwt.util.JwtUtils;
-import org.frias.avalon.core.util.PassSecure;
+import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
+import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepository;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;

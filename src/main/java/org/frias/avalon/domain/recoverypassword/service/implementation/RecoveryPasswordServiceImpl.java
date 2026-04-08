@@ -3,14 +3,13 @@ package org.frias.avalon.domain.recoverypassword.service.implementation;
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.jwt.util.PassSecure;
 import org.frias.avalon.domain.email.service.interfaces.EmailService;
+import org.frias.avalon.domain.person.entity.Person;
+import org.frias.avalon.domain.person.services.interfaces.PersonService;
 import org.frias.avalon.domain.recoverypassword.repository.PasswordResetRepository;
 import org.frias.avalon.domain.recoverypassword.service.entity.PasswordReset;
 import org.frias.avalon.domain.recoverypassword.service.interfaces.RecoveryPasswordService;
-import org.frias.avalon.domain.person.entity.Person;
-import org.frias.avalon.domain.person.services.interfaces.PersonService;
 import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
 import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepository;
-import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.UsersService;
 
 import java.time.LocalDateTime;
 import java.util.List;

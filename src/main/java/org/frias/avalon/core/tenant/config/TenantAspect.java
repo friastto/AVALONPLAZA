@@ -8,8 +8,8 @@ import jakarta.persistence.PersistenceContext;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.frias.avalon.core.tenant.tenantcontex.TenantContext;
 import org.frias.avalon.core.jwt.util.SecurityUtils;
+import org.frias.avalon.core.tenant.tenantcontex.TenantContext;
 import org.hibernate.Session;
 import org.springframework.stereotype.Component;
 

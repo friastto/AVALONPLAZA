@@ -1,11 +1,11 @@
 package org.frias.avalon.domain.promotion.fabric.discountpath;
 
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
+import org.frias.avalon.domain.inventory.promo.dtos.DiscountTempResult;
 import org.frias.avalon.domain.promotion.fabric.convertermasa.factory.ConvertFactoryService;
 import org.frias.avalon.domain.promotion.fabric.discountpath.components.DescuentoEmpleado;
 import org.frias.avalon.domain.promotion.fabric.discountpath.components.PromoCliente;
 import org.frias.avalon.domain.promotion.fabric.discountpath.components.SinDescuento;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
-import org.frias.avalon.domain.inventory.promo.dtos.DiscountTempResult;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

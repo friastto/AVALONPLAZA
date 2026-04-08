@@ -2,10 +2,10 @@ package org.frias.avalon.domain.usergeneral.useravalon.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.frias.avalon.core.tenant.config.TenantEntity;
 import org.frias.avalon.domain.company.entities.Company;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.outlet.entities.Outlet;
-import org.frias.avalon.core.tenant.config.TenantEntity;
 import org.frias.avalon.domain.person.entity.Person;
 
 import java.time.LocalDateTime;

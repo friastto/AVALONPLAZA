@@ -1,16 +1,12 @@
 package org.frias.avalon.domain.inventory.Producto.modules.adminoulet.controller;
 
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductCompanyRequestCreate;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseDto;
-import org.frias.avalon.domain.outlet.dtos.request.OutletMap;
-import org.frias.avalon.domain.outlet.dtos.response.OutletWithCatalogProductResponse;
-import org.frias.avalon.domain.outlet.dtos.response.OutletsWhitProductMap;
 import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.ProductOutletResponseDto;
 import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.services.interfaces.ProductOutletService;
+import org.frias.avalon.domain.outlet.dtos.request.OutletMap;
+import org.frias.avalon.domain.outlet.dtos.response.OutletsWhitProductMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 
 @RestController

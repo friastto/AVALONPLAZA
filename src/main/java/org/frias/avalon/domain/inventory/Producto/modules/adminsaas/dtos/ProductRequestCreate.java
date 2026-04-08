@@ -1,7 +1,6 @@
 package org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 import java.math.BigDecimal;

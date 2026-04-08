@@ -1,11 +1,11 @@
 package org.frias.avalon.domain.inventory.Producto.modules.adminoulet.services.interfaces;
 
+import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.ProductOutletResponseDto;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseDto;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.frias.avalon.domain.outlet.dtos.request.OutletMap;
 import org.frias.avalon.domain.outlet.dtos.response.OutletWithCatalogProductResponse;
 import org.frias.avalon.domain.outlet.dtos.response.OutletsWhitProductMap;
-import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.ProductOutletResponseDto;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
 
 import java.util.List;
 

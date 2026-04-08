@@ -2,6 +2,7 @@ package org.frias.avalon.domain.company.services.implementation;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import org.frias.avalon.core.tenant.tenantcontex.TenantContext;
 import org.frias.avalon.domain.company.dtos.CompanyRequestNewDto;
 import org.frias.avalon.domain.company.dtos.CompanyResponseDto;
 import org.frias.avalon.domain.company.dtos.UpdateCompanyDto;
@@ -13,8 +14,6 @@ import org.frias.avalon.domain.company.services.interfaces.CompanyService;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataService;
 import org.frias.avalon.domain.outlet.dtos.request.OutletNewDto;
-import org.frias.avalon.domain.outlet.entities.Outlet;
-import org.frias.avalon.core.tenant.tenantcontex.TenantContext;
 import org.frias.avalon.domain.outlet.services.interfaces.OutletService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;

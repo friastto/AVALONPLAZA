@@ -3,10 +3,10 @@ package org.frias.avalon.domain.inventory.promo.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.Product;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductCompany;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
+import org.frias.avalon.domain.masterdata.entities.MasterData;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

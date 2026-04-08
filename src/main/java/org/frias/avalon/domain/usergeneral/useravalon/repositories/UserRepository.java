@@ -1,8 +1,8 @@
 package org.frias.avalon.domain.usergeneral.useravalon.repositories;
 
 
-import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
 import org.frias.avalon.core.tenant.config.TenantAware;
+import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -2,11 +2,11 @@ package org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.frias.avalon.core.tenant.config.TenantEntity;
 import org.frias.avalon.domain.company.entities.Company;
+import org.frias.avalon.domain.inventory.promo.entities.Promotion;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.outlet.entities.Outlet;
-import org.frias.avalon.core.tenant.config.TenantEntity;
-import org.frias.avalon.domain.inventory.promo.entities.Promotion;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;

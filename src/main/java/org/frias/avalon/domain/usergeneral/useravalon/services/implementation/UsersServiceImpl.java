@@ -2,22 +2,22 @@ package org.frias.avalon.domain.usergeneral.useravalon.services.implementation;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import org.frias.avalon.core.jwt.util.JwtUtils;
+import org.frias.avalon.core.util.PassSecure;
 import org.frias.avalon.domain.company.facade.BaseTenantService;
 import org.frias.avalon.domain.company.services.interfaces.CompanyService;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataService;
-import org.frias.avalon.domain.usergeneral.useravalon.dtos.request.UserNewLinkPersonDto;
+import org.frias.avalon.domain.person.entity.Person;
+import org.frias.avalon.domain.person.services.interfaces.PersonService;
+import org.frias.avalon.domain.usergeneral.auth.dtos.request.UserValidateCredentials;
 import org.frias.avalon.domain.usergeneral.useravalon.dtos.request.UserNewDto;
+import org.frias.avalon.domain.usergeneral.useravalon.dtos.request.UserNewLinkPersonDto;
 import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
 import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepository;
 import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.EmployeeService;
 import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.UsersService;
 import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.UsuarioServiceValidate;
-import org.frias.avalon.domain.usergeneral.auth.dtos.request.UserValidateCredentials;
-import org.frias.avalon.core.jwt.util.JwtUtils;
-import org.frias.avalon.domain.person.entity.Person;
-import org.frias.avalon.domain.person.services.interfaces.PersonService;
-import org.frias.avalon.core.util.PassSecure;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

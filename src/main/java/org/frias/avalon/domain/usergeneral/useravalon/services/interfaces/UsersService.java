@@ -1,7 +1,7 @@
 package org.frias.avalon.domain.usergeneral.useravalon.services.interfaces;
 
-import org.frias.avalon.domain.usergeneral.useravalon.dtos.request.UserNewLinkPersonDto;
 import org.frias.avalon.domain.usergeneral.useravalon.dtos.request.UserNewDto;
+import org.frias.avalon.domain.usergeneral.useravalon.dtos.request.UserNewLinkPersonDto;
 import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
 
 import java.security.spec.InvalidKeySpecException;
