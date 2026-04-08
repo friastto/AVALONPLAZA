@@ -14,6 +14,7 @@ import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataService;
 import org.frias.avalon.domain.outlet.dtos.request.OutletMap;
 import org.frias.avalon.domain.outlet.dtos.request.OutletNewDto;
 import org.frias.avalon.domain.outlet.dtos.response.OutletDto;
+import org.frias.avalon.domain.outlet.dtos.response.OutletWithCatalogProductResponse;
 import org.frias.avalon.domain.outlet.entities.Outlet;
 import org.frias.avalon.domain.outlet.mappers.OutletMapper;
 import org.frias.avalon.domain.outlet.repositories.OutletRepository;
@@ -79,7 +80,7 @@ public class OutletServiceImpl
         }
 
         outletRepository.findByName(outletDto.name()).ifPresent(o -> {
-            throw new EntityExistsException("el nombre de la sucursal no disponible :" + o);
+            throw new EntityExistsException("el name de la sucursal no disponible :" + o);
         });
 
 
@@ -105,7 +106,7 @@ public class OutletServiceImpl
     @Override
     public List<OutletDto> getAll() {
 
-        getValidatedCompanyId();
+
 
         List<Outlet> outlets = outletRepository.findAll();
 
@@ -120,7 +121,9 @@ public class OutletServiceImpl
     @Override
     public Outlet searchById(Long id) {
 
-        return outletRepository.findById(getValidatedCompanyId()).orElseThrow(() -> new EntityExistsException("no se encuentro la sucursal en la base d ed atos "));
+        return outletRepository.findById(id)
+
+                .orElseThrow(() -> new EntityExistsException("no se encuentro la sucursal en la base d ed atos "));
     }
 
     @Override
@@ -151,6 +154,7 @@ public class OutletServiceImpl
 
         return outletRepository.existsByIdAndCompanyId(idOutlet, idCompany);
     }
+
 
 
     public void validarAccesoSucursal(Long idOutletDestino) {

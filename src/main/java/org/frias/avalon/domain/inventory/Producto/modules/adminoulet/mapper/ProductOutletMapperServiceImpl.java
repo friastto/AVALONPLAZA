@@ -19,8 +19,8 @@ public class ProductOutletMapperServiceImpl implements ProductOutletMapperServic
 
         return new ProductOutletResponseDto(
                 productOutlet.getId(),
-                productOutlet.getCustomName() != null ? productOutlet.getCustomName() : productOutlet.getCompanyProduct().getProduct().getName(),
-                productOutlet.getCustomDescription() != null ? productOutlet.getCustomDescription() : productOutlet.getCompanyProduct().getProduct().getDescription(),
+                productOutlet.getLocalName() != null ? productOutlet.getLocalName() : productOutlet.getCompanyProduct().getProduct().getName(),
+                productOutlet.getLocalDescription() != null ? productOutlet.getLocalDescription() : productOutlet.getCompanyProduct().getProduct().getDescription(),
                 productOutlet.getLocalImageUrl() != null ? productOutlet.getLocalImageUrl() : productOutlet.getCompanyProduct().getProduct().getImageUrl(),
                 productOutlet.getCompanyProduct().getProduct().getCategory().getFullName(),
                 productOutlet.getCompanyProduct().getProduct().getUnit().getFullName(),
@@ -29,7 +29,7 @@ public class ProductOutletMapperServiceImpl implements ProductOutletMapperServic
                 // Transformamos la lista de objetos Barcode a lista de Strings
                 productOutlet.getCompanyProduct().getBarcodes()
                         .stream()
-                        .map(ProductBarcode::getBarcode) // Cambia 'getCode' por el nombre real de tu atributo
+                        .map(ProductBarcode::getBarcode) // Cambia 'getCode' por el name real de tu atributo
                         .toList()
         );
 

@@ -65,7 +65,7 @@ public class UsersServiceImpl extends BaseTenantService implements UsersService,
 
         userRepository.findByUserName(userCreate.userName())
                 .ifPresent(u -> {
-                    throw new EntityExistsException("el nombre de usuario no esta disponible");
+                    throw new EntityExistsException("el name de usuario no esta disponible");
                 });
 
         Person personEntity = personService.save(userCreate.newPersonData());
@@ -160,7 +160,7 @@ public class UsersServiceImpl extends BaseTenantService implements UsersService,
 
         // 4. VALIDACIONES DE INTEGRIDAD
         userRepository.findByUserName(userCreate.userName()).ifPresent(u -> {
-            throw new EntityExistsException("El nombre de usuario '" + userCreate.userName() + "' ya existe.");
+            throw new EntityExistsException("El name de usuario '" + userCreate.userName() + "' ya existe.");
         });
 
         // 5. CONSTRUCCIÓN Y PERSISTENCIA

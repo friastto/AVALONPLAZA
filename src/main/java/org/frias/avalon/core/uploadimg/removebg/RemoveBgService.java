@@ -20,13 +20,13 @@ public class RemoveBgService {
     private String apiKey;
 
 
-    public byte[] removeBackground(MultipartFile file) {
+    public byte[] removeBackground(byte[] file) {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpPost uploadFile = new HttpPost("https://api.remove.bg/v1.0/removebg");
             uploadFile.addHeader("X-Api-Key", apiKey);
 
             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-            builder.addBinaryBody("image_file", file.getBytes(), ContentType.DEFAULT_BINARY, file.getOriginalFilename());
+            builder.addBinaryBody("image_file", file, ContentType.DEFAULT_BINARY, "image.bin");
             builder.addTextBody("size", "auto"); // 'auto' para optimizar créditos
 
             uploadFile.setEntity(builder.build());

@@ -72,7 +72,7 @@ public class RecoveryPasswordServiceImpl implements RecoveryPasswordService {
 
     @Override
     public void finishRecovery(String userName, String token, String newPassword) {
-// 1. Validamos el token y que pertenezca a ese nombre de usuario
+// 1. Validamos el token y que pertenezca a ese name de usuario
         PasswordReset reset = passwordResetRepository.findByTokenAndUserName(token, userName)
                 .orElseThrow(() -> new SecurityException("Código inválido o para el usuario incorrecto."));
 

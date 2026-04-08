@@ -8,7 +8,7 @@ import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepositor
 import org.frias.avalon.core.exeptions.InsufficientStockException;
 import org.frias.avalon.domain.promotion.fabric.convertermasa.factory.ConvertFactoryService;
 import org.frias.avalon.domain.promotion.fabric.discountpath.DiscountPathRoleFactory;
-import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.repository.ProductoOutletRepository;
+import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.repository.ProductOutletRepository;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.Product;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.services.interfaces.ProductoService;
@@ -39,7 +39,7 @@ public class SaleServiceImpl implements SaleService {
 
     private final ProductoService productoService;
     private final SaleRepository saleRepository;
-    private final ProductoOutletRepository productoOutletRepository;
+    private final ProductOutletRepository productOutletRepository;
 
     private final UserRepository userRepository;
 
@@ -54,10 +54,10 @@ public class SaleServiceImpl implements SaleService {
 
     private final SalesMapperService salesMapperService;
 
-    public SaleServiceImpl(ProductoService productoService, SaleRepository saleRepository, ProductoOutletRepository productoOutletRepository, UserRepository userRepository, PersonaRepository personaRepository, PersonService personaService, MasterDataSalesService masterDataSalesService, ConvertFactoryService convertFactoryService, DiscountPathRoleFactory priceCalculator, SalesMapperService salesMapperService) {
+    public SaleServiceImpl(ProductoService productoService, SaleRepository saleRepository, ProductOutletRepository productOutletRepository, UserRepository userRepository, PersonaRepository personaRepository, PersonService personaService, MasterDataSalesService masterDataSalesService, ConvertFactoryService convertFactoryService, DiscountPathRoleFactory priceCalculator, SalesMapperService salesMapperService) {
         this.productoService = productoService;
         this.saleRepository = saleRepository;
-        this.productoOutletRepository = productoOutletRepository;
+        this.productOutletRepository = productOutletRepository;
         this.userRepository = userRepository;
         this.personaService = personaService;
         this.masterDataSalesService = masterDataSalesService;
@@ -115,7 +115,7 @@ public class SaleServiceImpl implements SaleService {
             ? sd.quantity().replace(",",".")
                    : sd.quantity();
 
-            ProductOutlet productOutlet = productoOutletRepository.findByProductIdAndOutletId(
+            ProductOutlet productOutlet = productOutletRepository.findByProductIdAndOutletId(
                     sd.productId(), 1L).orElseThrow(() -> new EntityNotFoundException("Product not found")
             );
 
@@ -128,7 +128,7 @@ public class SaleServiceImpl implements SaleService {
                     && (sd.quantity().contains(".")||sd.quantity().contains(","))
             )
                 throw new IllegalArgumentException(
-                        "la cantidad ingresada no corresponde a la unidad de medida del producto : "
+                        "la cantidad ingresada no corresponde a la unidad de unitMeasure del producto : "
                                 + productEntity.getUnit().getShortName()
                 );
 

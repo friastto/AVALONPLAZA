@@ -17,7 +17,7 @@ public class SecurityUtils {
                 .anyMatch(authority -> authority.equals(role));
     }
 
-    // Para obtener el nombre de usuario o email del token
+    // Para obtener el name de usuario o email del token
     public static String getCurrentUserLogin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null) {

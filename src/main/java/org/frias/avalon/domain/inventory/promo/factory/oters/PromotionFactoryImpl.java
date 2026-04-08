@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @Service
 public class PromotionFactoryImpl implements PromotionFactoryService {
 
-    //spring rellena automaticamente con las estrategias de descuento
+    //spring rellena automaticamente con las estrategias de discount
     private final Map<String, PromotionStrategy> strategies;
 
     public PromotionFactoryImpl(List<PromotionStrategy> strategyList) {
@@ -28,14 +28,14 @@ public class PromotionFactoryImpl implements PromotionFactoryService {
     @Override
     public DiscountTempResult getFinalPrice(ProductOutlet productOutlet, Boolean isEmployee) {
 
-        if (productOutlet.getPromotions() == null || productOutlet.getPromotions().isEmpty()) {
+        if (productOutlet.getLocalPromotions() == null || productOutlet.getLocalPromotions().isEmpty()) {
         return new DiscountTempResult(
                 BigDecimal.ZERO,
                 "No promotions found",
                 productOutlet.getLocalPrice());
     }
 
-        return productOutlet.getPromotions().stream()
+        return productOutlet.getLocalPromotions().stream()
                 .filter(Promotion::estaActiva)
                 .filter(p -> {
                     String typeCode = p.getPromoTypeId().getShortName();

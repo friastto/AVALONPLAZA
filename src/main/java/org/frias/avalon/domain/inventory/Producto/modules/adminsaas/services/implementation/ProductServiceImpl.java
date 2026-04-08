@@ -2,6 +2,7 @@ package org.frias.avalon.domain.inventory.Producto.modules.adminsaas.services.im
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import org.frias.avalon.core.uploadimg.service.ImgProcessorService;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.masterdata.repositories.MasterDataRepository;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataProductService;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
@@ -44,6 +46,7 @@ public class ProductServiceImpl implements ProductoService
     private final MasterDataProductService masterDataService;
     private final ProductUploadImgImpl productUploadImg;
     private final RemoveBgService removeBgService;
+    private final ImgProcessorService imgProcessorService;
 
     private final String status = "ACT";
 
@@ -52,7 +55,7 @@ public class ProductServiceImpl implements ProductoService
     private final ProductoMapperService productoMapperService;
     private final JwtUtils jwtUtils;
 
-    public ProductServiceImpl(PromotionFactoryService promoFactoryService, ProductRepository productRepository, BarcodeRepository barcodeRepository, ConvertFactoryService convertFactoryService, MasterDataRepository masterDataRepository, MasterDataProductService masterDataService, ProductUploadImgImpl productUploadImg, RemoveBgService removeBgService, ProductoMapperService productoMapperService, JwtUtils jwtUtils) {
+    public ProductServiceImpl(PromotionFactoryService promoFactoryService, ProductRepository productRepository, BarcodeRepository barcodeRepository, ConvertFactoryService convertFactoryService, MasterDataRepository masterDataRepository, MasterDataProductService masterDataService, ProductUploadImgImpl productUploadImg, RemoveBgService removeBgService, ImgProcessorService imgProcessorService, ProductoMapperService productoMapperService, JwtUtils jwtUtils) {
         this.promoFactoryService = promoFactoryService;
         this.productRepository = productRepository;
         this.barcodeRepository = barcodeRepository;
@@ -60,6 +63,7 @@ public class ProductServiceImpl implements ProductoService
         this.masterDataService = masterDataService;
         this.productUploadImg = productUploadImg;
         this.removeBgService = removeBgService;
+        this.imgProcessorService = imgProcessorService;
         this.productoMapperService = productoMapperService;
         this.jwtUtils = jwtUtils;
     }
@@ -91,7 +95,7 @@ public class ProductServiceImpl implements ProductoService
         MasterData unit = masterDataService.searchById(request.unitId());
 
         if (!unitMasaPesable.contains(unit.getShortName()) && isDecimal)
-            throw new IllegalArgumentException("la unidad de medida :"
+            throw new IllegalArgumentException("la unidad de unitMeasure :"
                     + unit.getShortName()
                     +" solo acepta numeros enteros ");
 
@@ -122,7 +126,7 @@ public class ProductServiceImpl implements ProductoService
         productNewEntity.setStatus(status);
 
 
-        String fileName = productUploadImg.uploadFile(imgUrl,request.codeBar());
+        String fileName = "PlaceHolderName_temp.webp";//productUploadImg.uploadFile(imgUrl,request.codeBar());
 
         productNewEntity.setImageUrl(fileName);
 
@@ -135,7 +139,17 @@ public class ProductServiceImpl implements ProductoService
 
         barcodeRepository.save(pbc);
 
-        return null;//createDto(productSaved);
+        byte[] imageBytes;
+        try {
+            imageBytes = imgUrl.getBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("Error al leer la imagen del producto. Intente de nuevo.");
+        }
+
+        // Ahora sí, lanzas el proceso asíncrono
+        imgProcessorService.processProductImage(productSaved.getId(), imageBytes, request.codeBar(),"AVALON");
+
+        return productoMapperService.toDto(productSaved); //createDto(productSaved);
 
     }
 
@@ -223,6 +237,16 @@ public class ProductServiceImpl implements ProductoService
         return p.stream()
                 .map(productoMapperService::toDto)
                 .toList();
+    }
+
+    @Override
+    public void updateImageUrl(Long productId, String finalFileName) {
+
+       Product p =  searchById(productId);
+       p.setImageUrl(finalFileName);
+
+       productRepository.save(p);
+
     }
 
     @Override

@@ -1,37 +1,47 @@
 package org.frias.avalon.domain.inventory.Producto.modules.adminoulet.services.implementation;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.domain.company.facade.BaseTenantService;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseDto;
+import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.mappers.ProductoOutletMapperService;
 import org.frias.avalon.domain.outlet.dtos.request.OutletMap;
+import org.frias.avalon.domain.outlet.dtos.response.OutletWithCatalogProductResponse;
 import org.frias.avalon.domain.outlet.dtos.response.OutletsWhitProductMap;
 import org.frias.avalon.domain.outlet.entities.Outlet;
 import org.frias.avalon.core.tenant.config.TenantAware;
-import org.frias.avalon.core.tenant.tenantcontex.TenantContext;
 import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.ProductOutletResponseDto;
 import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.mapper.ProductOutletMapperService;
-import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.repository.ProductoOutletRepository;
+import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.repository.ProductOutletRepository;
 import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.services.interfaces.ProductOutletService;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseMap;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.mappers.ProductoMapperService;
+import org.frias.avalon.domain.outlet.services.interfaces.OutletService;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
 
 @TenantAware
 @Service
 public class ProductOutletServiceImpl extends BaseTenantService implements ProductOutletService {
 
-    private final ProductoOutletRepository productoOutletRepository;
+    private final ProductOutletRepository productOutletRepository;
     private final ProductoMapperService productoMapperService;
     private final ProductOutletMapperService productOutletMapperService;
+    private final ProductoOutletMapperService productoOutletMapperService;
+    private final OutletService outletService;
 
-    public ProductOutletServiceImpl(ProductoOutletRepository productoOutletRepository, ProductoMapperService productoMapperService, ProductOutletMapperService productOutletMapperService) {
-        this.productoOutletRepository = productoOutletRepository;
+    public ProductOutletServiceImpl(ProductOutletRepository productOutletRepository, ProductoMapperService productoMapperService, ProductOutletMapperService productOutletMapperService, ProductoOutletMapperService productoOutletMapperService, OutletService outletService) {
+        this.productOutletRepository = productOutletRepository;
         this.productoMapperService = productoMapperService;
 
         this.productOutletMapperService = productOutletMapperService;
+        this.productoOutletMapperService = productoOutletMapperService;
+        this.outletService = outletService;
     }
 
 
@@ -46,7 +56,7 @@ public class ProductOutletServiceImpl extends BaseTenantService implements Produ
     @Override
     public List<ProductOutletResponseDto> getProductCatalogToOutlet(Long id) {
 
-        List<ProductOutlet> productOutlets = productoOutletRepository.findAllByOutletIdWithHierarchy(id);
+        List<ProductOutlet> productOutlets = productOutletRepository.findAllByOutletIdWithHierarchy(id);
 
         return productOutlets.stream()
                 .map(productOutletMapperService::toDto)
@@ -56,7 +66,7 @@ public class ProductOutletServiceImpl extends BaseTenantService implements Produ
     @Override
     public List<OutletsWhitProductMap> getOutletProductByNameProduct(OutletMap requestMap) {
 
-        List<ProductOutlet> pots = productoOutletRepository.findByNameAndOutletRadius(
+        List<ProductOutlet> pots = productOutletRepository.findByNameAndOutletRadius(
                 requestMap.query(),
                 requestMap.lat(),
                 requestMap.lng(),
@@ -80,7 +90,7 @@ public class ProductOutletServiceImpl extends BaseTenantService implements Produ
                     List<ProductResponseMap> productList = entry.getValue().stream()
                             .map(po -> new ProductResponseMap(
                                     po.getId(),
-                                    po.getCustomName() != null ? po.getCustomName() : po.getCompanyProduct().getCustomName(),
+                                    po.getLocalName() != null ? po.getLocalName() : po.getCompanyProduct().getCustomName(),
                                     String.valueOf(po.getStock()) // Convertimos stock a String como pide tu record
                             ))
                             .toList();
@@ -99,6 +109,36 @@ public class ProductOutletServiceImpl extends BaseTenantService implements Produ
 
     @Override
     public void addAll(List<ProductOutlet> productOutletList) {
-        productoOutletRepository.saveAll(productOutletList);
+        productOutletRepository.saveAll(productOutletList);
+    }
+
+    @Override
+    public ProductResponseDto SearchProduct(Long id) {
+
+        ProductOutlet po = productOutletRepository.findById(id)
+                .orElseThrow(()->new EntityNotFoundException("no se encuentra registrado el producto o no esta habilitado para la venta"));
+
+
+        return productoOutletMapperService.toDto(po);
+    }
+
+    @Override
+    public OutletWithCatalogProductResponse getOutletWithCatalogProduct(Long id) {
+
+        Outlet o = outletService.searchById(id);
+
+        List<ProductOutlet> productOutlets = productOutletRepository.findAllByOutletIdWithHierarchy(id);
+
+
+        // Agrupamos por el name de la categoría y convertimos a DTO
+        Map<String, List<ProductResponseDto>> catalogDto = productOutlets.stream()
+                .map(productoOutletMapperService::toDto) // Referencia directa al mapper
+                .collect(Collectors.groupingBy(ProductResponseDto::category)); // Agrupa por el campo categoría del DTO
+
+        return new OutletWithCatalogProductResponse(
+                o.getId(),
+                o.getName(),
+                catalogDto
+        );
     }
 }

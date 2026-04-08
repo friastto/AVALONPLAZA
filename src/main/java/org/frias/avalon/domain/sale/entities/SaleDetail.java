@@ -41,6 +41,6 @@ public class SaleDetail {
 
     private String scannedBarcode; // El código exacto que disparó la venta
 
-    private String productNameSnapshot; // El nombre del producto al momento de vender
+    private String productNameSnapshot; // El name del producto al momento de vender
 
 }

@@ -21,4 +21,6 @@ public interface ProductoService {
     ProductResponseDto searchByName(String name);
 
     List<ProductResponseDto> findAll();
+
+    void updateImageUrl(Long productId, String finalFileName);
 }

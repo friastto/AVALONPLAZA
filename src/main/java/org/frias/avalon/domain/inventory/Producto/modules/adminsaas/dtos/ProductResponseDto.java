@@ -7,24 +7,24 @@ public record ProductResponseDto(
 
         Long id,
 
-        String codigoBarras,
+        String barcode,
 
-        String nombre,
+        String name,
 
-        String descripcion,
+        String description,
 
-        BigDecimal precio,
+        BigDecimal price,
 
-        BigDecimal descuento,
+        BigDecimal discount,
 
-        BigDecimal precioFinal,
+        BigDecimal finalPrice,
 
-        String categoria,
+        String category,
 
-        String medida,
+        String unitMeasure,
 
         String stock,
 
-        String image
+        String imageUrl
 ){
 }

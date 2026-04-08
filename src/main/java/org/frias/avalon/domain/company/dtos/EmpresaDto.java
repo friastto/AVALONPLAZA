@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 record EmpresaDto (
 
-        @NotBlank(message = "La empresa no piuede estar sin nombre")
+        @NotBlank(message = "La empresa no piuede estar sin name")
     String nombre,
 
         @NotBlank(message = "La empresa debe tener un nit")

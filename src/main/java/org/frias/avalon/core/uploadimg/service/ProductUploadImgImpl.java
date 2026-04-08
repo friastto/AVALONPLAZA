@@ -36,28 +36,28 @@ public class ProductUploadImgImpl {
         this.removeBgService = removeBgService;
     }
 
-    public String uploadFile(MultipartFile file, String codeBar) {
+    public String uploadFile(byte[] file, String codeBar) {
 
-        String originalFileName = file.getOriginalFilename();
+        //String originalFileName = file.getOriginalFilename();
 
 
-        validateImage(file);
+        //validateImage(file);
 
         byte[] fileCleanBg = removeBgService.removeBackground(file);
 
-        byte[] upscaledBytes = upscaleImage(fileCleanBg, 1080);
+        //byte[] upscaledBytes = upscaleImage(fileCleanBg, 1080);
 
         // 2. Extraer la extensión (el .jpg)
         //String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        String fileName = UUID.randomUUID().toString() + "_" + codeBar + ".png";
+        String fileName = UUID.randomUUID().toString() + "_" + codeBar + ".webp";
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
-                .contentType("image/png")
+                .contentType("image/webp")
                 .build();
 
-        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(upscaledBytes));
+        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(fileCleanBg));
 
         return fileName;
 

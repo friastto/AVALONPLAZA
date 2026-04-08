@@ -32,7 +32,7 @@ public class SalesMapperService {
                 sale.getAmountReceived(),
                 sale.getAmountReturned(),
                 sale.getPaymentMethodId().getFullName(),
-                // Obtenemos el nombre completo desde la relación User -> Person
+                // Obtenemos el name completo desde la relación User -> Person
                 sale.getEnployeeId().getPerson().getName() + " " + sale.getEnployeeId().getPerson().getLastName(),
                 // Identificación del cliente (Cédula)
                 sale.getCustomerId().getNumberid(),

@@ -11,19 +11,19 @@ public record ProductRequestCreate(
         @NotBlank(message = "producto sin codigo de barras")
         String codeBar,
 
-        @NotBlank(message="producto sin nombre")
+        @NotBlank(message="producto sin name")
         String name,
 
-        @NotBlank(message = "producto sin descripcion")
+        @NotBlank(message = "producto sin description")
         String desc,
 
-        @NotBlank(message = "producto sin precio")
+        @NotBlank(message = "producto sin price")
         BigDecimal price,
 
-        @NotBlank(message = "producto sin categoria")
+        @NotBlank(message = "producto sin category")
         Long categoryId,
 
-        @NotBlank(message = "producto sin unidad de medida")
+        @NotBlank(message = "producto sin unidad de unitMeasure")
          Long unitId,
 
         @jakarta.validation.constraints.Pattern(

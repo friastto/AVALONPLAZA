@@ -17,13 +17,13 @@ public class BarcodeMapper {
         public ProductOutletResponseDto toResponseDto(ProductOutlet outletItem) {
             Product globalProduct = outletItem.getCompanyProduct().getProduct();
 
-            // 1. Resolvemos el nombre (Prioridad: Custom > Global)
-            String finalName = Optional.ofNullable(outletItem.getCustomName())
+            // 1. Resolvemos el name (Prioridad: Custom > Global)
+            String finalName = Optional.ofNullable(outletItem.getLocalName())
                     .filter(name -> !name.isBlank())
                     .orElse(globalProduct.getName());
 
             // 2. Resolvemos la descripción
-            String finalDesc = Optional.ofNullable(outletItem.getCustomDescription())
+            String finalDesc = Optional.ofNullable(outletItem.getLocalDescription())
                     .filter(desc -> !desc.isBlank())
                     .orElse(globalProduct.getDescription());
 

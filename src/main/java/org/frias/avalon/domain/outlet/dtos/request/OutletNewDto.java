@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 public record OutletNewDto(
 
 
-        @NotBlank(message = "La sucursal no puede estar sin nombre")
+        @NotBlank(message = "La sucursal no puede estar sin name")
     String name,
 
         @NotBlank(message = "ingrese la direccion de la sucursal")

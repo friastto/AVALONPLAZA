@@ -36,7 +36,7 @@ private final String gramos= "GR";
 
     String medida =productOutlet.getCompanyProduct().getProduct().getUnit().getShortName();
 
-        return productOutlet.getPromotions().stream()
+        return productOutlet.getLocalPromotions().stream()
                 .filter(Promotion::estaActiva)
                 .findFirst()
                 .map(promo -> {
@@ -76,7 +76,7 @@ private final String gramos= "GR";
         int parejas = cantidadEntera / 2;
         int impares = cantidadEntera % 2;
 
-        // El descuento (ej: 50%) se aplica solo a una unidad de cada pareja
+        // El discount (ej: 50%) se aplica solo a una unidad de cada pareja
         BigDecimal descuentoPorUnidad = precio.multiply(promo.getDiscount().divide(new BigDecimal("100")));
         BigDecimal ahorroTotal = descuentoPorUnidad.multiply(new BigDecimal(parejas));
 
@@ -87,8 +87,8 @@ private final String gramos= "GR";
     }
 
     private DiscountTempResult calcularPorcentajeSimple(BigDecimal precioBase, String cantidad, Promotion promo,String medida) {
-        // 1. Calcular el subtotal sin descuento
-        // Ej: 1200g * $2.3 (precio por gramo) = $2760
+        // 1. Calcular el subtotal sin discount
+        // Ej: 1200g * $2.3 (price por gramo) = $2760
 
         BigDecimal subtotalSinDescuento = precioBase.multiply(new BigDecimal(cantidad));
 
@@ -112,7 +112,7 @@ private final String gramos= "GR";
         BigDecimal montoAhorrado = subtotalSinDescuento.multiply(porcentaje)
                 .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
 
-        // 4. Calcular el precio final
+        // 4. Calcular el price final
         BigDecimal precioFinal = subtotalSinDescuento.subtract(montoAhorrado);
 
         // 5. Retornar tu Record con la descripción de tu MasterData

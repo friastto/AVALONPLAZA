@@ -35,9 +35,9 @@ public class ProductOutlet extends TenantEntity {
         @JoinColumn(name = "company_product_id", nullable = false)
         private ProductCompany companyProduct;
 
-        private String customName;
+        private String localName;
 
-        private String customDescription;
+        private String localDescription;
 
         @Column(nullable = false)
         private Integer stock; // Stock específico de ESTA sucursal
@@ -62,7 +62,7 @@ public class ProductOutlet extends TenantEntity {
         private LocalDateTime updatedAt;
 
         @OneToMany(mappedBy = "productOutlet", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-        private List<Promotion> promotions;
+        private List<Promotion> localPromotions;
 
         @PrePersist
         protected void onCreate() {

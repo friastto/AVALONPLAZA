@@ -5,7 +5,7 @@ import java.util.List;
 
 public record ProductOutletResponseDto(
         Long id,
-        String displayName,      // El nombre ya resuelto (Custom o Global)
+        String displayName,      // El name ya resuelto (Custom o Global)
         String displayDescription,
         String imageUrl,
         String categoryName,
@@ -13,7 +13,7 @@ public record ProductOutletResponseDto(
         BigDecimal price,
         Integer stock,
         List<String> barcodes  // Lista de todos los códigos que activan este producto
-            // Para que el Front sepa si el nombre es propio o global
+            // Para que el Front sepa si el name es propio o global
 
 
 ) {

@@ -32,10 +32,6 @@ private final OutletService outletService;
         return outletService.create(outletDto);
     }
 
-
-
-
-
     @PostMapping("/nearby")
     public List<OutletDto> getOutletsNerby(@RequestBody OutletMap outletDto) {
 

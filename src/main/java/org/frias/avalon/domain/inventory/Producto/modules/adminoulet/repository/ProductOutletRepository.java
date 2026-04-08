@@ -1,7 +1,9 @@
 package org.frias.avalon.domain.inventory.Producto.modules.adminoulet.repository;
 
+import jakarta.transaction.Transactional;
 import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -10,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProductoOutletRepository extends JpaRepository<ProductOutlet, Long> {
+public interface ProductOutletRepository extends JpaRepository<ProductOutlet, Long> {
     @Query("""
             SELECT po FROM ProductOutlet po 
             JOIN po.companyProduct p 
@@ -43,16 +45,26 @@ SELECT po FROM ProductOutlet po
     @Query("SELECT po FROM ProductOutlet po " +
             "JOIN FETCH po.outlet o " +
             "JOIN FETCH po.companyProduct cp " +
-            "WHERE (cp.customName ILIKE %:nombre% OR po.customName ILIKE %:nombre%) " +
+            "WHERE (cp.customName ILIKE %:nombre% OR po.localName ILIKE %:nombre%) " +
             "AND po.stock > 0 " +
             "AND po.active = true " +
             "AND (6371 * acos(cos(radians(:userLat)) * cos(radians(o.latitude)) * " +
             "cos(radians(o.longitude) - radians(:userLng)) + " +
             "sin(radians(:userLat)) * sin(radians(o.latitude)))) <= :radioKm")
     List<ProductOutlet> findByNameAndOutletRadius(
-            @Param("nombre") String nombre,
+            @Param("name") String nombre,
             @Param("userLat") Double userLat,
             @Param("userLng") Double userLng,
             @Param("radioKm") int radioKm
     );
+
+    @Modifying // <--- ESTA ES LA QUE FALTA
+    @Transactional // Requerida para updates
+    @Query("""
+        UPDATE ProductOutlet p
+        set p.localImageUrl = :finalFileName
+        where p.id = :id
+        """)
+    void updateImageUrl(@Param("id") Long id,
+                        @Param("finalFileName") String finalFileName);
 }

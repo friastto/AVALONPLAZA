@@ -10,7 +10,7 @@ import org.frias.avalon.domain.outlet.dtos.request.OutletNewDto;
 import java.util.List;
 
 public record CompanyRequestNewDto(
-        @NotBlank(message = "La empresa no piuede estar sin nombre")
+        @NotBlank(message = "La empresa no piuede estar sin name")
 
     String name,
         @NotBlank(message = "La empresa debe tener un nit")

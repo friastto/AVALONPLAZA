@@ -4,15 +4,15 @@ import jakarta.validation.constraints.NotBlank;
 
 public record MasterDataNewDto(
 
-        @NotBlank(message = "el nombre largo no puede ser vacio")
+        @NotBlank(message = "el name largo no puede ser vacio")
         String fullName,
 
-        @NotBlank(message = "el nombre corto no puede ser vacio")
+        @NotBlank(message = "el name corto no puede ser vacio")
         String shortName,
 
         String parentShortName,
 
-        @NotBlank(message = "el nombre corto de status no puede ser vacio")
+        @NotBlank(message = "el name corto de status no puede ser vacio")
         String  statusId
 ){
 }

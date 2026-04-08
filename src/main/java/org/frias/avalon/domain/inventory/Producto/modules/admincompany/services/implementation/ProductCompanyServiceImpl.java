@@ -3,6 +3,7 @@ package org.frias.avalon.domain.inventory.Producto.modules.admincompany.services
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.tenant.config.TenantAware;
+import org.frias.avalon.core.uploadimg.service.ImgProcessorService;
 import org.frias.avalon.core.uploadimg.service.ProductUploadImgImpl;
 import org.frias.avalon.domain.company.facade.BaseTenantService;
 import org.frias.avalon.domain.company.services.interfaces.CompanyService;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -41,11 +43,12 @@ public class ProductCompanyServiceImpl extends BaseTenantService implements Prod
     private final MasterDataService masterDataService;
     private final ProductCompanyRepository productCompanyRepository;
     private final ProductOutletService productOutletService;
+    private final ImgProcessorService imgProcessorService;
 
     private final ProductoCompanyMapperService productoCompanyMapperService;
     private final ProductUploadImgImpl productUploadImg;
 
-    public ProductCompanyServiceImpl(BarcodeCompanyRepository barcodeCompanyRepository, ProductoService productService, CompanyService companyService, MasterDataService masterDataService, ProductCompanyRepository productCompanyRepository, ProductOutletService productOutletService, ProductoCompanyMapperService productoCompanyMapperService, ProductUploadImgImpl productUploadImg) {
+    public ProductCompanyServiceImpl(BarcodeCompanyRepository barcodeCompanyRepository, ProductoService productService, CompanyService companyService, MasterDataService masterDataService, ProductCompanyRepository productCompanyRepository, ProductOutletService productOutletService, ImgProcessorService imgProcessorService, ProductoCompanyMapperService productoCompanyMapperService, ProductUploadImgImpl productUploadImg) {
         this.barcodeCompanyRepository = barcodeCompanyRepository;
         this.productService = productService;
         this.companyService = companyService;
@@ -53,6 +56,7 @@ public class ProductCompanyServiceImpl extends BaseTenantService implements Prod
 
         this.productCompanyRepository = productCompanyRepository;
         this.productOutletService = productOutletService;
+        this.imgProcessorService = imgProcessorService;
 
         this.productoCompanyMapperService = productoCompanyMapperService;
         this.productUploadImg = productUploadImg;
@@ -178,13 +182,21 @@ public class ProductCompanyServiceImpl extends BaseTenantService implements Prod
                         ()-> new EntityNotFoundException("el producto a modificar no esta disponible.")
                 ),request);
 
-        String fileName = null;
 
-        if (imgUrl != null && !imgUrl.isEmpty()) {
-            fileName = productUploadImg.uploadFile(imgUrl, request.codeBar());
 
-            productCompany.setCustomImageUrl(fileName);
+
+        productUploadImg.validateImage(imgUrl);
+
+        byte[] imageBytes;
+        try {
+            imageBytes = imgUrl.getBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("Error al leer la imagen del producto. Intente de nuevo.");
         }
+
+
+
+        imgProcessorService.processProductImage(productCompany.getId(), imageBytes, request.codeBar(),"COMPANY");
 
 
         ProductBarcode barcode = new ProductBarcode();

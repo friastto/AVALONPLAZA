@@ -48,6 +48,8 @@ public class SecurityConfig {
                         .requestMatchers("/productOutlet/**").permitAll()
 
                         .requestMatchers("/masterData/**").permitAll()
+
+                        .requestMatchers("/consumer/**").permitAll()
                         /*
                         .requestMatchers("/master/create/bulk").permitAll() // crear tipos público
                         .requestMatchers("/admin/register/newUser").permitAll() //registro de usuario publico
