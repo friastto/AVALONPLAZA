@@ -26,7 +26,7 @@ public class ProductBarcode extends TenantEntity {
 
     private String barcode; // El código que lee el escáner
 
-    private String description; // Ej: "Código viejo" o "Empaque edición especial"
+    private String description; // EJ: "Código viejo" o "Empaque edición especial"
 
     @ManyToOne
     private Product product; // A qué producto pertenece
@@ -47,6 +47,7 @@ public class ProductBarcode extends TenantEntity {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
