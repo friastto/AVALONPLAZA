@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.inventory.promo.factory.oters;
 
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
+import org.frias.avalon.domain.product.domain.entity.ProductOutlet;
 import org.frias.avalon.domain.inventory.promo.dtos.DiscountTempResult;
 import org.frias.avalon.domain.inventory.promo.entities.Promotion;
 import org.frias.avalon.domain.inventory.promo.factory.oters.interfaz.PromotionStrategy;

@@ -2,7 +2,7 @@ package org.frias.avalon.domain.constumer;
 
 import org.frias.avalon.domain.constumer.service.ConsumerService;
 import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.services.interfaces.ProductOutletService;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseDto;
+import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
 import org.frias.avalon.domain.outlet.dtos.request.OutletMap;
 import org.frias.avalon.domain.outlet.dtos.response.OutletDto;
 import org.frias.avalon.domain.outlet.dtos.response.OutletWithCatalogProductResponse;

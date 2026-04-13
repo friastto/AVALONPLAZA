@@ -2,9 +2,9 @@ package org.frias.avalon.domain.inventory.Producto.modules.admincompany.services
 
 
 import org.frias.avalon.domain.inventory.Producto.modules.admincompany.dto.BarcodeRequestDto;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductRequestCreate;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseDto;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductCompany;
+import org.frias.avalon.domain.product.application.dto.company.ProductRequestCreate;
+import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
+import org.frias.avalon.domain.product.domain.entity.ProductCompany;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

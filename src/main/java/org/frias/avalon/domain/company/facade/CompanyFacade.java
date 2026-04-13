@@ -2,7 +2,7 @@ package org.frias.avalon.domain.company.facade;
 
 import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.UsersService;
 
-public class CompanyFacade extends BaseTenantService{
+public class CompanyFacade extends TenantSecurity {
 
     private final UsersService usersService;
 

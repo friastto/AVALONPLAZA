@@ -1,8 +1,8 @@
 package org.frias.avalon.domain.inventory.Producto.modules.admincompany.controllers;
 
 import org.frias.avalon.domain.inventory.Producto.modules.admincompany.services.interfaces.ProductoCompanyService;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductRequestCreate;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseDto;
+import org.frias.avalon.domain.product.application.dto.company.ProductRequestCreate;
+import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

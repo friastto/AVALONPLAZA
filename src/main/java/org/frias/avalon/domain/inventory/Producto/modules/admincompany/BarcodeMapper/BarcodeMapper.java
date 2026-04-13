@@ -1,9 +1,9 @@
 package org.frias.avalon.domain.inventory.Producto.modules.admincompany.BarcodeMapper;
 
 import org.frias.avalon.domain.inventory.Producto.modules.adminoulet.ProductOutletResponseDto;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.Product;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductBarcode;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
+import org.frias.avalon.domain.product.domain.entity.Product;
+import org.frias.avalon.domain.product.domain.entity.ProductBarcode;
+import org.frias.avalon.domain.product.domain.entity.ProductOutlet;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

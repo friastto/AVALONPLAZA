@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.outlet.dtos.response;
 
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseMap;
+import org.frias.avalon.domain.product.application.dto.ProductResponseMap;
 
 import java.util.List;
 

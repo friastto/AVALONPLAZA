@@ -50,6 +50,10 @@ public class SecurityConfig {
                         .requestMatchers("/masterData/**").permitAll()
 
                         .requestMatchers("/consumer/**").permitAll()
+
+                        .requestMatchers("/avalon/admin/saas/product/**").hasAnyRole("ADMIN","ADMINTI")
+
+
                         /*
                         .requestMatchers("/master/create/bulk").permitAll() // crear tipos público
                         .requestMatchers("/admin/register/newUser").permitAll() //registro de usuario publico

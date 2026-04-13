@@ -1,7 +1,7 @@
 package org.frias.avalon.domain.sale.dtos;
 
 
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseDetailDto;
+import org.frias.avalon.domain.product.application.dto.ProductResponseDetailDto;
 
 import java.math.BigDecimal;
 

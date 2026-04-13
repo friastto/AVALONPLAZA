@@ -6,7 +6,7 @@ import org.frias.avalon.domain.company.dtos.CompanyRequestNewDto;
 import org.frias.avalon.domain.company.dtos.CompanyResponseDto;
 import org.frias.avalon.domain.company.services.interfaces.CompanyService;
 import org.frias.avalon.domain.inventory.Producto.modules.admincompany.services.interfaces.ProductoCompanyService;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseDto;
+import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

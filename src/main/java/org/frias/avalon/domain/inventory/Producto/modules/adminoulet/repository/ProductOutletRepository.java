@@ -1,7 +1,7 @@
 package org.frias.avalon.domain.inventory.Producto.modules.adminoulet.repository;
 
 import jakarta.transaction.Transactional;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductOutlet;
+import org.frias.avalon.domain.product.domain.entity.ProductOutlet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

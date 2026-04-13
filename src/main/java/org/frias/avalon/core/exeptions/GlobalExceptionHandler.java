@@ -98,8 +98,9 @@ public class GlobalExceptionHandler {
     // 6. NullPointerException
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<ApiResponse<Object>> handleNullPointer(NullPointerException e) {
-        ApiResponse<Object> response = new ApiResponse<>(500, "Error interno: objeto nulo " + e.getMessage(), null);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse<>(500, "Error interno del servidor", null));
     }
 
     // 7. IllegalArgumentException
@@ -132,17 +133,29 @@ public class GlobalExceptionHandler {
     // 12. InsufficientStockException
     @ExceptionHandler(InsufficientStockException.class)
     public ResponseEntity<ApiResponse<Object>> handleInsufficientStock(InsufficientStockException e) {
-        ApiResponse<Object> response = new ApiResponse<>(400, e.getMessage(), null);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        ApiResponse<Object> response = new ApiResponse<>(
+                409,
+                e.getMessage(),
+                null);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Object>> handleBusinessException(BusinessException e) {
         ApiResponse<Object> response = new ApiResponse<>(
-                400,
+                422,
                 e.getMessage(),
                 null
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+    }
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBusinessException(AccessDeniedException e) {
+        ApiResponse<Object> response = new ApiResponse<>(
+                403,
+                e.getMessage(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 }

@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.Product;
+import org.frias.avalon.domain.product.domain.entity.Product;
 
 import java.math.BigDecimal;
 

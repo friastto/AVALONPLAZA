@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.inventory.Producto.modules.admincompany.repository;
 
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.entities.ProductBarcode;
+import org.frias.avalon.domain.product.domain.entity.ProductBarcode;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

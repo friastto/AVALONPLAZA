@@ -1,9 +1,10 @@
 package org.frias.avalon.domain.inventory.Producto.modules.adminsaas.controllers;
 
 import org.frias.avalon.core.uploadimg.service.ProductUploadImgImpl;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductRequestCreate;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.dtos.ProductResponseDto;
-import org.frias.avalon.domain.inventory.Producto.modules.adminsaas.services.interfaces.ProductoService;
+import org.frias.avalon.domain.product.application.dto.company.ProductRequestCreate;
+import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
+import org.frias.avalon.domain.product.application.dto.saas.ProductAvalonResponseDto;
+import org.frias.avalon.domain.product.application.services.interfaces.ProductoService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,13 +38,13 @@ public class ProductoController {
 
     }
     @GetMapping("/findAll")
-    public List<ProductResponseDto > getAll() {
+    public List<ProductAvalonResponseDto > getAll() {
 
         return productoService.findAll();
     }
 
     @PostMapping(value = "/productsImg", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ProductResponseDto createProduct(
+    public ProductAvalonResponseDto createProduct(
             @RequestPart("data") ProductRequestCreate data,
             @RequestPart("image") MultipartFile image) {
 
