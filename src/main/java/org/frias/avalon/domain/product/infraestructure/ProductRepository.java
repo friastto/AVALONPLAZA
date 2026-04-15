@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @TenantAware
@@ -27,5 +28,20 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         where p.id = :id
         """)
     void updateImageUrl(@Param("id") Long id,
-                        @Param("finalFileName") String finalFileName);
+                        @Param("finalFileName") String finalFileName
+    );
+
+    //Long id(Long id);
+
+
+
+    @Query("""
+SELECT p 
+FROM Product p 
+WHERE LOWER(p.name) 
+LIKE LOWER(CONCAT('%', :name, '%'))
+""")
+    List<Product> nearbyByName(@Param("name") String name);
+
+
 }

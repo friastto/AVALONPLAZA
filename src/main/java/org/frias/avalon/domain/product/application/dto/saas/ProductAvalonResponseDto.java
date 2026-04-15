@@ -1,6 +1,5 @@
 package org.frias.avalon.domain.product.application.dto.saas;
 
-import jakarta.validation.constraints.NotBlank;
 
 public record ProductAvalonResponseDto(
 
@@ -13,6 +12,8 @@ public record ProductAvalonResponseDto(
         String categoryId,
 
         String unitMeasureId,
+
+        String status,
 
         String imageUrl
 ) { }

@@ -32,16 +32,14 @@ public class ProductoMapperServiceImpl implements ProductoMapperService, Product
     @Override
     public ProductAvalonResponseDto toDto(Product p) {
 
-
-
-
         return new ProductAvalonResponseDto(
                 p.getId(),
                 p.getName(),
                 p.getDescription(),
                 p.getCategory().getFullName(),
                 p.getUnit().getShortName(),
-                p.getImageUrl()
+                p.getStatus().getFullName(),
+                "https://productcatalogavalonplaza.s3.us-east-2.amazonaws.com/"+p.getImageUrl()
         );
 
     }

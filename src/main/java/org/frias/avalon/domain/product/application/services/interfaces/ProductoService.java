@@ -1,6 +1,7 @@
 package org.frias.avalon.domain.product.application.services.interfaces;
 
 
+import jakarta.validation.constraints.NotBlank;
 import org.frias.avalon.domain.product.application.dto.company.ProductRequestCreate;
 import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
 import org.frias.avalon.domain.product.application.dto.saas.ProductAvalonResponseDto;
@@ -13,6 +14,8 @@ import java.util.List;
 public interface ProductoService {
     ProductAvalonResponseDto save(ProductRequestCreate request, MultipartFile imgUrl);
 
+    Product disableProductById(Long idProduct);
+
     Product searchById(Long id);
 
     BigDecimal calculatePrice(Long productId, String identity);
@@ -23,6 +26,8 @@ public interface ProductoService {
 
     List<ProductAvalonResponseDto> findAll();
 
+    List<Product> getAllProducts();
+
     void updateImageUrl(Long productId, String finalFileName);
 
     void deleteById(Long id);
@@ -32,5 +37,18 @@ public interface ProductoService {
             String desc,
             Long aLong,
             Long aLong1
+    );
+
+    Product update(
+            Long idproduct,
+            String name,
+            String description,
+            Long categoryId,
+            Long unitMeasureId
+
+    );
+
+   List<Product> nearbyNameProduct(
+            String name
     );
 }

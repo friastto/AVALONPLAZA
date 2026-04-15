@@ -34,6 +34,7 @@ build/
 
 # Secretos y variables de entorno
 .env
+env
 
 # Archivos de configuración con datos sensibles
 src/main/resources/application-local.properties

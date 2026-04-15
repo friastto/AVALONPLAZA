@@ -155,6 +155,16 @@ public class ProductServiceImpl implements ProductoService
     }
 
     @Override
+    public Product disableProductById(Long idProduct) {
+        Product product = productRepository.findById(idProduct)
+                .orElseThrow( ()-> new EntityNotFoundException("el producto a inabilitar no se encuentra en la base de datos"));
+
+        product.setStatus(masterDataService.searchByNameShortAndStatusActive("INA"));
+
+        return productRepository.save(product);
+    }
+
+    @Override
     public ProductResponseDto findByCodeBar(String codeBar) {
 
 
@@ -241,6 +251,11 @@ public class ProductServiceImpl implements ProductoService
     }
 
     @Override
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
+    @Override
     public void updateImageUrl(Long productId, String finalFileName) {
 
        Product p =  searchById(productId);
@@ -258,6 +273,43 @@ public class ProductServiceImpl implements ProductoService
     @Override
     public ProductResponseDto save(String name, String desc, Long aLong, Long aLong1) {
         return null;
+    }
+
+    @Override
+    public Product update(
+            Long idproduct,
+            String name,
+            String description,
+            Long categoryId,
+            Long unitMeasureId
+    ) {
+
+
+        Product p = searchById(idproduct);
+
+        if(name.isBlank()){
+            p.setName(name);
+        }
+        if(description.isBlank()){
+            p.setDescription(description);
+        }
+        if(categoryId != null && categoryId > 0){
+            p.setCategory(masterDataService.searchById(categoryId));
+
+        }
+        if(unitMeasureId != null && unitMeasureId > 0){
+            p.setUnit(masterDataService.searchById(unitMeasureId));
+        }
+
+      return productRepository.save(p);
+
+    }
+
+    @Override
+    public List<Product> nearbyNameProduct(String name) {
+
+        return productRepository.nearbyByName(name);
+
     }
 
     @Override
@@ -279,4 +331,6 @@ public class ProductServiceImpl implements ProductoService
 
         throw new UnsupportedOperationException("operacion no disponible");
     }
+
+
 }

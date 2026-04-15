@@ -5,15 +5,14 @@ import org.frias.avalon.domain.product.application.dto.company.ProductRequestCre
 import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
 import org.frias.avalon.domain.product.application.dto.saas.ProductAvalonRequestDataDto;
 import org.frias.avalon.domain.product.application.dto.saas.ProductAvalonResponseDto;
-import org.frias.avalon.domain.product.application.usecase.saas.CreateProductUseCase;
-import org.frias.avalon.domain.product.application.usecase.saas.DeleteProductByIdUseCase;
-import org.frias.avalon.domain.product.application.usecase.saas.SearchProductByIdUseCase;
-import org.frias.avalon.domain.product.application.usecase.saas.UpdateProductUseCase;
+import org.frias.avalon.domain.product.application.usecase.saas.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/avalon/admin/saas/products")
@@ -24,12 +23,18 @@ public class SaasProductController {
     private final SearchProductByIdUseCase searchProductByIdUseCase;
     private final DeleteProductByIdUseCase deleteProductByIdUseCase;
     private final UpdateProductUseCase updateProductUseCase;
+    private final GetAllProductsUseCase getAllProductByIdUseCase;
+    private final DisableProductByIdUseCase disableProductByIdUseCase;
+    private final NearbyProductByNameUseCase nearbyProductByNameUseCase;
 
-    public SaasProductController(CreateProductUseCase createProductUseCase, SearchProductByIdUseCase searchProductByIdUseCase, DeleteProductByIdUseCase deleteProductByIdUseCase, UpdateProductUseCase updateProductUseCase) {
+    public SaasProductController(CreateProductUseCase createProductUseCase, SearchProductByIdUseCase searchProductByIdUseCase, DeleteProductByIdUseCase deleteProductByIdUseCase, UpdateProductUseCase updateProductUseCase, GetAllProductsUseCase getAllProductByIdUseCase, DisableProductByIdUseCase disableProductByIdUseCase, NearbyProductByNameUseCase nearbyProductByNameUseCase) {
         this.createProductUseCase = createProductUseCase;
         this.searchProductByIdUseCase = searchProductByIdUseCase;
         this.deleteProductByIdUseCase = deleteProductByIdUseCase;
         this.updateProductUseCase = updateProductUseCase;
+        this.getAllProductByIdUseCase = getAllProductByIdUseCase;
+        this.disableProductByIdUseCase = disableProductByIdUseCase;
+        this.nearbyProductByNameUseCase = nearbyProductByNameUseCase;
     }
 
 
@@ -45,7 +50,7 @@ public class SaasProductController {
                 .body(new ApiResponse<>(201, "Producto creado con exito", response));
     }
 
-    @PostMapping("/search/v1/{id}")
+    @GetMapping("/search/v1/{id}")
     public ResponseEntity<ApiResponse<ProductAvalonResponseDto>> searchById(
             @PathVariable Long id
     ) {
@@ -53,9 +58,28 @@ public class SaasProductController {
         ProductAvalonResponseDto response = searchProductByIdUseCase.execute(id);
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse<>(201, "producto encontrado", response));
+                .body(new ApiResponse<>(200, "producto encontrado", response));
     }
 
+    @GetMapping("/nearby")
+    public ResponseEntity<ApiResponse<List<ProductAvalonResponseDto>>> searchById(
+            @RequestParam("name") String name
+    ) {
+
+        List<ProductAvalonResponseDto> response = nearbyProductByNameUseCase.execute(name);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(200, "producto encontrado", response));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<ProductAvalonResponseDto>>> getAll() {
+
+        List<ProductAvalonResponseDto> response = getAllProductByIdUseCase.execute();
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(200, "producto encontrado", response));
+    }
     @PutMapping("/Delete/{id}")
     public ResponseEntity<ApiResponse<ProductAvalonResponseDto>> deleteById(
             @PathVariable Long id
@@ -66,17 +90,27 @@ public class SaasProductController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(200, "Producto eliminado con exito", null));
     }
+    @PutMapping("/disable/{id}")
+    public ResponseEntity<ApiResponse<ProductAvalonResponseDto>> disableProductById(
+            @PathVariable Long id
+    ) {
 
-    @PostMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        ProductAvalonResponseDto productoAvalon = disableProductByIdUseCase.execute(id);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(200, "Producto inabilitado con exito", productoAvalon));
+    }
+    @PutMapping(value = "/update/{id}")
     public ResponseEntity<ApiResponse<ProductAvalonResponseDto>> updateProduct(
-            @RequestPart("data") ProductRequestCreate data,
-            @RequestPart("image") MultipartFile image) {
+            @PathVariable Long id,
+            @RequestBody ProductAvalonRequestDataDto data
+            ) {
 
 
-        ProductAvalonResponseDto response = updateProductUseCase.execute(data, image);
+        ProductAvalonResponseDto response = updateProductUseCase.execute(id, data);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(201, "Producto actualizado con exito", response));
+                .body(new ApiResponse<>(200, "Producto actualizado con exito", response));
     }
 
 }
