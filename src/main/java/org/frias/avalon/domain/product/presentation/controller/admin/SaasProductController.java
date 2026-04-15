@@ -1,11 +1,9 @@
 package org.frias.avalon.domain.product.presentation.controller.admin;
 
 import org.frias.avalon.core.exeptions.ApiResponse;
-import org.frias.avalon.domain.product.application.dto.company.ProductRequestCreate;
-import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
 import org.frias.avalon.domain.product.application.dto.saas.ProductAvalonRequestDataDto;
 import org.frias.avalon.domain.product.application.dto.saas.ProductAvalonResponseDto;
-import org.frias.avalon.domain.product.application.usecase.saas.*;
+import org.frias.avalon.domain.product.application.usecase.inter.saas.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

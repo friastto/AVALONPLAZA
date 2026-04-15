@@ -22,4 +22,13 @@ public interface OutletService {
     Boolean existsByIdAndCompanyId(Long idOutlets, Long idCompany);
 
 
+    Outlet create(
+            Long idCompany,
+            String name,
+            String address,
+            String phone,
+            Double latitude,
+            Double longitude,
+            boolean isMain
+    );
 }

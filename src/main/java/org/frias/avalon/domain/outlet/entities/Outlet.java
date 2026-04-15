@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.frias.avalon.core.tenant.config.TenantEntity;
 import org.frias.avalon.core.tenant.config.TenantEntityListener;
-import org.frias.avalon.domain.company.entities.Company;
+import org.frias.avalon.domain.company.domain.entities.Company;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;

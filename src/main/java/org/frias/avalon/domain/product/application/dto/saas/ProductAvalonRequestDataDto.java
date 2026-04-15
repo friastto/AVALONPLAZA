@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record ProductAvalonRequestDataDto(
 
-        @NotBlank(message = "producto sin nombre")
+        @NotBlank(message = "producto sin name")
         String name,
 
         @NotBlank(message = "producto sin description")

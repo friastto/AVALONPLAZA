@@ -6,7 +6,7 @@ import org.frias.avalon.domain.inventory.Producto.modules.admincompany.services.
 import org.frias.avalon.domain.product.application.dto.company.ProductRequestCreate;
 import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
 import org.frias.avalon.domain.product.application.services.interfaces.ProductoService;
-import org.frias.avalon.domain.product.application.usecase.company.UpdateProductCompanyUseCase;
+import org.frias.avalon.domain.product.application.usecase.inter.company.UpdateProductCompanyUseCase;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

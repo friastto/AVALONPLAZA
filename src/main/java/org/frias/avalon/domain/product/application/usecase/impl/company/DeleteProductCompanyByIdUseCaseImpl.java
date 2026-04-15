@@ -4,7 +4,7 @@ import org.frias.avalon.core.exeptions.AccessDeniedException;
 import org.frias.avalon.domain.company.facade.TenantSecurity;
 import org.frias.avalon.domain.product.application.mapper.ProductoMapperService;
 import org.frias.avalon.domain.product.application.services.interfaces.ProductoService;
-import org.frias.avalon.domain.product.application.usecase.company.DeleteProductCompanyByIdUseCase;
+import org.frias.avalon.domain.product.application.usecase.inter.company.DeleteProductCompanyByIdUseCase;
 import org.springframework.stereotype.Service;
 
 @Service

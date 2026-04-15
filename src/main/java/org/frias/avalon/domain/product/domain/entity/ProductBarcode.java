@@ -3,7 +3,7 @@ package org.frias.avalon.domain.product.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.frias.avalon.core.tenant.config.TenantEntity;
-import org.frias.avalon.domain.company.entities.Company;
+import org.frias.avalon.domain.company.domain.entities.Company;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;

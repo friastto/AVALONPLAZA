@@ -1,10 +1,9 @@
 package org.frias.avalon.domain.product.application.usecase.impl.company;
 
-import jakarta.mail.MethodNotSupportedException;
 import org.frias.avalon.domain.company.facade.TenantSecurity;
 import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
 import org.frias.avalon.domain.product.application.services.interfaces.ProductoService;
-import org.frias.avalon.domain.product.application.usecase.company.AssingProductToCompanyUseCase;
+import org.frias.avalon.domain.product.application.usecase.inter.company.AssingProductToCompanyUseCase;
 import org.springframework.stereotype.Service;
 
 @Service

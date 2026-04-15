@@ -2,11 +2,10 @@ package org.frias.avalon.domain.product.application.usecase.impl.saas;
 
 import org.frias.avalon.core.exeptions.AccessDeniedException;
 import org.frias.avalon.domain.company.facade.TenantSecurity;
-import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
 import org.frias.avalon.domain.product.application.dto.saas.ProductAvalonResponseDto;
 import org.frias.avalon.domain.product.application.mapper.ProductoMapperService;
 import org.frias.avalon.domain.product.application.services.interfaces.ProductoService;
-import org.frias.avalon.domain.product.application.usecase.saas.SearchProductByIdUseCase;
+import org.frias.avalon.domain.product.application.usecase.inter.saas.SearchProductByIdUseCase;
 import org.springframework.stereotype.Service;
 
 

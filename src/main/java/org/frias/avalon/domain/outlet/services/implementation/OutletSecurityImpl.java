@@ -6,7 +6,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.frias.avalon.core.jwt.util.JwtUtils;
 import org.frias.avalon.core.tenant.config.TenantAware;
-import org.frias.avalon.domain.company.entities.Company;
+import org.frias.avalon.domain.company.domain.entities.Company;
 import org.frias.avalon.domain.company.facade.TenantSecurity;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataService;
@@ -153,6 +153,36 @@ public class OutletSecurityImpl
         return outletRepository.existsByIdAndCompanyId(idOutlet, idCompany);
     }
 
+    @Override
+    public Outlet create(Long idComany, String name, String address, String phone, Double latitude, Double longitude, boolean isMain) {
+
+        // REGLA DE ORO: ¿Quién intenta crear?
+
+            // Si eres TÚ (Master), la empresa DEBE venir en el DTO (porque tú creas para otros)
+            if (idComany == null) {
+                throw new IllegalArgumentException("la outlet no se puede crear por fuera el contexto empresarial. debe crear una empresa primero");
+            }
+
+            /*outletRepository.findByName(name).ifPresent(o -> {
+            throw new EntityExistsException("el nombre de la sucursal no disponible :" + o);
+        });*/
+
+        MasterData estadoActivo = masterDataService.getStatusActive();
+
+        Outlet o = new Outlet();
+
+        o.codeGenerator();
+        o.setName(name);
+        o.setAddress(address);
+        o.setPhone(phone);
+        o.setMain(isMain);
+        o.setStatus(estadoActivo);
+        o.setLatitude(latitude);
+        o.setLongitude(longitude);
+        o.setCompany(new Company(idComany));
+
+        return outletRepository.save(o);
+    }
 
 
     public void validarAccesoSucursal(Long idOutletDestino) {

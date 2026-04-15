@@ -5,7 +5,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.jwt.util.JwtUtils;
 import org.frias.avalon.core.util.PassSecure;
 import org.frias.avalon.domain.company.facade.TenantSecurity;
-import org.frias.avalon.domain.company.services.interfaces.CompanyService;
+import org.frias.avalon.domain.company.application.services.interfaces.CompanyService;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataService;
 import org.frias.avalon.domain.person.entity.Person;

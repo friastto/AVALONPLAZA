@@ -5,11 +5,9 @@ import org.frias.avalon.domain.company.facade.TenantSecurity;
 import org.frias.avalon.domain.product.application.dto.saas.ProductAvalonResponseDto;
 import org.frias.avalon.domain.product.application.mapper.ProductoMapperService;
 import org.frias.avalon.domain.product.application.services.interfaces.ProductoService;
-import org.frias.avalon.domain.product.application.usecase.saas.NearbyProductByNameUseCase;
-import org.frias.avalon.domain.product.application.usecase.saas.SearchProductByIdUseCase;
+import org.frias.avalon.domain.product.application.usecase.inter.saas.NearbyProductByNameUseCase;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 
 
@@ -31,7 +29,7 @@ public class NearbyProductByNameUseCaseImpl implements NearbyProductByNameUseCas
     public List<ProductAvalonResponseDto> execute(String name) {
 
         if(!tenantSecurity.isMasterStaff()){
-            throw new AccessDeniedException("Solo SaaS Admin puede buscar productos por coincidencias en el nombre");
+            throw new AccessDeniedException("Solo SaaS Admin puede buscar productos por coincidencias en el name");
         }
 
         return productoService.nearbyNameProduct(name).stream()

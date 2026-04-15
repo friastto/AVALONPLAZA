@@ -4,13 +4,13 @@ package org.frias.avalon.domain.outlet.dtos.response;
 public record OutletDto(
         Long id,
 
-    String name,
+        String name,
 
-    String address,
+        String address,
 
-    String phone,
+        String phone,
 
-    Double latitude,
+        Double latitude,
 
-    Double longitude
-    ){}
+        Double longitude
+){}
