@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.person.entity.Person;
-import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
+import org.frias.avalon.domain.user.domain.entities.UserAvalon;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;

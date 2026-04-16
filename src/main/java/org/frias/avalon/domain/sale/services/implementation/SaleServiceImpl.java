@@ -22,8 +22,8 @@ import org.frias.avalon.domain.sale.entities.SaleDetail;
 import org.frias.avalon.domain.sale.mappers.SalesMapperService;
 import org.frias.avalon.domain.sale.repositories.SaleRepository;
 import org.frias.avalon.domain.sale.services.interfaces.SaleService;
-import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
-import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepository;
+import org.frias.avalon.domain.user.domain.entities.UserAvalon;
+import org.frias.avalon.domain.user.infraestruture.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

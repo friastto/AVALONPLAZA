@@ -2,17 +2,17 @@ package org.frias.avalon.domain.person.dto;
 
 public record PersonRequestNewDto(
 
-String numberId,
+    String numberId,
 
-String name,
+    String name,
 
-String lastName,
+    String lastName,
 
-String address,
+    String address,
 
-Long identificationId,
+    Long identificationId,
 
-Long sexId
+    Long sexId
 
 ) {
 }

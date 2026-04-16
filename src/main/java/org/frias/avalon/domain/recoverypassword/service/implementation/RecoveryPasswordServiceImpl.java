@@ -8,8 +8,8 @@ import org.frias.avalon.domain.person.services.interfaces.PersonService;
 import org.frias.avalon.domain.recoverypassword.repository.PasswordResetRepository;
 import org.frias.avalon.domain.recoverypassword.service.entity.PasswordReset;
 import org.frias.avalon.domain.recoverypassword.service.interfaces.RecoveryPasswordService;
-import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
-import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepository;
+import org.frias.avalon.domain.user.domain.entities.UserAvalon;
+import org.frias.avalon.domain.user.infraestruture.repositories.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;

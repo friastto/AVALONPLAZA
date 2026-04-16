@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.company.facade;
 
-import org.frias.avalon.domain.usergeneral.useravalon.services.interfaces.UsersService;
+import org.frias.avalon.domain.user.domain.services.interfaces.UsersService;
 
 public class CompanyFacade extends TenantSecurity {
 

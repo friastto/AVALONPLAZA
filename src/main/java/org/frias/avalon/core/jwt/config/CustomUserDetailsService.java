@@ -1,8 +1,8 @@
 package org.frias.avalon.core.jwt.config;
 
 
-import org.frias.avalon.domain.usergeneral.useravalon.entities.UserAvalon;
-import org.frias.avalon.domain.usergeneral.useravalon.repositories.UserRepository;
+import org.frias.avalon.domain.user.domain.entities.UserAvalon;
+import org.frias.avalon.domain.user.infraestruture.repositories.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
