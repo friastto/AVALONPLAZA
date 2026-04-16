@@ -34,7 +34,7 @@ public class RecoveryPasswordServiceImpl implements RecoveryPasswordService {
     @Override
     public List<String> initiateRecovery(String identification, String method) {
         // 1. Buscamos la persona por su cédula
-        Person person = personService.findByNumberId(identification);
+        Person person = personService.findByNumberId(identification).get();
 
 
         // 2. Traemos todos sus usuarios (Invitado, Empleado, etc.)

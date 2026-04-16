@@ -19,6 +19,13 @@ public class AuthloginUseCaseImpl implements AuthloginUseCase {
     @Override
     public AuthResponse execute(AuthRequest request) {
 
-        return authService.login(request.username(), request.password());
+        return execute(request.username(),request.password());
     }
+
+    public AuthResponse execute(String userName, String password){
+
+        return authService.login(userName, password);
+    }
+
+
 }

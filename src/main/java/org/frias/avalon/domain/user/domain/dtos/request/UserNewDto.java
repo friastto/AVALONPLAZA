@@ -6,10 +6,10 @@ public record UserNewDto(
 
     String userName,
     String password,
-    Long role,
-    PersonRequestNewDto newPersonData,
+    Long roleId,
     Long companyId,
+    PersonRequestNewDto newPersonData,
+
     Long outletId
 
-){
-}
+) implements BaseNewUserDto{}

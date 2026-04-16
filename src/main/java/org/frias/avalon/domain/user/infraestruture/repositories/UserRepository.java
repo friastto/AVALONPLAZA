@@ -18,6 +18,16 @@ public interface UserRepository extends JpaRepository<UserAvalon, Long> {
     // Esta consulta busca el usuario por la identificación de la persona asociada
     // y verifica que el usuario esté activo.
 
+    @Query("""
+        SELECT COUNT(u) > 0
+        FROM UserAvalon u
+        WHERE u.person.id = :personId
+          AND u.rolId.id = :roleId
+    """)
+    boolean existsByPersonAndRole(@Param("personId") Long personId,
+                                  @Param("roleId") Long roleId);
+
+
     List<UserAvalon> findAllByPersonId(Long personId);
 
     @Query("""
@@ -75,5 +85,7 @@ SELECT u FROM UserAvalon u
     ORDER BY o.id ASC NULLS FIRST, u.userName ASC
 """)
     List<UserAvalon>getAllEmployesCompany(@Param("id") Long id);
+
+
 
 }

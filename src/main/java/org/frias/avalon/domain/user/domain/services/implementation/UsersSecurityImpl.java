@@ -22,7 +22,10 @@ import org.frias.avalon.domain.user.domain.services.interfaces.UsuarioServiceVal
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class UsersSecurityImpl extends TenantSecurity implements UsersService, UsuarioServiceValidate, EmployeeService {
@@ -34,12 +37,19 @@ public class UsersSecurityImpl extends TenantSecurity implements UsersService, U
     private final JwtUtils jwtUtils;
     private final CompanyService companyService;
 
+    private static final Map<String, Set<String>> ROLE_PERMISSIONS = Map.of(
+            "ADMINTI", Set.of("ROOT", "ADMIN", "GERGEN", "USER","GERENTE"),
+            "ADMIN", Set.of("GERGEN", "USER"),
+            "GERENTE", Set.of("USER")
+    );
+
     public UsersSecurityImpl(UserRepository userRepository, PersonService personService, MasterDataService masterDataService, JwtUtils jwtUtils, CompanyService companyService) {
         this.userRepository = userRepository;
         this.personService = personService;
         this.masterDataService = masterDataService;
         this.jwtUtils = jwtUtils;
         this.companyService = companyService;
+
     }
 
 
@@ -64,17 +74,13 @@ public class UsersSecurityImpl extends TenantSecurity implements UsersService, U
 
         // se construye la entidad Usuario
 
-        userRepository.findByUserName(userCreate.userName())
-                .ifPresent(u -> {
-                    throw new EntityExistsException("el name de usuario no esta disponible");
-                });
 
         Person personEntity = personService.save(userCreate.newPersonData());
 
         return createUserAndCreateLinkPerson(new UserNewLinkPersonDto(
                 userCreate.userName(),
                 userCreate.password(),
-                userCreate.role(),
+                userCreate.roleId(),
                 personEntity.getId(),
                 userCreate.companyId(),
                 userCreate.outletId()
@@ -229,14 +235,74 @@ public class UsersSecurityImpl extends TenantSecurity implements UsersService, U
         return userRepository.save(userAdminCompany);
     }
 
+    @Override
+    public UserAvalon createUserWithRules(Long companyId, String operatorRol, String username, String password, Long role) {
+
+        return null;
+    }
+
+    @Override
+    public UserAvalon createUser(Long idCompany, String rolOperator, Person person, String userName, String password, Long idRol) {
+        // 🔹 username único
+       validateUsername(userName);
+
+        // 🔹 rol
+        MasterData rolNewUser = masterDataService.searchById(idRol);
+        MasterData rolRootNew = masterDataService.getRootBranch(rolNewUser.getId(), "ROL");
+
+        //desactivar los uusarios en otras empresas
+        deactivateActiveUsersInOtherCompanies(person.getId(), idCompany);
+
+        // 🔹 validaciones
+        validatePersonDoesNotHaveRoleInSameBranch(person.getId(), idRol);
+
+        if (rolOperator != null) {
+            validateHierarchy(rolOperator, rolRootNew);
+        }
+
+        validatePersonRules(idCompany, person.getId());
+
+        // 🔹 empresa
+        Company company = (idCompany != null)
+                ? companyService.searchById(idCompany)
+                : null;
+
+        // 🔹 construir
+        UserAvalon user = new UserAvalon();
+
+        user.setCompanyId(company);
+        user.setPerson(person);
+        user.setRolId(rolNewUser);
+        user.setUserName(userName);
+
+        user.setHashSalt(PassSecure.generateSalt());
+        user.setHashPassword(PassSecure.hashPassword(password, user.getHashSalt()));
+
+        user.setStatusId(masterDataService.searchByShortName("ACT"));
+
+        return userRepository.save(user);
+    }
+
+    @Override
+    public boolean existsByPersonAndRole(Long personId, Long roleId) {
+
+        return userRepository.existsByPersonAndRole(personId,roleId);
+    }
+
+    @Override
+    public List<UserAvalon> getAllUserIntoCompany(Long idCompany) {
+
+       return  userRepository.getAllEmployesCompany(idCompany);
+    }
+
 
     @Override
     public Boolean validateUser(UserValidateCredentials userValidateCredentials) {
 
         UserAvalon user = userRepository.findByUserName(userValidateCredentials.userName())
-                .orElseThrow(() -> {
-                    throw new RuntimeException("credenciales invalidas");
-                });
+                .orElseThrow(() ->
+                     new IllegalArgumentException("credenciales invalidas")
+                );
 
         return PassSecure.verifyPassword(userValidateCredentials.password(), user.getHashSalt(), user.getHashPassword());
     }
@@ -272,10 +338,111 @@ public class UsersSecurityImpl extends TenantSecurity implements UsersService, U
         return userAvalonList.isEmpty() ? userAvalonList: List.of();
     }
 
+    private void validateHierarchy(String operatorRol, MasterData rolRootNew) {
+
+        String newRole = rolRootNew.getShortName();
+
+        Set<String> allowedRoles = ROLE_PERMISSIONS.get(operatorRol);
+
+        if (allowedRoles == null || !allowedRoles.contains(newRole)) {
+            throw new SecurityException(
+                    "El rol " + operatorRol + " no puede crear usuarios con rol " + newRole
+            );
+        }
+    }
+
+    private void validatePersonRules(Long companyId, Long personId) {
+
+        List<UserAvalon> existingUsers = userRepository.findAllByPersonId(personId);
+
+        for (UserAvalon u : existingUsers) {
+
+            Long userCompanyId = (u.getCompanyId() != null)
+                    ? u.getCompanyId().getId()
+                    : null;
+            String status = u.getStatusId().getShortName();
+
+            /*if ("ACT".equals(status)
+                    && userCompanyId != null
+                    && !userCompanyId.equals(companyId)) {
+
+                throw new SecurityException(
+                        "La persona ya está activa en otra empresa"
+                );
+            }*/
+            if (companyId != null && companyId.equals(userCompanyId)) {
+                throw new EntityExistsException("Ya tiene usuario en esta empresa");
+            }
 
 
+        }
+    }
+    private void validateUsername(String username) {
 
+        userRepository.findByUserName(username)
+                .ifPresent(u -> {
+                    throw new EntityExistsException(
+                            "El username '" + username + "' ya existe"
+                    );
+                });
+    }
+    private void validatePersonDoesNotHaveRoleInSameBranch(Long personId, Long roleId) {
 
+        // 🔹 rol nuevo
+        MasterData newRole = masterDataService.searchById(roleId);
+        MasterData newRoot = masterDataService.getRootBranch(newRole.getId(), "ROL");
+
+        // 🔹 usuarios actuales de la persona
+        List<UserAvalon> users = userRepository.findAllByPersonId(personId);
+
+        for (UserAvalon u : users) {
+
+            MasterData existingRoot = masterDataService.getRootBranch(
+                    u.getRolId().getId(),
+                    "ROL"
+            );
+
+            if (existingRoot.getShortName().equals(newRoot.getShortName())) {
+                throw new IllegalStateException(
+                        "La persona ya tiene un usuario en la rama " + newRoot.getShortName()
+                );
+            }
+        }
+    }
+
+    private void deactivateActiveUsersInOtherCompanies(Long personId, Long newCompanyId) {
+
+        List<UserAvalon> users = userRepository.findAllByPersonId(personId);
+
+        Map<Long, String> roleRootCache = new HashMap<>();
+
+        for (UserAvalon u : users) {
+
+            Long userCompanyId = (u.getCompanyId() != null)
+                    ? u.getCompanyId().getId()
+                    : null;
+
+            String status = u.getStatusId().getShortName();
+
+            String rootName = roleRootCache.computeIfAbsent(
+                    u.getRolId().getId(),
+                    roleId -> masterDataService
+                            .getRootBranch(roleId, "ROL")
+                            .getShortName()
+            );
+
+            if ("USUARIO".equals(rootName)) {
+                continue;
+            }
+
+            if ("ACT".equals(status)
+                    && userCompanyId != null
+                    && !userCompanyId.equals(newCompanyId)) {
+
+                u.setStatusId(masterDataService.searchByShortName("INA"));
+            }
+        }
+    }
 }
 
 

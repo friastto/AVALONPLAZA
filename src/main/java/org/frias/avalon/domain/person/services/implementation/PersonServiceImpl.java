@@ -9,6 +9,8 @@ import org.frias.avalon.domain.person.repository.PersonaRepository;
 import org.frias.avalon.domain.person.services.interfaces.PersonService;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class PersonServiceImpl implements PersonService {
 
@@ -22,37 +24,41 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public Person findByNumberId(String numberId) {
-        return personaRepository.findByNumberid(numberId)
-                .orElseThrow(() -> new EntityNotFoundException("No registrado en el sistema : "+numberId));
+    public Optional<Person> findByNumberId(String numberId) {
+        return personaRepository.findByNumberid(numberId);
+
 
     }
 
     @Override
     public Person save(PersonRequestNewDto personCreate) {
 
-        Person person = new Person();
-
-        personaRepository.findByNumberid(personCreate.numberId())
-                .ifPresent(p -> {
-                    throw new EntityExistsException("la identificación del usuario no está disponible");
-                });
-
-           person.setNumberid(personCreate.numberId());
-           person.setName(personCreate.name());
-           person.setDir(personCreate.address());
-           person.setLastName(personCreate.lastName());
-           person.setIdentificationId(masterDataService.searchById(personCreate.identificationId()));
-           person.setStatusId(masterDataService.searchByShortName("ACT"));
-           person.setSexId(masterDataService.searchById(personCreate.sexId()));
-
-           return personaRepository.save(person);
-
+        return create(personCreate.numberId(), personCreate.name(),personCreate.lastName(),personCreate.address(),personCreate.identificationId(),personCreate.sexId());
     }
 
     @Override
     public Person searchById(Long id) {
 
         return personaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Persona no encontrada en el sistema : para añadirle un susario a una persona debe crear una persona y despues asignarselo al usuario"));
+    }
+
+    @Override
+    public Person create(String numberId, String name, String lastName, String address, Long identificationId, Long sexId) {
+        Person person = new Person();
+
+        personaRepository.findByNumberid(numberId)
+                .ifPresent(p -> {
+                    throw new EntityExistsException("la identificación del usuario no está disponible");
+                });
+
+        person.setNumberid(numberId);
+        person.setName(name);
+        person.setDir(address);
+        person.setLastName(lastName);
+        person.setIdentificationId(masterDataService.searchById(identificationId));
+        person.setStatusId(masterDataService.getStatusActive());
+        person.setSexId(masterDataService.searchById(sexId));
+
+        return personaRepository.save(person);
     }
 }

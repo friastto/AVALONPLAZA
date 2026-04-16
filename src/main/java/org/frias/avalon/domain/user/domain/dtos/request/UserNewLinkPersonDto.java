@@ -4,7 +4,8 @@ public record UserNewLinkPersonDto(
         String userName,
         String password,
         Long roleId,
-        Long personId,
         Long companyId,
+
+        Long personId,
         Long outletId
-) {}
+) implements BaseNewUserDto{}

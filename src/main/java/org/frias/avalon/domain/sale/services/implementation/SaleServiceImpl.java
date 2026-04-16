@@ -77,12 +77,12 @@ public class SaleServiceImpl implements SaleService {
         Person customer;
 
         try{
-            customer = personaService.findByNumberId(saleRequest.customerId());
+            customer = personaService.findByNumberId(saleRequest.customerId()).get();
 
 
         }catch(EntityNotFoundException ex){
             String CUSTOMER_GENERIC_ID = "999";
-            customer = personaService.findByNumberId(CUSTOMER_GENERIC_ID);
+            customer = personaService.findByNumberId(CUSTOMER_GENERIC_ID).get();
         }
 
 

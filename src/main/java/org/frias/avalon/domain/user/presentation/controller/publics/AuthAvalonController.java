@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.security.spec.InvalidKeySpecException;
 
 @RestController
-@RequestMapping("/auth-avalon")
+@RequestMapping("/avalon/public/auth")
 public class AuthAvalonController {
 
     private final AuthService authService;
