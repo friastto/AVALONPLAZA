@@ -13,7 +13,5 @@ public record UpdateCompanyDto(
         String email
 
 
-
-
-        ) {
+) {
 }

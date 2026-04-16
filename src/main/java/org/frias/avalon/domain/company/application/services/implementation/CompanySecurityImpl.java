@@ -3,14 +3,14 @@ package org.frias.avalon.domain.company.application.services.implementation;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.tenant.tenantcontex.TenantContext;
-import org.frias.avalon.domain.company.application.dtos.request.CompanyRequestNewDto;
 import org.frias.avalon.domain.company.application.dtos.CompanyResponseDto;
 import org.frias.avalon.domain.company.application.dtos.UpdateCompanyDto;
+import org.frias.avalon.domain.company.application.dtos.request.CompanyRequestNewDto;
+import org.frias.avalon.domain.company.application.mappers.CompanyMapper;
+import org.frias.avalon.domain.company.application.services.interfaces.CompanyService;
 import org.frias.avalon.domain.company.domain.entities.Company;
 import org.frias.avalon.domain.company.facade.TenantSecurity;
-import org.frias.avalon.domain.company.application.mappers.CompanyMapper;
 import org.frias.avalon.domain.company.infraestructure.repositories.CompanyRepository;
-import org.frias.avalon.domain.company.application.services.interfaces.CompanyService;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataService;
 import org.frias.avalon.domain.outlet.dtos.request.OutletNewDto;
@@ -19,6 +19,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class CompanySecurityImpl extends TenantSecurity
@@ -34,24 +36,26 @@ public class CompanySecurityImpl extends TenantSecurity
     private final OutletService outletService;
 
 
+
     public CompanySecurityImpl(CompanyRepository companyRepository, MasterDataService masterDataService, CompanyMapper companyMapper, OutletService outletService) {
         this.companyRepository = companyRepository;
         this.masterDataService = masterDataService;
         this.companyMapper = companyMapper;
         this.outletService = outletService;
+
     }
 
 
-    private boolean checkCompanyExistsByNit(String nit){
+    private boolean checkCompanyExistsByNit(String nit) {
 
-        return  companyRepository.findByNit(nit).isPresent();
+        return companyRepository.findByNit(nit).isPresent();
     }
 
 
     @Override
     public Company create(CompanyRequestNewDto newCompanyData) {
 
-        if(checkCompanyExistsByNit(newCompanyData.nit()))
+        if (checkCompanyExistsByNit(newCompanyData.nit()))
             throw new EntityExistsException("El NIT digitado * " + newCompanyData.nit() + " * no se encuentra disponible");
 
         MasterData statusActive = masterDataService.getStatusActive();
@@ -107,16 +111,16 @@ public class CompanySecurityImpl extends TenantSecurity
 
         for (OutletNewDto outletDto : dto.outlets()) {
 
-             OutletNewDto oN = new OutletNewDto(
-                                                outletDto.name(),
-                                                outletDto.address(),
-                                                outletDto.phone(),
-                                                outletDto.latitude(),
-                                                outletDto.longitude(),
-                                                companySaved.getId()
-                                            );
+            OutletNewDto oN = new OutletNewDto(
+                    outletDto.name(),
+                    outletDto.address(),
+                    outletDto.phone(),
+                    outletDto.latitude(),
+                    outletDto.longitude(),
+                    companySaved.getId()
+            );
 
-           companySaved.addSucursal(outletService.create(oN));
+            companySaved.addSucursal(outletService.create(oN));
         }
 
 
@@ -141,7 +145,6 @@ public class CompanySecurityImpl extends TenantSecurity
         }
 
 
-
     }
 
     @Override
@@ -156,7 +159,7 @@ public class CompanySecurityImpl extends TenantSecurity
     public Company searchByNit(String nit) {
 
         return companyRepository.findByNit(nit)
-                .orElseThrow( ( ) -> new EntityExistsException("no se encontraron empresas relacionadas con el nit * " + nit + " *"));
+                .orElseThrow(() -> new EntityExistsException("no se encontraron empresas relacionadas con el nit * " + nit + " *"));
     }
 
     @Override
@@ -171,7 +174,7 @@ public class CompanySecurityImpl extends TenantSecurity
         companyOld.setAddress(request.address().trim());
 
         companyOld.setEmail(request.email());
-        try{
+        try {
 
             return companyRepository.save(companyOld);
         } catch (DataIntegrityViolationException e) {
@@ -191,7 +194,7 @@ public class CompanySecurityImpl extends TenantSecurity
 
         company.setStatus(newStatus);
 
-        try{
+        try {
 
             return companyRepository.save(company);
         } catch (DataIntegrityViolationException e) {
@@ -214,9 +217,15 @@ public class CompanySecurityImpl extends TenantSecurity
         return companyMapper.toDto(searchCompany());
     }
 
-
+@Override
     public Company searchCompany(Long id) {
         return companyRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No se encuentran registros de la compañia en la base de datos"));
+    }
+
+    @Override
+    public List<Company> getAll() {
+
+        return companyRepository.findAll();
     }
 
     @Override
@@ -228,7 +237,7 @@ public class CompanySecurityImpl extends TenantSecurity
     @Override
     public Company create(String nit, String name, String email) {
 
-        if(checkCompanyExistsByNit(nit))
+        if (checkCompanyExistsByNit(nit))
             throw new EntityExistsException("El NIT digitado * " + nit + " * no se encuentra disponible");
 
         MasterData statusActive = masterDataService.getStatusActive();
@@ -243,4 +252,30 @@ public class CompanySecurityImpl extends TenantSecurity
         return companyRepository.save(company);
 
     }
+
+    @Override
+    public Company disableCompany(Long id) {
+
+        Company company = searchCompany(id);
+
+        MasterData statusDisable = masterDataService.searchByNameShortAndStatusActive("INA");
+
+        company.setStatus(statusDisable);
+
+        return companyRepository.save(company);
+    }
+
+    @Override
+    public Company changeStatus(Long id, Long idStatus) {
+
+       MasterData status =  masterDataService.searchById(idStatus);
+
+        Company company = searchById(id);
+
+        company.setStatus(status);
+
+        return companyRepository.save(company);
+    }
+
+
 }

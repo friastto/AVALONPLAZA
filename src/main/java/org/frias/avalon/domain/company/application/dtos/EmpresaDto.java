@@ -4,19 +4,21 @@ package org.frias.avalon.domain.company.application.dtos;
 import jakarta.validation.constraints.NotBlank;
 import org.frias.avalon.domain.outlet.dtos.response.OutletDto;
 
-record EmpresaDto (
+record EmpresaDto(
 
-        @NotBlank(message = "La empresa debe tener un nit")
-    String nit,
+        String nit,
 
-        @NotBlank(message = "La empresa no piuede estar sin name")
-    String nombre,
+        String nombre,
 
+        String email,
 
+        String address,
 
-        @NotBlank(message = "La empresa debe tener un email de contacto")
-    String email,
+        String phone,
 
-    OutletDto outlet
+        Double latitude,
 
-){}
+        Double longitude
+
+) {
+}

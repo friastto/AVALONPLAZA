@@ -22,11 +22,11 @@ public class CreateOutletUseCaseImpl extends TenantSecurity implements CreateOut
 
         Long idCompany = getCompanyId();
 
-        if(idCompany == null)
+        if (idCompany == null)
             throw new SecurityException("no tiene los permisos necesarios para crear outlets para esta empresa");
 
 
-        Outlet o =outletService.create(
+        Outlet o = outletService.create(
                 idCompany,
                 request.name(),
                 request.address(),

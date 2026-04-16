@@ -85,9 +85,10 @@ public class SaasProductController {
 
         deleteProductByIdUseCase.execute(id);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse<>(200, "Producto eliminado con exito", null));
     }
+
     @PutMapping("/disable/{id}")
     public ResponseEntity<ApiResponse<ProductAvalonResponseDto>> disableProductById(
             @PathVariable Long id
@@ -98,6 +99,7 @@ public class SaasProductController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse<>(200, "Producto inabilitado con exito", productoAvalon));
     }
+
     @PutMapping(value = "/update/{id}")
     public ResponseEntity<ApiResponse<ProductAvalonResponseDto>> updateProduct(
             @PathVariable Long id,

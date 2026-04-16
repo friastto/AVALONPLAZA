@@ -2,8 +2,8 @@ package org.frias.avalon.domain.company.presentation.controllers.company;
 
 
 import jakarta.validation.Valid;
-import org.frias.avalon.domain.company.application.dtos.request.CompanyRequestNewDto;
 import org.frias.avalon.domain.company.application.dtos.CompanyResponseDto;
+import org.frias.avalon.domain.company.application.dtos.request.CompanyRequestNewDto;
 import org.frias.avalon.domain.company.application.services.interfaces.CompanyService;
 import org.frias.avalon.domain.inventory.Producto.modules.admincompany.services.interfaces.ProductoCompanyService;
 import org.frias.avalon.domain.product.application.dto.company.ProductResponseDto;
@@ -33,6 +33,7 @@ public class CompanyController {
 
         return companyService.searchCompanyAndOutlets();
     }
+
     @PostMapping("/add-from-avalon/{avalonProductId}")
     public ProductResponseDto addProductToCatalog(@PathVariable Long avalonProductId) {
 

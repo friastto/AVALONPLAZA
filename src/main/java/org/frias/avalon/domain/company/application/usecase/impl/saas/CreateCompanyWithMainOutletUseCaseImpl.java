@@ -15,7 +15,7 @@ import java.util.List;
 
 @Service
 public class CreateCompanyWithMainOutletUseCaseImpl extends TenantSecurity implements CreateCompanyWithMainOutletUseCase {
-    
+
     private final CompanyService companyService;
     private final OutletService outletService;
     private final CompanyMapper companyMapper;
@@ -31,35 +31,36 @@ public class CreateCompanyWithMainOutletUseCaseImpl extends TenantSecurity imple
 
     @Override
     public CompanyWhithMainOutletResponseDto execute(CompanyWithOutletDto request) {
-        
-        if(!isMasterStaff()) throw new SecurityException("Solo los admin-Avalon Pueden crear una empresa en Avalon");
+
+        if (!isMasterStaff()) throw new SecurityException("Solo los admin-Avalon Pueden crear una empresa en Avalon");
 
         CompanyWhithMainOutletResponseDto companyResponse = companyMapper.toDtoCompanyWithMainOutlet(
                 companyService.create(
-                    request.nit(),
-                    request.name(),
-                    request.email()
+                        request.nit(),
+                        request.name(),
+                        request.email()
                 )
         );
-        
-       OutletDto outletresponse = outletMapper.toDto(
-               outletService.create(
-                       companyResponse.id(),
-                request.outlet().name(),
-                request.outlet().address(),
-                request.outlet().phone(),
-                request.outlet().latitude(),
-                request.outlet().longitude(),
-                       true
-            )
-       );
-        
+
+        OutletDto outletresponse = outletMapper.toDto(
+                outletService.create(
+                        companyResponse.id(),
+                        request.outlet().name(),
+                        request.outlet().address(),
+                        request.outlet().phone(),
+                        request.outlet().latitude(),
+                        request.outlet().longitude(),
+                        true
+                )
+        );
+
         return new CompanyWhithMainOutletResponseDto(
                 companyResponse.id(),
                 companyResponse.nit(),
                 companyResponse.name(),
                 companyResponse.email(),
-                List.of(outletresponse)
+                companyResponse.status(),
+                outletresponse
 
         );
     }

@@ -12,17 +12,18 @@ import java.util.List;
 public record CompanyRequestNewDto(
         @NotBlank(message = "La empresa no piuede estar sin name")
 
-    String name,
+        String name,
         @NotBlank(message = "La empresa debe tener un nit")
 
-    String nit,
+        String nit,
 
         @NotBlank(message = "La empresa debe tener un email de contacto")
         @Email(message = "Debe ingresar un formato de email válido (ejemplo@dominio.com)")
-    String email,
+        String email,
 
         @NotEmpty(message = "La empresa debe tener almenos una sucursal")
         @Valid
-    List<OutletNewDto> outlets
+        List<OutletNewDto> outlets
 
-){}
+) {
+}

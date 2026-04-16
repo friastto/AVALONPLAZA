@@ -9,5 +9,7 @@ public record CompanyWhithMainOutletResponseDto(
         String nit,
         String name,
         String email,
-        List<OutletDto> outlet
-) { }
+        String status,
+        OutletDto outlet
+) {
+}

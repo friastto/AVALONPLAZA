@@ -31,5 +31,4 @@ public record OutletNewDto(
 
         Long companyId
 
-
     ){}

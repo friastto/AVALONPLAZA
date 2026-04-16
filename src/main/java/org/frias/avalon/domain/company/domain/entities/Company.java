@@ -47,7 +47,9 @@ public class Company {
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Outlet> outlets = new ArrayList<>();
 
-    public Company(Long id){ this.id = id; }
+    public Company(Long id) {
+        this.id = id;
+    }
 
     @PrePersist
     protected void onCreate() {

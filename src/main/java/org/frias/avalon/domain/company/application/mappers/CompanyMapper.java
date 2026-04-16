@@ -1,15 +1,16 @@
 package org.frias.avalon.domain.company.application.mappers;
 
 
-import org.antlr.v4.runtime.atn.SemanticContext;
 import org.frias.avalon.domain.company.application.dtos.CompanyResponseDto;
 import org.frias.avalon.domain.company.application.dtos.response.CompanyWhithMainOutletResponseDto;
 import org.frias.avalon.domain.company.domain.entities.Company;
 import org.frias.avalon.domain.outlet.dtos.response.OutletDto;
+import org.frias.avalon.domain.outlet.entities.Outlet;
 import org.frias.avalon.domain.outlet.mappers.OutletMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class CompanyMapper {
@@ -35,26 +36,23 @@ public class CompanyMapper {
 
     public CompanyWhithMainOutletResponseDto toDtoCompanyWithMainOutlet(Company c) {
 
-       List<OutletDto> oDto ;
-
-       if (!c.getOutlets().isEmpty()){
-
-           oDto = c.getOutlets().stream()
-                   .map(outletMapper::toDto)
-                   .toList();
-       }else {
-
-           oDto = List.of();
-       }
+        OutletDto mainOutlet = c.getOutlets().stream()
+                .filter(Outlet::isMain)
+                .findFirst()
+                .map(outletMapper::toDto)
+                .orElse(null);
 
         return new CompanyWhithMainOutletResponseDto(
                 c.getId(),
                 c.getNit(),
                 c.getName(),
                 c.getEmail(),
-                oDto
+                c.getStatus().getFullName(),
+                mainOutlet
         );
 
 
     }
+
+
 }
