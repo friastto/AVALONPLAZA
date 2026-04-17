@@ -25,10 +25,8 @@ public class GetAllProductsUseCaseImpl extends TenantSecurity implements GetAllP
     @Override
     public List<ProductAvalonResponseDto> execute() {
 
-        if(!isMasterStaff()){
-            throw new AccessDeniedException("Solo SaaS Admin puede crear productos");
-        }
-List<Product> productList = ps.getAllProducts();
+
+        List<Product> productList = ps.getAllProducts();
 
         return productList.stream()
                 .map(productoMapperService::toDto)

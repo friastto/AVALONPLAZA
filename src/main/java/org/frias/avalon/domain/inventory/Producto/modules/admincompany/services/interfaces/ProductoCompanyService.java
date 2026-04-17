@@ -15,9 +15,14 @@ public interface ProductoCompanyService {
     ProductCompany save(ProductCompany productCompany);
 
     ProductResponseDto addSaasProductToCompanyCatalog(Long idAvalonProduct);
+
     ProductCompany searchProductCompanyByIdProductAvalonProduct(Long idProductAvalon);
 
     List<ProductResponseDto> getAll();
 
     ProductResponseDto update(Long id, ProductRequestCreate productRequestCreate, MultipartFile imgUrl);
+
+
+    ProductCompany assingProductCatalogAvalonToCatalogCompany(Long idProduct);
+
 }

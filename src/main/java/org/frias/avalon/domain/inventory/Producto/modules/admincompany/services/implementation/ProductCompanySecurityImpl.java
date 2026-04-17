@@ -211,6 +211,11 @@ public class ProductCompanySecurityImpl extends TenantSecurity implements Produc
         return productoCompanyMapperService.toDto(productCompanyRepository.save(productCompany));
     }
 
+    @Override
+    public ProductCompany assingProductCatalogAvalonToCatalogCompany(Long idProduct) {
+        return null;
+    }
+
     private ProductCompany asignamentAttribute(ProductCompany productCompany, ProductRequestCreate request){
 
 

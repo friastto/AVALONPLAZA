@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.frias.avalon.core.jwt.util.JwtUtils;
+import org.frias.avalon.core.jwt.util.SecurityUtils;
 import org.frias.avalon.core.tenant.tenantcontex.TenantContext;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -55,8 +56,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String username = jwtUtils.extractUsername(jwt);
                     String rol = jwtUtils.extractRol(jwt);
 
-                    Long companyId = jwtUtils.extractParent(jwt,"empresa_Id");
+
                     Long outletId = jwtUtils.extractParent(jwt,"outlet_Id");
+
+                    String tenantHeader = request.getHeader("X-Tenant-Id");
+
+                    // 🔐 solo ADMINTI puede usar header
+                    if (!SecurityUtils.hasRole("ROLE_ADMINTI") && tenantHeader != null) {
+                        throw new SecurityException("No autorizado para cambiar tenant");
+                    }
+
+                    // si viene header, lo se parsea seguro
+                    Long companyId = jwtUtils.extractParent(jwt, "empresa_Id");
+
+                    if (tenantHeader != null) {
+                        try {
+                            companyId = Long.parseLong(tenantHeader);
+                        } catch (NumberFormatException e) {
+                            throw new SecurityException("X-Tenant-Id inválido");
+                        }
+                    }
 
                     // 4. Si no hay una autenticación activa en el contexto
                     Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
