@@ -7,11 +7,16 @@ import org.frias.avalon.domain.company.domain.entities.Company;
 import org.frias.avalon.domain.masterdata.entities.MasterData;
 import org.frias.avalon.domain.outlet.entities.Outlet;
 import org.frias.avalon.domain.person.entity.Person;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users_Avalon")
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "empresaId", type = Long.class))
+@Filter(name = "tenantFilter", condition = "company_id = :empresaId")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

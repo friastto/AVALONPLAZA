@@ -75,16 +75,17 @@ SELECT u FROM UserAvalon u
 """)
     List<UserAvalon>getAllEmployeesOnlyOutlet(@Param("id") Long id);
 
+
+
+
     @Query("""
-    SELECT u 
-    FROM UserAvalon u 
-    LEFT JOIN u.outletId o
-    JOIN u.companyId c
-    WHERE c.id = :id 
-      AND u.statusId.shortName = 'ACT'
-    ORDER BY o.id ASC NULLS FIRST, u.userName ASC
+SELECT u 
+FROM UserAvalon u 
+LEFT JOIN u.outletId o
+WHERE u.statusId.shortName = 'ACT'
+ORDER BY o.id ASC NULLS FIRST, u.userName ASC
 """)
-    List<UserAvalon>getAllEmployesCompany(@Param("id") Long id);
+    List<UserAvalon> getAllEmployesCompany();
 
 
 

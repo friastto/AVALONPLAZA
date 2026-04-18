@@ -56,6 +56,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String username = jwtUtils.extractUsername(jwt);
                     String rol = jwtUtils.extractRol(jwt);
 
+                    // 4. Si no hay una autenticación activa en el contexto
+                    Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+
+                    if (username != null && (currentAuth == null || currentAuth instanceof AnonymousAuthenticationToken)) {
+
+                        // 5. Creamos autoridad desde el rol del token
+                        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + rol));
+
+                        // 6. Creamos autenticación con username y autoridad (sin password ni detalles)
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(username, jwt, authorities);
+
+                        // 7. Registramos la autenticación en el contexto de seguridad
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
+
+
+                    System.out.println("ROL DEL TOKEN "+ rol);
+                    SecurityContextHolder.getContext().getAuthentication()
+                            .getAuthorities()
+                            .forEach(a -> System.out.println("AUTH: " + a.getAuthority()));
 
                     Long outletId = jwtUtils.extractParent(jwt,"outlet_Id");
 
@@ -77,21 +98,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         }
                     }
 
-                    // 4. Si no hay una autenticación activa en el contexto
-                    Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
-
-                    if (username != null && (currentAuth == null || currentAuth instanceof AnonymousAuthenticationToken)) {
-
-                        // 5. Creamos autoridad desde el rol del token
-                        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + rol));
-
-                        // 6. Creamos autenticación con username y autoridad (sin password ni detalles)
-                        UsernamePasswordAuthenticationToken auth =
-                                new UsernamePasswordAuthenticationToken(username, jwt, authorities);
-
-                        // 7. Registramos la autenticación en el contexto de seguridad
-                        SecurityContextHolder.getContext().setAuthentication(auth);
-                    }
 
                     // 8. Continuamos con el resto del pipeline
                     //ponemos el company y el outlet en el contexto

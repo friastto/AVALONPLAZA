@@ -3,6 +3,7 @@ package org.frias.avalon.domain.user.domain.services.implementation;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.jwt.util.JwtUtils;
+import org.frias.avalon.core.tenant.config.TenantAware;
 import org.frias.avalon.core.util.PassSecure;
 import org.frias.avalon.domain.company.domain.entities.Company;
 import org.frias.avalon.domain.company.facade.TenantSecurity;
@@ -27,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
+@TenantAware
 @Service
 public class UsersSecurityImpl extends TenantSecurity implements UsersService, UsuarioServiceValidate, EmployeeService {
 
@@ -292,7 +295,7 @@ public class UsersSecurityImpl extends TenantSecurity implements UsersService, U
     @Override
     public List<UserAvalon> getAllUserIntoCompany(Long idCompany) {
 
-       return  userRepository.getAllEmployesCompany(idCompany);
+       return  userRepository.getAllEmployesCompany();
     }
 
 
@@ -333,7 +336,7 @@ public class UsersSecurityImpl extends TenantSecurity implements UsersService, U
     @Override
     public List<UserAvalon> getAll(Long idCompany) {
 
-        List<UserAvalon> userAvalonList = userRepository.getAllEmployesCompany(idCompany);
+        List<UserAvalon> userAvalonList = userRepository.getAllEmployesCompany();
 
         return userAvalonList.isEmpty() ? userAvalonList: List.of();
     }
