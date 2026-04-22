@@ -25,6 +25,7 @@ public class CreateProductUseCaseImpl extends TenantSecurity implements CreatePr
     public ProductAvalonResponseDto execute(ProductAvalonRequestDataDto dto, MultipartFile image) {
 
 
+
         if (!isMasterStaff())
             throw new AccessDeniedException("Solo Avalon-Admin puede crear productos en Avalon");
 

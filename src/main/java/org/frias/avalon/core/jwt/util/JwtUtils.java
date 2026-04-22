@@ -34,7 +34,7 @@ public class JwtUtils {
 
         if (empresaId != null) {
             tknBuilder.claim("empresa_Id", empresaId);
-        } if (empresaId != null) {
+        } if (outletId != null) {
             tknBuilder.claim("outlet_Id", outletId);
         }
 
