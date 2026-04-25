@@ -33,6 +33,18 @@ public class GlobalExceptionHandler {
      *
      */
 
+
+    // 1. Entidad no encontrada
+    @ExceptionHandler(DomainValidationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEntityNotFound(DomainValidationException e) {
+        ApiResponse<Object> response = new ApiResponse<>(
+                422,
+                e.getMessage(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
     // 1. Entidad no encontrada
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleEntityNotFound(EntityNotFoundException e) {

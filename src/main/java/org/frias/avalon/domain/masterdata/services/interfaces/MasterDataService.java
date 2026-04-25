@@ -1,7 +1,7 @@
 package org.frias.avalon.domain.masterdata.services.interfaces;
 
-import org.frias.avalon.domain.masterdata.dtos.request.MasterDataNewDto;
-import org.frias.avalon.domain.masterdata.entities.MasterData;
+import org.frias.avalon.domain.masterdata.application.dto.request.MasterDataNewDto;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.masterdata.services.interfaces;
 
-import org.frias.avalon.domain.masterdata.entities.MasterData;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
 
 public interface MasterDataSalesService {
 

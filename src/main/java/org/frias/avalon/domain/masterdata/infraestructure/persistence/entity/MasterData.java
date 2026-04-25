@@ -1,4 +1,4 @@
-package org.frias.avalon.domain.masterdata.entities;
+package org.frias.avalon.domain.masterdata.infraestructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,10 +22,8 @@ public class MasterData {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
     private String fullName;
 
-    @Column(nullable = false, unique = true)
     private String shortName;
 
     private Long parentId; // "parent" es el estándar para dependencias jerárquicas

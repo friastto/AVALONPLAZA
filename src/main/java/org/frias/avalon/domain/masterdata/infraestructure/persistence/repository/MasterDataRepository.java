@@ -1,6 +1,6 @@
-package org.frias.avalon.domain.masterdata.repositories;
+package org.frias.avalon.domain.masterdata.infraestructure.persistence.repository;
 
-import org.frias.avalon.domain.masterdata.entities.MasterData;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -51,5 +51,12 @@ public interface MasterDataRepository extends JpaRepository<MasterData, Long> {
             """)
     List<MasterData> findAllActive();
 
+    @Query("""
+    select p from MasterData p
+    where p.id = (
+        select m.parentId from MasterData m where m.id = :id
+    )
+""")
+    Optional<MasterData> findParentByChildId(@Param("id") Long childId);
 
 }

@@ -1,9 +1,9 @@
 package org.frias.avalon.domain.masterdata.services.implementation;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.frias.avalon.domain.masterdata.dtos.request.MasterDataNewDto;
-import org.frias.avalon.domain.masterdata.entities.MasterData;
-import org.frias.avalon.domain.masterdata.repositories.MasterDataRepository;
+import org.frias.avalon.domain.masterdata.application.dto.request.MasterDataNewDto;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.repository.MasterDataRepository;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataProductService;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataSalesService;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataService;

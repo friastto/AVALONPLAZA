@@ -1,9 +1,9 @@
-package org.frias.avalon.domain.masterdata.controllers;
+package org.frias.avalon.domain.masterdata.presentation.controllers;
 
 
 import jakarta.validation.Valid;
-import org.frias.avalon.domain.masterdata.dtos.request.MasterDataNewDto;
-import org.frias.avalon.domain.masterdata.entities.MasterData;
+import org.frias.avalon.domain.masterdata.application.dto.request.MasterDataNewDto;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
