@@ -1,9 +1,9 @@
 package org.frias.avalon.module.masterdata.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.frias.avalon.domain.masterdata.controllers.MasterDataController;
-import org.frias.avalon.domain.masterdata.dtos.request.MasterDataNewDto;
-import org.frias.avalon.domain.masterdata.entities.MasterData;
+import org.frias.avalon.domain.masterdata.presentation.controllers.MasterDataController;
+import org.frias.avalon.domain.masterdata.application.dto.request.MasterDataNewDto;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
 import org.frias.avalon.domain.masterdata.services.interfaces.MasterDataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

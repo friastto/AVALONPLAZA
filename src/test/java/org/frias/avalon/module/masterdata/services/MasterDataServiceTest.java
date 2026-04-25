@@ -1,9 +1,9 @@
 package org.frias.avalon.module.masterdata.services;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.frias.avalon.domain.masterdata.dtos.request.MasterDataNewDto;
-import org.frias.avalon.domain.masterdata.entities.MasterData;
-import org.frias.avalon.domain.masterdata.repositories.MasterDataRepository;
+import org.frias.avalon.domain.masterdata.application.dto.request.MasterDataNewDto;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.repository.MasterDataRepository;
 import org.frias.avalon.domain.masterdata.services.implementation.MasterDataServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,13 +13,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 

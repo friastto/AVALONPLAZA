@@ -1,7 +1,7 @@
 package org.frias.avalon.module.masterdata.controller;
 
-import org.frias.avalon.domain.masterdata.entities.MasterData;
-import org.frias.avalon.domain.masterdata.repositories.MasterDataRepository;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.repository.MasterDataRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
