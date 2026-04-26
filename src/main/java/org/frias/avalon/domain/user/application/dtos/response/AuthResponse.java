@@ -8,5 +8,6 @@ import java.util.List;
 public record AuthResponse(
         String token,
         UserAvalonResponseDto user,
-        List<RoleAccessDto> roles
+        List<String> roles,
+        List<String> permissions
 ) {}

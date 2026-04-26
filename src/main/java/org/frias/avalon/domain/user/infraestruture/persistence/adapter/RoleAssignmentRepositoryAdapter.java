@@ -2,11 +2,15 @@ package org.frias.avalon.domain.user.infraestruture.persistence.adapter;
 
 import org.frias.avalon.domain.user.domain.mapper.RoleAssignmentMapper;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
+import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
 import org.frias.avalon.domain.user.infraestruture.persistence.entity.RoleAssignment;
 import org.frias.avalon.domain.user.infraestruture.persistence.repository.JpaRoleAssignmentRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
+
+import java.util.Collections;
+import java.util.List;
 
 @Component
 public class RoleAssignmentRepositoryAdapter implements RoleAssignmentRepositoryPort {
@@ -26,5 +30,12 @@ public class RoleAssignmentRepositoryAdapter implements RoleAssignmentRepository
 
 
         return null;
+    }
+
+    @Override
+    public List<RoleAssignmentDomain> findByUser(Long id) {
+        List<RoleAssignment> roleAssignment = jpa.findByUserId(id);
+
+        return roleAssignment.stream().map(mapper::toDomain).toList();
     }
 }

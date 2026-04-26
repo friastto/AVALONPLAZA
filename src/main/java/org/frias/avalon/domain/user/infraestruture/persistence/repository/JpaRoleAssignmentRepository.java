@@ -4,6 +4,9 @@ import org.frias.avalon.domain.user.infraestruture.persistence.entity.RoleAssign
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface JpaRoleAssignmentRepository extends JpaRepository<RoleAssignment,Long> {
+    List<RoleAssignment> findByUserId(Long id);
 }
