@@ -5,35 +5,37 @@ import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.infraestruture.persistence.entity.UserAvalon;
 import org.frias.avalon.domain.user.infraestruture.persistence.repository.JpaUserAvalonRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
-@Repository
+@Component
 public class UserAvalonRepositoryAdapter implements UserAvalonRepositoryPort {
 
     private final JpaUserAvalonRepository jpa;
-    private final UserAvalonMapper userAvalonMapper;
+    private final UserAvalonMapper mapper;
 
-    public UserAvalonRepositoryAdapter(JpaUserAvalonRepository jpa, UserAvalonMapper userAvalonMapper) {
+    public UserAvalonRepositoryAdapter(JpaUserAvalonRepository jpa, UserAvalonMapper mapper) {
         this.jpa = jpa;
-        this.userAvalonMapper = userAvalonMapper;
+        this.mapper = mapper;
     }
 
 
     @Override
     public Optional<UserAvalonDomain> findById(Long id) {
-        return Optional.empty();
+
+        return jpa.findById(id).map(mapper::toDomain);
     }
 
     @Override
     public UserAvalonDomain save(UserAvalonDomain userRoot) {
 
-        UserAvalon ua = userAvalonMapper.toEntity(userRoot);
+        UserAvalon ua = mapper.toEntity(userRoot);
 
         UserAvalon userSaved = jpa.save(ua);
 
-        return userAvalonMapper.toDomain(userSaved);
+        return mapper.toDomain(userSaved);
     }
 
     @Override
@@ -49,5 +51,17 @@ public class UserAvalonRepositoryAdapter implements UserAvalonRepositoryPort {
     @Override
     public boolean existByUsername(String userName) {
         return false;
+    }
+
+    @Override
+    public List<UserAvalonDomain> getAll() {
+        List<UserAvalon> userAvalonList = jpa.findAll();
+
+        return userAvalonList.stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public Optional<UserAvalonDomain> findByUserNmae(String userName) {
+        return jpa.findByUserName(userName).map(mapper::toDomain);
     }
 }

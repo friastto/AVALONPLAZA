@@ -6,9 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 public record AuthResponse(
-    String token,
-    UserAvalonResponseDto userAvalon,
-    String role,
-    List<String> permissions
-){
-}
+        String token,
+        UserAvalonResponseDto user,
+        List<RoleAccessDto> roles
+) {}

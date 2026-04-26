@@ -44,7 +44,4 @@ public class RoleAssignment {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-
-
 }

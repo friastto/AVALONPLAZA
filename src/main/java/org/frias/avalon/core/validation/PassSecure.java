@@ -48,9 +48,19 @@ public class PassSecure {
         }
     }
 
-    // Verifica si la contraseña ingresada coincide con el hash almacenado
+    /*/ Verifica si la contraseña ingresada coincide con el hash almacenado
     public static boolean verifyPassword(String password, String salt, String expectedHash) throws InvalidKeySpecException {
         String pwdHash = hashPassword(password, salt);
         return pwdHash.equals(expectedHash);
+    }
+
+     */
+    public static boolean verifyPassword(String password, String salt, String expectedHash) {
+        try {
+            String pwdHash = hashPassword(password, salt);
+            return pwdHash.equals(expectedHash);
+        } catch (Exception e) {
+            return false; // falla silenciosa → no revela detalles
+        }
     }
 }

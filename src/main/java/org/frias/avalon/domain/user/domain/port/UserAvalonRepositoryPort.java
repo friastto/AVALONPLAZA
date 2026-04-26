@@ -2,6 +2,7 @@ package org.frias.avalon.domain.user.domain.port;
 
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserAvalonRepositoryPort {
@@ -17,4 +18,7 @@ public interface UserAvalonRepositoryPort {
     boolean existByUsername(String userName);
 
 
+    List<UserAvalonDomain> getAll();
+
+    Optional<UserAvalonDomain> findByUserNmae(String userName);
 }

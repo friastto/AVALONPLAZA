@@ -4,7 +4,9 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.validation.PassSecure;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.user.application.dtos.request.UserNewDto;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
 import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapper;
@@ -19,11 +21,13 @@ public class CreateUserAvalonUseCaseImpl implements CreateUserAvalonUseCase {
     private final UserAvalonRepositoryPort userPort;
     private final MasterDataRepositoryPort mdPort;
     private final UserAvalonMapper mapper;
+    private final MasterTreeProvider masterTreeProvider;
 
-    public CreateUserAvalonUseCaseImpl(UserAvalonRepositoryPort userPort, MasterDataRepositoryPort mdPort, UserAvalonMapper mapper) {
+    public CreateUserAvalonUseCaseImpl(UserAvalonRepositoryPort userPort, MasterDataRepositoryPort mdPort, UserAvalonMapper mapper, MasterTreeProvider masterTreeProvider) {
         this.userPort = userPort;
         this.mdPort = mdPort;
         this.mapper = mapper;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     @Transactional
@@ -35,8 +39,14 @@ public class CreateUserAvalonUseCaseImpl implements CreateUserAvalonUseCase {
             throw new EntityExistsException("Nombre de usuario no disponible");
         }
 
-        MasterRoot statusActive = mdPort.getActiveStatus()
+        MasterRoot statusActive = mdPort.findById(2L)
                 .orElseThrow(() -> new EntityNotFoundException("no se puede Activar el suaurio qeu se quiere crear"));
+
+        MasterTree tree = masterTreeProvider.getTree();
+
+        if(tree.isChildOf( statusActive,"STSGEN")) throw new RuntimeException("no se pudo establecer el estado del usuario");
+
+
 
         String salt = PassSecure.generateSalt();
 

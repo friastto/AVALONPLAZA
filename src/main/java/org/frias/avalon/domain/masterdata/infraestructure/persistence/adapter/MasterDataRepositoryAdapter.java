@@ -5,11 +5,13 @@ import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepository
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
 import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
 import org.frias.avalon.domain.masterdata.infraestructure.persistence.repository.JpaMasterDataRepository;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
-@Repository
+@Component
 public class MasterDataRepositoryAdapter implements MasterDataRepositoryPort {
     private final JpaMasterDataRepository jpa;
     private final MasterDataMapperService mapper;
@@ -71,6 +73,13 @@ public class MasterDataRepositoryAdapter implements MasterDataRepositoryPort {
 
         return findByCode("ACT");
 
+    }
+
+    @Override
+    public List<MasterRoot> findAll() {
+        return jpa.findAll().stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
 

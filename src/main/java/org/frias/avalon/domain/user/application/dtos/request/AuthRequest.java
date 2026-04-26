@@ -10,10 +10,12 @@ public record AuthRequest (
     String username,
 
     @NotBlank(message = "Ingrese una contraseña valida")
-    String password,
+    String password
 
-    @NotBlank(message = ("no se eligio el modo de operacion"))
+    /*@NotBlank(message = ("no se eligio el modo de operacion"))
     String mode
+
+     */
     ){
 }
 

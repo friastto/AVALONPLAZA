@@ -2,6 +2,7 @@ package org.frias.avalon.domain.masterdata.domain.repository;
 
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MasterDataRepositoryPort {
@@ -21,5 +22,7 @@ public interface MasterDataRepositoryPort {
     Optional<MasterRoot> findParentByIClilldrenId(Long chilldrenId);
 
     Optional<MasterRoot> getActiveStatus();
+
+    List<MasterRoot> findAll();
 
 }

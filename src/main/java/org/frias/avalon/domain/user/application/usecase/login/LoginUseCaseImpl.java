@@ -1,24 +1,62 @@
 package org.frias.avalon.domain.user.application.usecase.login;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.frias.avalon.core.validation.PassSecure;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.user.application.dtos.request.AuthRequest;
 import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
+import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
+import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapper;
+import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
+import org.springframework.stereotype.Service;
 
+@Service
 public class LoginUseCaseImpl implements LoginUseCase{
 
-    private final UserAvalonRepositoryPort userPort;
-    private final MasterDataRepositoryPort masterPort;
     //private final RoleAssignmentRepositoryPort roleAssignmentPort;
 
-    public LoginUseCaseImpl(UserAvalonRepositoryPort userPort, MasterDataRepositoryPort masterPort) {
+    private final UserAvalonRepositoryPort userPort;
+    private final MasterTreeProvider masterTreeProvider;
+    private final UserAvalonMapper mapper;
+
+    public LoginUseCaseImpl(UserAvalonRepositoryPort userPort, MasterTreeProvider masterTreeProvider, UserAvalonMapper mapper) {
         this.userPort = userPort;
-        this.masterPort = masterPort;
+        this.masterTreeProvider = masterTreeProvider;
+        this.mapper = mapper;
     }
 
 
     @Override
     public AuthResponse execute(AuthRequest request) {
-        return null;
+
+
+        UserAvalonDomain user = userPort.findByUserNmae(request.username())
+                .orElseThrow(() -> new EntityNotFoundException("usuario no encontrado"));
+
+        var tree = masterTreeProvider.getTree();
+
+        MasterRoot status = tree.getById(user.getStatusId());
+
+        if (status == null) {
+            throw new IllegalStateException("Estado inconsistente en cache");
+        }
+
+        if (tree.is(status, "BAN") || tree.is(status, "LOKUSER")) {
+            throw new IllegalStateException("Usuario no puede autenticarse");
+        }
+
+       if( PassSecure.verifyPassword(request.password(), user.getHashSalt(),user.getHashPassword()))
+           throw new IllegalStateException("Credenciales inválidas");
+
+        UserAvalonResponseDto userDto = mapper.toResponse(user,status);
+
+        return new AuthResponse(
+                "token generated null",
+                userDto,
+                role,
+        );
     }
 }

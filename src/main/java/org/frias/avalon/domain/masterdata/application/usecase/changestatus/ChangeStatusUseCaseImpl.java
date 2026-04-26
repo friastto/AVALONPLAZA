@@ -6,6 +6,7 @@ import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataRes
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.StatusRules;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,11 +16,13 @@ public class ChangeStatusUseCaseImpl implements ChangeStatusUseCase {
 
     private final MasterDataRepositoryPort masterDataRepositoryPort;
     private final MasterDataMapperService mapper;
+    private final MasterTreeProvider masterTreeProvider;
 
 
-    public ChangeStatusUseCaseImpl(MasterDataRepositoryPort masterDataRepositoryPort, MasterDataMapperService mapper) {
+    public ChangeStatusUseCaseImpl(MasterDataRepositoryPort masterDataRepositoryPort, MasterDataMapperService mapper, MasterTreeProvider masterTreeProvider) {
         this.masterDataRepositoryPort = masterDataRepositoryPort;
         this.mapper = mapper;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     @Transactional
@@ -37,6 +40,8 @@ public class ChangeStatusUseCaseImpl implements ChangeStatusUseCase {
         current.changeStatus(next.getId());
 
         MasterRoot mrUpdated = masterDataRepositoryPort.save(current);
+
+        masterTreeProvider.refresh();
 
         return mapper.toResponse(mrUpdated);
     }
