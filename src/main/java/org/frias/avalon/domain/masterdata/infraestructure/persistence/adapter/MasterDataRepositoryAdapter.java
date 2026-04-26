@@ -5,6 +5,7 @@ import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepository
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
 import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
 import org.frias.avalon.domain.masterdata.infraestructure.persistence.repository.JpaMasterDataRepository;
+import org.frias.avalon.domain.user.infraestruture.persistence.entity.UserAvalon;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
@@ -82,5 +83,12 @@ public class MasterDataRepositoryAdapter implements MasterDataRepositoryPort {
                 .toList();
     }
 
+    @Override
+    public List<MasterRoot> saveAll(List<MasterRoot> mdList2) {
+
+        List<MasterData> uaList = mdList2.stream().map(mapper::toEntity).toList();
+
+        return uaList.stream().map(mapper::toDomain).toList();
+    }
 
 }

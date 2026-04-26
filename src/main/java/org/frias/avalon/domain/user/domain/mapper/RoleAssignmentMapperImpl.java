@@ -63,7 +63,6 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper{
 
         MasterDataResponseDto rolevalid = masterMapper.toResponse(role);
 
-
         return new AssignmentRoleResponse(
                 userDto,
                 rolevalid,

@@ -39,12 +39,12 @@ public class CreateUserAvalonUseCaseImpl implements CreateUserAvalonUseCase {
             throw new EntityExistsException("Nombre de usuario no disponible");
         }
 
-        MasterRoot statusActive = mdPort.findById(2L)
+        MasterRoot statusActive = mdPort.getActiveStatus()
                 .orElseThrow(() -> new EntityNotFoundException("no se puede Activar el suaurio qeu se quiere crear"));
 
         MasterTree tree = masterTreeProvider.getTree();
 
-        if(tree.isChildOf( statusActive,"STSGEN")) throw new RuntimeException("no se pudo establecer el estado del usuario");
+        if(! tree.isChildOf( statusActive,"STSGEN")) throw new RuntimeException("no se pudo establecer el estado del usuario");
 
 
 

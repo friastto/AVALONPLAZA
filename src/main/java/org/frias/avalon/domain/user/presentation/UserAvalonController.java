@@ -64,25 +64,32 @@ public class UserAvalonController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse<>(
                                 200,
-                                "se cambio el estado del usuario a -> "+userUpdated.status(),
+                                "se cambio el estado del usuario a -> " + userUpdated.status(),
                                 userUpdated
                         )
                 );
     }
 
-    @PatchMapping("/assignment/role/{UserId}")
-    public ResponseEntity<ApiResponse<AssignmentRoleResponse>> assignmentRole(@RequestBody AssignmentRoleRequestDto request) {
+    @PatchMapping("/assignment/role/{userId}")
+    public ResponseEntity<ApiResponse<AssignmentRoleResponse>> assignmentRole(@PathVariable Long userId, @RequestBody AssignmentRoleRequestDto request) {
 
-        AssignmentRoleResponse userUpdated = assignmentRole.execute(request);
+
+        AssignmentRoleResponse userUpdated = assignmentRole.execute(new AssignmentRoleRequestDto(
+                userId,
+                request.roleId(),
+                request.staffScopeId(),
+                request.scope()
+        ));
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse<>(
                                 200,
-                                "se cambio el estado del usuario a -> ",
+                                "se cambio el rol del usuario a -> "+userUpdated.role().fullName(),
                                 userUpdated
                         )
                 );
     }
+
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<UserAvalonResponseDto>>> getAll() {
 
@@ -91,7 +98,7 @@ public class UserAvalonController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse<>(
                                 200,
-                                "se obtuvieron * "+userList.size()+ " * usuarios de avalon",
+                                "se obtuvieron * " + userList.size() + " * usuarios de avalon",
                                 userList
                         )
                 );
@@ -110,6 +117,7 @@ public class UserAvalonController {
                         )
                 );
     }
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> auth(@Valid @RequestBody AuthRequest credentials) {
 

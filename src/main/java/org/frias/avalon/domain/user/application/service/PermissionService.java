@@ -31,6 +31,10 @@ public class PermissionService {
                 case "CSTNDR":
                     permissions.add("VIEW_MARKETPLACE");
                     break;
+
+                case "USANONIMO":
+                    permissions.add("VIEW_MARKETPLACE");
+                    break;
             }
         }
 

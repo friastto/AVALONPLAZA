@@ -6,20 +6,20 @@ import org.frias.avalon.core.exeptions.DomainValidationException;
 @Getter
 public class MasterRoot {
     private final Long id;
-    private final String fullName;
     private final String shortName;
+    private final String fullName;
     private final Long parentId;
     private Long statusId;
 
-    public MasterRoot(Long id, String fullName, String shortName, Long parentId, Long statusId) {
+    public MasterRoot(Long id, String shortName, String fullName, Long parentId, Long statusId) {
         this.id = id;
-        this.fullName = fullName;
         this.shortName = shortName;
+        this.fullName = fullName;
         this.parentId = parentId;
         this.statusId = statusId;
     }
 
-    public static MasterRoot create(String fullName, String shortName, Long parentId, Long statusId) {
+    public static MasterRoot create(String shortName,String fullName,  Long parentId, Long statusId) {
 
 
         if (shortName == null || shortName.isBlank()) {
@@ -29,14 +29,14 @@ public class MasterRoot {
             throw new RuntimeException("fullName requerido");
         }
 
-        return new MasterRoot(null, fullName, shortName, parentId, statusId);
+        return new MasterRoot(null,  shortName, fullName,parentId, statusId);
 
     }
 
     public static MasterRoot fromPersistence(
             Long id,
-            String fullName,
             String shortName,
+            String fullName,
             Long parentId,
             Long statusId
     ) {
@@ -48,10 +48,10 @@ public class MasterRoot {
             throw new IllegalStateException("Data corrupta en BD: fullName null");
         }
         if (id == null) {
-            throw new IllegalStateException("Data corrupta en BD: id null");
+            throw new IllegalStateException("Data corrupta en BD: id null "+shortName);
         }
 
-        return new MasterRoot(id, fullName, shortName, parentId, statusId);
+        return new MasterRoot(id, shortName, fullName, parentId, statusId);
     }
 
     public void changeStatus(Long newStatusId) {

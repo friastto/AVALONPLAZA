@@ -14,8 +14,8 @@ public class MasterDataMapperServiceImpl implements MasterDataMapperService {
 
         return new MasterDataResponseDto(
                 masterData.getId()
-                , masterData.getFullName()
                 , masterData.getShortName()
+                , masterData.getFullName()
         );
     }
 
@@ -24,8 +24,8 @@ public class MasterDataMapperServiceImpl implements MasterDataMapperService {
 
         return MasterRoot.fromPersistence(
                 entity.getId(),
-                entity.getFullName(),
                 entity.getShortName(),
+                entity.getFullName(),
                 entity.getParentId(),
                 entity.getStatusId()
         );
@@ -35,8 +35,8 @@ public class MasterDataMapperServiceImpl implements MasterDataMapperService {
     public MasterData toEntity(MasterRoot domain) {
         return MasterData.builder()
                 .id(domain.getId())
-                .fullName(domain.getFullName())
                 .shortName(domain.getShortName())
+                .fullName(domain.getFullName())
                 .parentId(domain.getParentId())
                 .statusId(domain.getStatusId())
                 .build();

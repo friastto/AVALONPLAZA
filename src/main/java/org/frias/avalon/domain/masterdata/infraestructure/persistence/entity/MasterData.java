@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "master_data",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = "full_name"),
-                @UniqueConstraint(columnNames = "short_name")
+        @UniqueConstraint(columnNames = "short_name"),
+                @UniqueConstraint(columnNames = "full_name")
+
         })
 @Data
 @NoArgsConstructor
@@ -22,9 +23,9 @@ public class MasterData {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String fullName;
-
     private String shortName;
+
+    private String fullName;
 
     private Long parentId; // "parent" es el estándar para dependencias jerárquicas
 

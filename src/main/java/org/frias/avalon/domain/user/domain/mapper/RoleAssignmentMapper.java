@@ -13,5 +13,12 @@ public interface RoleAssignmentMapper {
     AssignmentRoleResponse toResponse(RoleAssignmentDomain domain);
 
 
-    AssignmentRoleResponse toResponse(UserAvalonDomain user, MasterRoot userStatus, MasterRoot role, MasterRoot statusActive, String empresa, String outlet);
+    AssignmentRoleResponse toResponse(
+            UserAvalonDomain user,
+            MasterRoot userStatus,
+            MasterRoot role,
+            MasterRoot statusActive,
+            String empresa,
+            String outlet
+    );
 }

@@ -25,7 +25,7 @@ public class CreateMasterDataUseCaseImpl implements CreateMasterDataUseCase {
 
         Long statusId = masterDataRepositoryPort.getIdByCode("ACT");
 
-        MasterRoot domain = MasterRoot.create(request.shortName(), request.fullName(), parentId, statusId);
+        MasterRoot domain = MasterRoot.create(request.shortName().toUpperCase(), request.fullName().toUpperCase(), parentId, statusId);
 
         masterTreeProvider.refresh();
 
