@@ -1,16 +1,20 @@
 package org.frias.avalon.domain.user.presentation;
 
+import jakarta.validation.Valid;
 import org.frias.avalon.core.exeptions.ApiResponse;
 import org.frias.avalon.domain.user.application.dtos.request.AssignmentRoleRequestDto;
+import org.frias.avalon.domain.user.application.dtos.request.AuthRequest;
 import org.frias.avalon.domain.user.application.dtos.request.ChangeUserAvalonStatusRequest;
 import org.frias.avalon.domain.user.application.dtos.request.UserNewDto;
 import org.frias.avalon.domain.user.application.dtos.response.AssignmentRoleResponse;
+import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
 import org.frias.avalon.domain.user.application.usecase.assingnrole.AssignmentRoleUseCase;
 import org.frias.avalon.domain.user.application.usecase.changestatus.ChangeStatusUserAvalonUseCase;
 import org.frias.avalon.domain.user.application.usecase.create.CreateUserAvalonUseCase;
 import org.frias.avalon.domain.user.application.usecase.find.FindByUserNameUseCase;
 import org.frias.avalon.domain.user.application.usecase.find.GetAllUserAvalonUseCase;
+import org.frias.avalon.domain.user.application.usecase.login.LoginUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,13 +30,15 @@ public class UserAvalonController {
     private final AssignmentRoleUseCase assignmentRole;
     private final GetAllUserAvalonUseCase getAllUserAvalonUseCase;
     private final FindByUserNameUseCase findByUserName;
+    private final LoginUseCase loginUseCase;
 
-    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName) {
+    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName, LoginUseCase loginUseCase) {
         this.createUser = createUser;
         this.changeStatusUser = changeStatusUser;
         this.assignmentRole = assignmentRole;
         this.getAllUserAvalonUseCase = getAllUserAvalonUseCase;
         this.findByUserName = findByUserName;
+        this.loginUseCase = loginUseCase;
     }
 
 
@@ -104,4 +110,19 @@ public class UserAvalonController {
                         )
                 );
     }
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponse>> auth(@Valid @RequestBody AuthRequest credentials) {
+
+        AuthResponse auth = loginUseCase.execute(credentials);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(
+                                200,
+                                "Inicio de seccion Exitoso",
+                                auth
+                        )
+                );
+    }
+
+
 }

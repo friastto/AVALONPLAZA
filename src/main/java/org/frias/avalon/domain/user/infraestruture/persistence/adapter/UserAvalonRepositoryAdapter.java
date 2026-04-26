@@ -61,7 +61,9 @@ public class UserAvalonRepositoryAdapter implements UserAvalonRepositoryPort {
     }
 
     @Override
-    public Optional<UserAvalonDomain> findByUserNmae(String userName) {
+    public Optional<UserAvalonDomain> findByUserName(String userName) {
+        System.out.println("el susaurio buscado es "+userName);
+
         return jpa.findByUserName(userName).map(mapper::toDomain);
     }
 }

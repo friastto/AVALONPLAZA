@@ -29,7 +29,7 @@ public class FindByUserNameUseCaseImpl implements FindByUserNameUseCase {
     @Override
     public UserAvalonResponseDto execute(String userName) {
 
-        UserAvalonDomain user = userPort.findByUserNmae(userName)
+        UserAvalonDomain user = userPort.findByUserName(userName)
                 .orElseThrow(() -> new EntityNotFoundException("usuario no encontrado"));
 
         var tree = masterTreeProvider.getTree();

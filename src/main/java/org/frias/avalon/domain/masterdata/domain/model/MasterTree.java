@@ -7,10 +7,18 @@ import java.util.stream.Collectors;
 public class MasterTree {
 
     private final Map<Long, MasterRoot> nodes;
+    private final Map<String, MasterRoot> byCode;
 
     public MasterTree(List<MasterRoot> list) {
         this.nodes = list.stream()
                 .collect(Collectors.toMap(MasterRoot::getId, m -> m));
+        this.byCode = list.stream()
+                .collect(Collectors.toMap(
+                        m -> m.getShortName().toUpperCase(),
+                        m -> m,
+                        (a, b) -> a // evita crash si hay duplicados
+                ));
+
     }
 
     public boolean isChildOf(MasterRoot node, String parentCode) {
@@ -45,5 +53,18 @@ public class MasterTree {
             return false;
         }
         return code.equalsIgnoreCase(node.getShortName().trim());
+    }
+
+    public MasterRoot getByCode(String code) {
+        if (code == null) return null;
+        return byCode.get(code.toUpperCase());
+    }
+    public boolean isAny(MasterRoot node, String... codes) {
+        if (node == null || codes == null) return false;
+
+        for (String code : codes) {
+            if (is(node, code)) return true;
+        }
+        return false;
     }
 }

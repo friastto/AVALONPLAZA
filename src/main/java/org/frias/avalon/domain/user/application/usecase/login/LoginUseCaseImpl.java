@@ -3,7 +3,6 @@ package org.frias.avalon.domain.user.application.usecase.login;
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.validation.PassSecure;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.user.application.dtos.request.AuthRequest;
 import org.frias.avalon.domain.user.application.dtos.request.AuthorizationResult;
@@ -36,8 +35,7 @@ public class LoginUseCaseImpl implements LoginUseCase{
     @Override
     public AuthResponse execute(AuthRequest request) {
 
-
-        UserAvalonDomain user = userPort.findByUserNmae(request.username())
+        UserAvalonDomain user = userPort.findByUserName(request.userName())
                 .orElseThrow(() -> new EntityNotFoundException("usuario no encontrado"));
 
         var tree = masterTreeProvider.getTree();

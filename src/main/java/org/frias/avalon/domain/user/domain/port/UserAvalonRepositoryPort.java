@@ -20,5 +20,5 @@ public interface UserAvalonRepositoryPort {
 
     List<UserAvalonDomain> getAll();
 
-    Optional<UserAvalonDomain> findByUserNmae(String userName);
+    Optional<UserAvalonDomain> findByUserName(String userName);
 }

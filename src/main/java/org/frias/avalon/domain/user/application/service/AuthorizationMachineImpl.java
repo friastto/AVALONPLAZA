@@ -6,10 +6,12 @@ import org.frias.avalon.domain.user.application.dtos.request.AuthorizationResult
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
 
+@Component
 public class AuthorizationMachineImpl implements AuthorizationMachine {
 
     private final RoleAssignmentRepositoryPort roleAssignmentPort;
@@ -42,6 +44,16 @@ public class AuthorizationMachineImpl implements AuthorizationMachine {
                 .filter(Objects::nonNull)
                 .toList();
 
+
+        if (roles.isEmpty()) {
+
+            MasterRoot anonRole = tree.getByCode("USANONIMO");
+
+            if (anonRole == null) {
+                throw new IllegalStateException("Rol anónimo no configurado");
+            }
+            roles = List.of(anonRole);
+        }
         // 3. Resolver permisos
         List<String> permissions = permissionService.resolvePermissions(roles);
 
