@@ -1,5 +1,6 @@
 package org.frias.avalon.domain.outlet.infraestructure.persistence.adapter;
 
+import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
@@ -55,5 +56,13 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
     @Override
     public OutletDomain delete(OutletDomain domain) {
         return null;
+    }
+
+    @Override
+    public List<OutletDomain> findNearbyByRadius(LocationDomain location, int radius) {
+
+        List<Outlet> outletsList = jpa.findNearByOrderByDistance(location.longitude(),location.latitude(),radius);
+
+        return outletsList.stream().map(outletMapper::toDomain).toList();
     }
 }
