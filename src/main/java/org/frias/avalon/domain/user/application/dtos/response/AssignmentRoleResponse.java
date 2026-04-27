@@ -4,7 +4,7 @@ import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataRes
 import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
 
 public record AssignmentRoleResponse(
-        UserAvalonResponseDto userName,
+        UserAvalonResponseDto userAvalon,
         MasterDataResponseDto role,
         String staffScope,
         String scope,

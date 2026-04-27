@@ -63,7 +63,11 @@ public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase{
                 .orElseThrow(()-> new EntityNotFoundException("no se pudo activar el rol al usuario"));
 
 
-        RoleAssignmentDomain.create(user.getId(),role.getId(),1L,2L,statusActive.getId());
+        RoleAssignmentDomain roleDomain = rolePort.create(RoleAssignmentDomain.create(
+                user.getId(),role.getId(),1L,2L,statusActive.getId()
+        )
+        );
+
 
         return  mapper.toResponse(user,userStatus, role, statusActive,"empresa", "outlet");
     }

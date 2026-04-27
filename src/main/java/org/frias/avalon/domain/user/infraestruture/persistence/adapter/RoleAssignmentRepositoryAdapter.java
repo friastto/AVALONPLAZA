@@ -18,6 +18,7 @@ public class RoleAssignmentRepositoryAdapter implements RoleAssignmentRepository
     private final JpaRoleAssignmentRepository jpa;
     private final RoleAssignmentMapper mapper;
 
+
     public RoleAssignmentRepositoryAdapter(JpaRoleAssignmentRepository jpa, RoleAssignmentMapper mapper) {
         this.jpa = jpa;
         this.mapper = mapper;
@@ -28,8 +29,7 @@ public class RoleAssignmentRepositoryAdapter implements RoleAssignmentRepository
 
         RoleAssignment role = mapper.toEntity(domain);
 
-
-        return null;
+        return mapper.toDomain(jpa.save(role));
     }
 
     @Override

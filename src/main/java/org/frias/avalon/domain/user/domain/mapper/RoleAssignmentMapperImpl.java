@@ -29,6 +29,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper{
         RoleAssignment role = new RoleAssignment();
         role.setRoleId(domain.getId());
         role.setUserId(domain.getUserId());
+        role.setRoleId(domain.getRoleId());
         role.setStaffScope(domain.getStaffScope());
         role.setScope(domain.getScope());
         role.setStatus(domain.getStatus());
