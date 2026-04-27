@@ -6,11 +6,13 @@ import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.application.dto.LocationDto;
 import org.frias.avalon.domain.outlet.application.dto.request.OutletCreateRequestDto;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
+import org.frias.avalon.domain.outlet.infraestructure.mapper.LocationMapper;
 import org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,12 +24,14 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
     private final MasterDataRepositoryPort masterPort;
     private final MasterTreeProvider masterTreeProvider;
     private final OutletMapper outletMapper;
+    private final LocationMapper locationMapper;
 
-    public CreateOutletUseCaseImpl(OutletRepositoryPort outletPort, MasterDataRepositoryPort masterPort, MasterTreeProvider masterTreeProvider, OutletMapper outletMapper) {
+    public CreateOutletUseCaseImpl(OutletRepositoryPort outletPort, MasterDataRepositoryPort masterPort, MasterTreeProvider masterTreeProvider, OutletMapper outletMapper, LocationMapper locationMapper) {
         this.outletPort = outletPort;
         this.masterPort = masterPort;
         this.masterTreeProvider = masterTreeProvider;
         this.outletMapper = outletMapper;
+        this.locationMapper = locationMapper;
     }
 
 @Transactional
@@ -54,12 +58,15 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
 
        StatusResponseDto statusResponse = new StatusResponseDto(status.getId(), status.getShortName(),status.getFullName());
 
+    LocationDto locationDto = locationMapper.domainToDto(outletSaved.getLocation());
+
+
        return new OutletResponseDto(
                 outletSaved.getId(),
                 outletSaved.getName(),
                 outletSaved.getAddress(),
                 outletSaved.getPhone(),
-                outletSaved.getLocation(),
+                locationDto,
                 statusResponse
 
         );

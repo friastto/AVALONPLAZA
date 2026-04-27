@@ -1,5 +1,6 @@
 package org.frias.avalon.domain.outlet.domain.port;
 
+import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 
 import java.util.List;
@@ -13,7 +14,7 @@ public interface OutletRepositoryPort {
     List<OutletDomain> nearbyByName(String domain);
     OutletDomain update(OutletDomain domain);
     OutletDomain delete(OutletDomain domain);
-
+    List<OutletDomain> findNearbyByRadius(LocationDomain location, int radius);
 
 
 }
