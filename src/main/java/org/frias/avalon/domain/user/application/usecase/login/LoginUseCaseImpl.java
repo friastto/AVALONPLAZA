@@ -62,7 +62,6 @@ public class LoginUseCaseImpl implements LoginUseCase{
                 "token generated null",
                 userDto,
                 authz.roles(),
-
                 authz.permissions()
         );
     }

@@ -1,0 +1,67 @@
+package org.frias.avalon.domain.outlet.application.usecase.create;
+
+import jakarta.persistence.EntityNotFoundException;
+import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.application.dto.request.OutletCreateRequestDto;
+import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
+import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
+import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
+import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
+import org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
+
+    private final OutletRepositoryPort outletPort;
+    private final MasterDataRepositoryPort masterPort;
+    private final MasterTreeProvider masterTreeProvider;
+    private final OutletMapper outletMapper;
+
+    public CreateOutletUseCaseImpl(OutletRepositoryPort outletPort, MasterDataRepositoryPort masterPort, MasterTreeProvider masterTreeProvider, OutletMapper outletMapper) {
+        this.outletPort = outletPort;
+        this.masterPort = masterPort;
+        this.masterTreeProvider = masterTreeProvider;
+        this.outletMapper = outletMapper;
+    }
+
+@Transactional
+    @Override
+    public OutletResponseDto execute(OutletCreateRequestDto dto) {
+
+
+        MasterRoot status = masterPort.getActiveStatus()
+                .orElseThrow(() -> new EntityNotFoundException("no se pudo activar la tienda en este moemnto "));
+
+        MasterTree tree = masterTreeProvider.getTree();
+
+        LocationDomain location = new LocationDomain(dto.location().lon(),  dto.location().lat());
+
+        OutletDomain outletDomain = OutletDomain.create(
+                dto.name(),
+                dto.address(),
+                dto.phone(),
+                status.getId(),
+                location
+                );
+
+       OutletDomain outletSaved =  outletPort.save(outletDomain);
+
+       StatusResponseDto statusResponse = new StatusResponseDto(status.getId(), status.getShortName(),status.getFullName());
+
+       return new OutletResponseDto(
+                outletSaved.getId(),
+                outletSaved.getName(),
+                outletSaved.getAddress(),
+                outletSaved.getPhone(),
+                outletSaved.getLocation(),
+                statusResponse
+
+        );
+    }
+}
