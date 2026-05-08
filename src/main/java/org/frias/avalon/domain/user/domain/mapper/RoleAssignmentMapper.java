@@ -18,7 +18,6 @@ public interface RoleAssignmentMapper {
             MasterRoot userStatus,
             MasterRoot role,
             MasterRoot statusActive,
-            String empresa,
-            String outlet
+            Long outlet
     );
 }

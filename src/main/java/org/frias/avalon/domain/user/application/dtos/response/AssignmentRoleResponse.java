@@ -6,8 +6,7 @@ import org.frias.avalon.domain.masterdata.application.dto.response.StatusRespons
 public record AssignmentRoleResponse(
         UserAvalonResponseDto userAvalon,
         MasterDataResponseDto role,
-        String staffScope,
-        String scope,
+        Long outlet,
         StatusResponseDto status
 ) {
 }

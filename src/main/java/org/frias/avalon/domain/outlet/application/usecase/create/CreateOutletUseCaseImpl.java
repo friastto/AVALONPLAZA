@@ -44,7 +44,7 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
 
         MasterTree tree = masterTreeProvider.getTree();
 
-        LocationDomain location = new LocationDomain(dto.location().lon(),  dto.location().lat());
+        LocationDomain location = new LocationDomain(  dto.location().lat(),dto.location().lon());
 
         OutletDomain outletDomain = OutletDomain.create(
                 dto.name(),
@@ -63,6 +63,7 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
 
        return new OutletResponseDto(
                 outletSaved.getId(),
+                outletSaved.getCode(),
                 outletSaved.getName(),
                 outletSaved.getAddress(),
                 outletSaved.getPhone(),
