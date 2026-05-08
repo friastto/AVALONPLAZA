@@ -24,9 +24,10 @@ public class RoleAssignment {
 
     private Long roleId;
 
-    private Long staffScope;
 
-    private Long scope;
+   private Long outletId;
+
+    //private Long scope;
 
    // private Long schedule;
 

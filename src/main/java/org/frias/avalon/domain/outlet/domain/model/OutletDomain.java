@@ -53,11 +53,11 @@ public class OutletDomain {
                 .build();
     }
 
-    public static OutletDomain fromPersistence(Long id, String name, String address, String phone,Long status,LocationDomain location){
+    public static OutletDomain fromPersistence(Long id,String code, String name, String address, String phone,Long status,LocationDomain location){
 
         return OutletDomain.builder()
                 .id(id)
-                .code(generateCode())
+                .code(code)
                 .name(name)
                 .address(address)
                 .phone(phone)
@@ -76,4 +76,16 @@ public class OutletDomain {
         // Podrías usar un UUID corto o una lógica más personalizada
         return "Oult-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
+
+    public boolean isActive(String status){
+
+        if("ACT".equals(status)) {
+            return true;
+        }
+
+        return false;
+
+    }
+
+
 }

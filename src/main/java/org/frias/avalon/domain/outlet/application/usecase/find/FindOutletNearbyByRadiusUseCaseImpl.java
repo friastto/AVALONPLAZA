@@ -50,6 +50,7 @@ public class FindOutletNearbyByRadiusUseCaseImpl implements FindOutletNearbyByRa
 
                     return new OutletResponseDto(
                             outletDomain.getId(),
+                            outletDomain.getCode(),
                             outletDomain.getName(),
                             outletDomain.getAddress(),
                             outletDomain.getPhone(),

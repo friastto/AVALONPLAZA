@@ -77,8 +77,7 @@ public class UserAvalonController {
         AssignmentRoleResponse userUpdated = assignmentRole.execute(new AssignmentRoleRequestDto(
                 userId,
                 request.roleId(),
-                request.staffScopeId(),
-                request.scope()
+                request.outletId()
         ));
 
         return ResponseEntity.status(HttpStatus.OK)

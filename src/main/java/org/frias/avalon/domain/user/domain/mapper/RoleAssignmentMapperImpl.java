@@ -3,7 +3,6 @@ package org.frias.avalon.domain.user.domain.mapper;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
-import org.frias.avalon.domain.masterdata.domain.model.StatusRules;
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
 import org.frias.avalon.domain.user.application.dtos.response.AssignmentRoleResponse;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
@@ -30,8 +29,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper{
         role.setRoleId(domain.getId());
         role.setUserId(domain.getUserId());
         role.setRoleId(domain.getRoleId());
-        role.setStaffScope(domain.getStaffScope());
-        role.setScope(domain.getScope());
+        role.setOutletId(domain.getOutletId());
         role.setStatus(domain.getStatus());
 
 
@@ -44,8 +42,8 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper{
         return new RoleAssignmentDomain(
                 role.getId(),
                 role.getUserId(),
-                role.getStaffScope(),
-                role.getScope(),
+                role.getOutletId(),
+                role.getOutletId(),
                 role.getStatus()
         );
     }
@@ -58,7 +56,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper{
     }
 
     @Override
-    public AssignmentRoleResponse toResponse(UserAvalonDomain user, MasterRoot userStatus, MasterRoot role, MasterRoot statusActive, String empresa, String outlet) {
+    public AssignmentRoleResponse toResponse(UserAvalonDomain user, MasterRoot userStatus, MasterRoot role, MasterRoot statusActive, Long outletId) {
 
        UserAvalonResponseDto userDto = userMapper.toResponse(user,userStatus);
 
@@ -67,8 +65,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper{
         return new AssignmentRoleResponse(
                 userDto,
                 rolevalid,
-                "company",
-                "outlet",
+                outletId,
                 new StatusResponseDto(statusActive.getId(),statusActive.getShortName(),statusActive.getFullName())
 
         );

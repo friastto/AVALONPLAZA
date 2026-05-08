@@ -37,7 +37,7 @@ try {
     e.printStackTrace();
     throw new RuntimeException(e);
 }
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(201)
                 .body(new ApiResponse<>(
                         201,
                         "se creo la tienda exitosamente",
@@ -56,7 +56,7 @@ try {
             throw new RuntimeException(e);
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(200)
                 .body(new ApiResponse<>(
                         newOutlet.isEmpty()?404:200,
                                 newOutlet.isEmpty()?"no tiene tiendas cerca":"se encontraron tiendas cercanas",

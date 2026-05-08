@@ -6,6 +6,7 @@ import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
 
 public record OutletResponseDto(
         Long id,
+        String code,
         String name,
         String address,
         String phone,

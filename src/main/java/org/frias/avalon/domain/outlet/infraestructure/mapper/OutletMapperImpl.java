@@ -25,6 +25,7 @@ private final LocationMapper locationMapper;
 
         return OutletDomain.fromPersistence(
                 o.getId(),
+                o.getCode(),
                 o.getName(),
                 o.getAddress(),
                 o.getPhone(),
