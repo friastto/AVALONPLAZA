@@ -48,7 +48,6 @@ public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase{
                 .orElseThrow(()-> new EntityNotFoundException("no se pudo encontrar el rol para asignar"));
 
 
-
         var tree = treeProvider.getTree();
 
         // 1. Validar que es rol

@@ -42,7 +42,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper{
         return new RoleAssignmentDomain(
                 role.getId(),
                 role.getUserId(),
-                role.getOutletId(),
+                role.getRoleId(),
                 role.getOutletId(),
                 role.getStatus()
         );

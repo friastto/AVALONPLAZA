@@ -59,7 +59,7 @@ public class AuthorizationMachineImpl implements AuthorizationMachine {
 
         // 4. Mapear roles a códigos
         List<String> roleCodes = roles.stream()
-                .map(MasterRoot::getShortName)
+                .map(MasterRoot::getFullName)
                 .toList();
 
         return new AuthorizationResult(roleCodes, permissions, List.of());

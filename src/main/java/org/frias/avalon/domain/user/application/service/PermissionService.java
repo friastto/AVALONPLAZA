@@ -17,29 +17,45 @@ public class PermissionService {
 
         for (MasterRoot role : roles) {
 
-            switch (role.getShortName()) {
-
-                case "GERGEN":
-                    permissions.add("VIEW_DASHBOARD");
-                    permissions.add("MANAGE_USERS");
-                    break;
-
-                case "CJTURNO":
-                    permissions.add("POS_SALES");
-                    break;
-
-                case "CSTNDR":
-                    permissions.add("VIEW_MARKETPLACE");
-                    break;
-
-                case "USANONIMO":
-                    permissions.add("VIEW_MARKETPLACE");
-                    break;
-            }
+            permissions.addAll(permisos(role));
         }
 
         return new ArrayList<>(permissions);
     }
+    public List<String> resolvePermissions(MasterRoot role) {
+
+        return new ArrayList<>(permisos(role));
+    }
+    private Set<String> permisos(MasterRoot role){
+        Set<String> permissions = new HashSet<>();
+        switch (role.getShortName()) {
+
+            case "GERGEN":
+                permissions.add("VIEW_DASHBOARD");
+                permissions.add("MANAGE_EMPLOYEE");
+                permissions.add("POS_SALES");
+                permissions.add("MANAGE_INVENTORY");
+
+                break;
+
+            case "CJTURNO":
+                permissions.add("POS_SALES");
+                break;
+
+            case "CSTNDR":
+                permissions.add("VIEW_MARKETPLACE");
+                permissions.add("BUY_PRODUCTS");
+                break;
+
+            case "USANONIMO":
+                permissions.add("VIEW_MARKETPLACE");
+                break;
+        }
+
+        return permissions;
+    }
+
+
 
 
     /**
