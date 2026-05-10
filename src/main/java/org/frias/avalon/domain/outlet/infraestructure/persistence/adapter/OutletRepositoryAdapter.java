@@ -35,7 +35,9 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
 
     @Override
     public Optional<OutletDomain> findById(Long id) {
-        return Optional.empty();
+
+
+        return jpa.findById(id).map(outletMapper::toDomain);
     }
 
     @Override

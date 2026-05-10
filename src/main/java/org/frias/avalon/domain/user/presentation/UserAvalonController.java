@@ -70,7 +70,7 @@ public class UserAvalonController {
                 );
     }
 
-    @PatchMapping("/assignment/role/{userId}")
+    @PatchMapping("/{userId}/assignment/role")
     public ResponseEntity<ApiResponse<AssignmentRoleResponse>> assignmentRole(@PathVariable Long userId, @RequestBody AssignmentRoleRequestDto request) {
 
 

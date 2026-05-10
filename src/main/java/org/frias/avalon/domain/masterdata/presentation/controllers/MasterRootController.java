@@ -8,6 +8,7 @@ import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataRes
 import org.frias.avalon.domain.masterdata.application.usecase.changestatus.ChangeStatusUseCase;
 import org.frias.avalon.domain.masterdata.application.usecase.create.CreateAllMasterDataUseCase;
 import org.frias.avalon.domain.masterdata.application.usecase.create.CreateMasterDataUseCase;
+import org.frias.avalon.domain.masterdata.application.usecase.find.FindAllMasterDataUseCase;
 import org.frias.avalon.domain.masterdata.application.usecase.find.FindMasterDataByIdUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +23,15 @@ public class MasterRootController {
     private final FindMasterDataByIdUseCase findByIdUseCase;
     private final ChangeStatusUseCase changeStatusUseCase;
     private final CreateAllMasterDataUseCase createAllMasterDataUseCase;
+    private final FindAllMasterDataUseCase findAllUseCase;
 
 
-    public MasterRootController(CreateMasterDataUseCase createUseCase, FindMasterDataByIdUseCase findByIdUseCase, ChangeStatusUseCase changeStatusUseCase, CreateAllMasterDataUseCase createAllMasterDataUseCase) {
+    public MasterRootController(CreateMasterDataUseCase createUseCase, FindMasterDataByIdUseCase findByIdUseCase, ChangeStatusUseCase changeStatusUseCase, CreateAllMasterDataUseCase createAllMasterDataUseCase, FindAllMasterDataUseCase findAllUseCase) {
         this.createUseCase = createUseCase;
         this.findByIdUseCase = findByIdUseCase;
         this.changeStatusUseCase = changeStatusUseCase;
         this.createAllMasterDataUseCase = createAllMasterDataUseCase;
+        this.findAllUseCase = findAllUseCase;
     }
 
     @PostMapping("/create")
@@ -40,6 +43,20 @@ public class MasterRootController {
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(201, "se creo el tipo exitosamente", response));
     }
 
+    @GetMapping("/showAll")
+    public ResponseEntity<ApiResponse<List<MasterDataResponseDto>>> showAll() {
+
+        List<MasterDataResponseDto> response = findAllUseCase.execute();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ApiResponse<>(
+                                200,
+                                "se listaron los datos maestros ",
+                                response
+                        )
+                );
+    }
 
     @GetMapping("/search/v2/{id}")
     public ResponseEntity<ApiResponse<MasterDataResponseDto>> searchById(@PathVariable Long id) {
