@@ -93,6 +93,7 @@ public class LoginUseCaseImpl implements LoginUseCase{
 
         List<RoleAssignmentDomain> roleAssigned = rolesPort.findByUser(user.getId());
 
+
         RoleAssignmentDomain employeeAssignment = roleAssigned.stream()
                 .filter(assignment ->
                         assignment.getOutletId() != null

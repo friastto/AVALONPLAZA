@@ -80,7 +80,7 @@ public class CustomUserDetailsService implements UserDetailsService { // Impleme
         // Si el usuario no tiene roles asignados o activos, se le puede asignar un rol por defecto si es necesario
         if (authorities.isEmpty()) {
             // Ejemplo: asignar un rol de "USUARIO" por defecto si no tiene ninguno
-            authorities.add(new SimpleGrantedAuthority("ROLE_ANONIMOUS"));
+            authorities.add(new SimpleGrantedAuthority("ROLE_USANONIMO"));
         }
 
         // 5. Devolver un objeto UserDetails que Spring Security entiende
