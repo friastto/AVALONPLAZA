@@ -116,6 +116,7 @@ public class LoginUseCaseImpl implements LoginUseCase{
         }
 
 
+
         ModesResult modesResult = mode.resolve(roleAssigned,outlet);
 
 

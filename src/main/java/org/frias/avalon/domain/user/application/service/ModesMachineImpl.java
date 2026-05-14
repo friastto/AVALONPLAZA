@@ -47,6 +47,7 @@ public class ModesMachineImpl implements ModesMachine {
             List<String> anonymousPermissions = Collections.emptyList(); // Por defecto, cliente anónimo no tiene permisos específicos
 
             if (anonymousRole != null) {
+
                 anonymousPermissions = permissionService.resolvePermissions(anonymousRole);
                 clientResult = new ClientResult(
                         anonymousRole.getFullName(),

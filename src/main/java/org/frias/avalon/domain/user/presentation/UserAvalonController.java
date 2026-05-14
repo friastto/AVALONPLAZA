@@ -9,6 +9,7 @@ import org.frias.avalon.domain.user.application.dtos.request.UserNewDto;
 import org.frias.avalon.domain.user.application.dtos.response.AssignmentRoleResponse;
 import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
+import org.frias.avalon.domain.user.application.usecase.assingnrole.AssignmentRoleConsumerSelfUseCase;
 import org.frias.avalon.domain.user.application.usecase.assingnrole.AssignmentRoleUseCase;
 import org.frias.avalon.domain.user.application.usecase.changestatus.ChangeStatusUserAvalonUseCase;
 import org.frias.avalon.domain.user.application.usecase.create.CreateUserAvalonUseCase;
@@ -31,14 +32,16 @@ public class UserAvalonController {
     private final GetAllUserAvalonUseCase getAllUserAvalonUseCase;
     private final FindByUserNameUseCase findByUserName;
     private final LoginUseCase loginUseCase;
+    private final AssignmentRoleConsumerSelfUseCase consumerSelfUseCase;
 
-    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName, LoginUseCase loginUseCase) {
+    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName, LoginUseCase loginUseCase, AssignmentRoleConsumerSelfUseCase consumerSelfUseCase) {
         this.createUser = createUser;
         this.changeStatusUser = changeStatusUser;
         this.assignmentRole = assignmentRole;
         this.getAllUserAvalonUseCase = getAllUserAvalonUseCase;
         this.findByUserName = findByUserName;
         this.loginUseCase = loginUseCase;
+        this.consumerSelfUseCase = consumerSelfUseCase;
     }
 
 
@@ -130,6 +133,18 @@ public class UserAvalonController {
                         )
                 );
     }
+    @PatchMapping("/assignment/role/consumer/self")
+    public ResponseEntity<ApiResponse<AssignmentRoleResponse>> assignmentROleConsumerSelf() {
 
+        AssignmentRoleResponse userUpdated = consumerSelfUseCase.execute();
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(
+                                200,
+                                "se creo el rol -> "+userUpdated.role().fullName(),
+                                userUpdated
+                        )
+                );
+    }
 
 }

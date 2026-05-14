@@ -74,7 +74,7 @@ public class JwtUtils {
     // Modificado: Ahora extrae la lista de roles
     public List<String> extractRoles(String token) {
         // El claim "roles" se guarda como List<String>
-        return extractAllClaims(token).get("roles", List.class);
+        return extractAllClaims(token).get("rol", List.class);
     }
 
 

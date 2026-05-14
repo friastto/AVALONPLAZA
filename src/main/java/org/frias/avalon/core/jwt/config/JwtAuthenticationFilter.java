@@ -79,7 +79,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
 
 
-                    System.out.println("ROLES DEL TOKEN "+ rolesFromJwt.toString());
+                    if(rolesFromJwt != null && !rolesFromJwt.isEmpty() ) System.out.println("ROLES DEL TOKEN "+ rolesFromJwt.toString());
+
                     SecurityContextHolder.getContext().getAuthentication()
                             .getAuthorities()
                             .forEach(a -> System.out.println("AUTH: " + a.getAuthority()));
