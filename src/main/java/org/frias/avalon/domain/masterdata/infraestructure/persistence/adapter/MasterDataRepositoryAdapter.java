@@ -64,7 +64,7 @@ public class MasterDataRepositoryAdapter implements MasterDataRepositoryPort {
     }
 
     @Override
-    public Optional<MasterRoot> findParentByIClilldrenId(Long chilldrenId) {
+    public Optional<MasterRoot> findParentByChildrenId(Long chilldrenId) {
 
         return jpa.findParentByChildId(chilldrenId).map(mapper::toDomain);
     }

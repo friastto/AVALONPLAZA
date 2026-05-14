@@ -2,6 +2,8 @@ package org.frias.avalon.domain.user.application.usecase.login;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.exeptions.BusinessException;
+import org.frias.avalon.core.jwt.config.CustomUserDetailsService;
+import org.frias.avalon.core.jwt.util.JwtUtils;
 import org.frias.avalon.core.validation.PassSecure;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
@@ -20,6 +22,7 @@ import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,8 +39,10 @@ public class LoginUseCaseImpl implements LoginUseCase{
     private final  AuthorizationMachine authMachine;
     private final ModesMachine mode;
     private final RoleAssignmentRepositoryPort rolesPort;
+    private final JwtUtils jwtUtils;
+    private final CustomUserDetailsService userDetailsService;
 
-    public LoginUseCaseImpl(UserAvalonRepositoryPort userPort, OutletRepositoryPort outletPort, MasterTreeProvider masterTreeProvider, UserAvalonMapper mapper, AuthorizationMachine authMachine, ModesMachine mode, RoleAssignmentRepositoryPort rolesPort) {
+    public LoginUseCaseImpl(UserAvalonRepositoryPort userPort, OutletRepositoryPort outletPort, MasterTreeProvider masterTreeProvider, UserAvalonMapper mapper, AuthorizationMachine authMachine, ModesMachine mode, RoleAssignmentRepositoryPort rolesPort, JwtUtils jwtUtils, CustomUserDetailsService userDetailsService) {
         this.userPort = userPort;
         this.outletPort = outletPort;
         this.masterTreeProvider = masterTreeProvider;
@@ -45,6 +50,8 @@ public class LoginUseCaseImpl implements LoginUseCase{
         this.authMachine = authMachine;
         this.mode = mode;
         this.rolesPort = rolesPort;
+        this.jwtUtils = jwtUtils;
+        this.userDetailsService = userDetailsService;
     }
 
 
@@ -68,6 +75,19 @@ public class LoginUseCaseImpl implements LoginUseCase{
 
        if( PassSecure.verifyPassword(request.password(), user.getHashSalt(),user.getHashPassword()))
            throw new IllegalStateException("Credenciales inválidas");
+
+        // --- Lógica de generación de JWT ---
+        // 1. Obtener UserDetails completo con roles y estado de cuenta
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.userName());
+        // 2. Verificar que el UserDetails obtenido es válido (ej. no está bloqueado, etc.)
+        //    La lógica de CustomUserDetailsService ya maneja esto al construir el UserDetails.
+        //    Si el usuario no está habilitado, el UserDetails.isEnabled() será false.
+        //    Podrías añadir una verificación aquí si quieres lanzar una excepción específica de negocio.
+        if (!userDetails.isEnabled() || !userDetails.isAccountNonLocked()) {
+            throw new IllegalStateException("La cuenta del usuario no está activa o está bloqueada.");
+        }
+        // --- Fin Lógica de generación de JWT ---
+
 
         AuthorizationResult authz = authMachine.resolve(user);
 
@@ -103,10 +123,10 @@ public class LoginUseCaseImpl implements LoginUseCase{
         ModesResponseDto modesResponse = mode.mapperToResponse(modesResult);
 
 
-
+String token = jwtUtils.generateToken(userDetails, outlet != null ? outlet.getId() : null);
 
         return new AuthResponse(
-                "TOKEN NO HABILITADO AUN",
+                token,
                 userDto,
                 //authz.roles(),
                // authz.permissions(),

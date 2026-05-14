@@ -19,7 +19,7 @@ public interface MasterDataRepositoryPort {
 
     MasterRoot deleteById(Long id);
 
-    Optional<MasterRoot> findParentByIClilldrenId(Long chilldrenId);
+    Optional<MasterRoot> findParentByChildrenId(Long chilldrenId);
 
     Optional<MasterRoot> getActiveStatus();
 

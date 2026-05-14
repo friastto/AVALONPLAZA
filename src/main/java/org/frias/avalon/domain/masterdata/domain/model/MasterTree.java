@@ -23,7 +23,7 @@ public class MasterTree {
 
     public boolean isChildOf(MasterRoot node, String parentCode) {
 
-        MasterRoot current = node;
+        MasterRoot current = nodes.get(node.getParentId());
 
         while (current != null) {
 
