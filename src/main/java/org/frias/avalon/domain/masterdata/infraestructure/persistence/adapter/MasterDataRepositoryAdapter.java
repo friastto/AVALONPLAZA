@@ -5,9 +5,7 @@ import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepository
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
 import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
 import org.frias.avalon.domain.masterdata.infraestructure.persistence.repository.JpaMasterDataRepository;
-import org.frias.avalon.domain.user.infraestruture.persistence.entity.UserAvalon;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;

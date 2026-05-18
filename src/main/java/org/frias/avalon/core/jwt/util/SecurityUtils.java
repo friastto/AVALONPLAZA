@@ -1,8 +1,13 @@
 package org.frias.avalon.core.jwt.util;
 
+import org.frias.avalon.core.permissions.UserContext;
+import org.frias.avalon.core.tenant.TenantContext; // Asegurarse de que esta importación esté presente
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class SecurityUtils {
 
@@ -25,14 +30,42 @@ public class SecurityUtils {
         }
         return null;
     }
-    public static Long getTenantId() {
+
+    // Eliminado el método getTenantId() de SecurityUtils, ya que se obtiene directamente de TenantContext.
+
+    /**
+     * Construye el UserContext a partir de la autenticación actual del usuario.
+     * Asume que la autenticación proviene de una configuración estándar de Spring Security.
+     * Los datos de companyId y employeeOutletId se obtienen del TenantContext.
+     *
+     * @return UserContext con la información del usuario actual.
+     * @throws IllegalStateException si no hay un usuario autenticado.
+     */
+    public static UserContext getCurrentUserContext() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null) return null;
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("No user authenticated.");
+        }
 
-        Object principal = authentication.getPrincipal();
+        // Extraer roles
+        List<String> roles = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(authority -> authority.startsWith("ROLE_")) // Asegurarse de que sean roles
+                .collect(Collectors.toList());
 
+        // Extraer username
+        String username = authentication.getName();
 
-        return null;
+        // Obtener companyId y employeeOutletId del TenantContext
+        //Long companyId = TenantContext.getTenantId();
+        Long employeeOutletId = TenantContext.getTenantOutletId();
+
+        return new UserContext(
+                username,
+                roles,
+                employeeOutletId
+                // Ahora se pasa companyId
+        );
     }
 }

@@ -47,6 +47,8 @@ public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase{
     @Override
     public AssignmentRoleResponse execute(AssignmentRoleRequestDto request) {
 
+        var tree = treeProvider.getTree();
+
         UserAvalonDomain user = userPort.findById(request.userId())
                     .orElseThrow(()-> new EntityNotFoundException("no se pudo encontrar el usuario"));
 
@@ -57,13 +59,9 @@ public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase{
                 .orElseThrow(()-> new EntityNotFoundException("no se pudo encontrar el rol para asignar"));
 
 
-
-        var tree = treeProvider.getTree();
-
         // 1. Validar que es rol
-        if (!tree.isChildOf(role, "ROL")) {
-            throw new RuntimeException("No es un rol válido");
-        }
+        if (!tree.isChildOf(role, "ROL")) { throw new RuntimeException("No es un rol válido"); }
+
 
         List<RoleAssignmentDomain> roleAssigned = rolePort.findByUser(user.getId());
 

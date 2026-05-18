@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 public record AuthRequest (
 
     @NotBlank(message = "ingrese un usuario valido")
-    String userName,
+    String identifier,
 
     @NotBlank(message = "Ingrese una contraseña valida")
     String password

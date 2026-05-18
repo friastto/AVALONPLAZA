@@ -5,6 +5,7 @@ import org.frias.avalon.domain.masterdata.application.dto.response.StatusRespons
 
 public record UserAvalonResponseDto(
     Long id,
+    Long personId,
     String userName,
     StatusResponseDto status
     ){

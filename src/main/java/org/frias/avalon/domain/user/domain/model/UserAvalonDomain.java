@@ -7,6 +7,8 @@ import lombok.Getter;
 public class UserAvalonDomain {
     private Long id;
 
+    private Long personId;
+
     private String userName;
 
     private String hashSalt;
@@ -24,12 +26,14 @@ public class UserAvalonDomain {
     }
     public UserAvalonDomain(
             Long id,
+            Long personId,
             String userName,
             String hashSalt,
             String hashPassword,
             Long statusId
     ) {
         this.id = id;
+        this.personId = personId;
         this.userName = userName;
         this.hashSalt = hashSalt;
         this.hashPassword = hashPassword;
@@ -42,6 +46,15 @@ public class UserAvalonDomain {
             String hashPassword,
             Long statusId
     ) {
+        this.userName = userName;
+        this.hashSalt = hashSalt;
+        this.hashPassword = hashPassword;
+        this.statusId = statusId;
+    }
+
+    public UserAvalonDomain(Long id, Long personId, String userName, Long statusId) {
+        this.id = id;
+        this.personId = personId;
         this.userName = userName;
         this.hashSalt = hashSalt;
         this.hashPassword = hashPassword;
@@ -65,13 +78,14 @@ public class UserAvalonDomain {
 
 
 
-    public static UserAvalonDomain fromPersistenceBasic(Long id, String userName, Long statusId) {
+    public static UserAvalonDomain fromPersistenceBasic(Long id, Long personId, String userName, Long statusId) {
 
-        return new UserAvalonDomain( id,  userName, statusId);
+        return new UserAvalonDomain( id,personId,  userName, statusId);
 
     }
     public static UserAvalonDomain fromPersistenceAdvanced(
             Long id,
+            Long personId,
             String userName,
             String hashSalt,
             String hashPassword,
@@ -80,6 +94,7 @@ public class UserAvalonDomain {
 
         return new UserAvalonDomain(
                 id,
+                personId,
                 userName,
                 hashSalt,
                 hashPassword,

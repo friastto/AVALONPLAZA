@@ -2,13 +2,16 @@ package org.frias.avalon.domain.user.presentation;
 
 import jakarta.validation.Valid;
 import org.frias.avalon.core.exeptions.ApiResponse;
+import org.frias.avalon.domain.person.application.dto.request.CreatePersonRequest;
 import org.frias.avalon.domain.user.application.dtos.request.AssignmentRoleRequestDto;
 import org.frias.avalon.domain.user.application.dtos.request.AuthRequest;
 import org.frias.avalon.domain.user.application.dtos.request.ChangeUserAvalonStatusRequest;
 import org.frias.avalon.domain.user.application.dtos.request.UserNewDto;
 import org.frias.avalon.domain.user.application.dtos.response.AssignmentRoleResponse;
 import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
+import org.frias.avalon.domain.user.application.dtos.response.UserAvalonDto;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
+import org.frias.avalon.domain.user.application.usecase.asignmentPerson.AssignPersonToUserUseCase;
 import org.frias.avalon.domain.user.application.usecase.assingnrole.AssignmentRoleConsumerSelfUseCase;
 import org.frias.avalon.domain.user.application.usecase.assingnrole.AssignmentRoleUseCase;
 import org.frias.avalon.domain.user.application.usecase.changestatus.ChangeStatusUserAvalonUseCase;
@@ -33,8 +36,9 @@ public class UserAvalonController {
     private final FindByUserNameUseCase findByUserName;
     private final LoginUseCase loginUseCase;
     private final AssignmentRoleConsumerSelfUseCase consumerSelfUseCase;
+    private final AssignPersonToUserUseCase assignmentPerson;
 
-    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName, LoginUseCase loginUseCase, AssignmentRoleConsumerSelfUseCase consumerSelfUseCase) {
+    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName, LoginUseCase loginUseCase, AssignmentRoleConsumerSelfUseCase consumerSelfUseCase, AssignPersonToUserUseCase assignmentPerson) {
         this.createUser = createUser;
         this.changeStatusUser = changeStatusUser;
         this.assignmentRole = assignmentRole;
@@ -42,6 +46,7 @@ public class UserAvalonController {
         this.findByUserName = findByUserName;
         this.loginUseCase = loginUseCase;
         this.consumerSelfUseCase = consumerSelfUseCase;
+        this.assignmentPerson = assignmentPerson;
     }
 
 
@@ -120,19 +125,7 @@ public class UserAvalonController {
                 );
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> auth(@Valid @RequestBody AuthRequest credentials) {
 
-        AuthResponse auth = loginUseCase.execute(credentials);
-
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse<>(
-                                200,
-                                "Inicio de seccion Exitoso",
-                                auth
-                        )
-                );
-    }
     @PatchMapping("/assignment/role/consumer/self")
     public ResponseEntity<ApiResponse<AssignmentRoleResponse>> assignmentROleConsumerSelf() {
 
@@ -142,6 +135,19 @@ public class UserAvalonController {
                 .body(new ApiResponse<>(
                                 200,
                                 "se creo el rol -> "+userUpdated.role().fullName(),
+                                userUpdated
+                        )
+                );
+    }
+
+    @PatchMapping("/{idUser}/assignment/person/")
+    public ResponseEntity<ApiResponse<UserAvalonDto>> assignmentPerson(@PathVariable Long idUser, @RequestBody CreatePersonRequest newPersonData) {
+
+        UserAvalonDto userUpdated = assignmentPerson.execute(idUser,newPersonData);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(
+                                200,
+                                "se asigno la persona exitosamente",
                                 userUpdated
                         )
                 );

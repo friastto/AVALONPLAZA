@@ -1,4 +1,4 @@
-package org.frias.avalon.domain.user.infraestruture.persistence.entity;
+package org.frias.avalon.domain.user.infraestructure.persistence.entity;
 
 
 import jakarta.persistence.*;
@@ -9,41 +9,40 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Entity
 @Table
+@Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class UserAvalon {
+public class RoleAssignment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String userName;
+    private Long userId;
 
-    @Column(nullable = false)
-    private String hashSalt;
+    private Long roleId;
 
-    @Column(nullable = false)
-    private String hashPassword;
 
-    @Column(nullable = false)
-    private Long statusId;
+   private Long outletId;
+
+    //private Long scope;
+
+   // private Long schedule;
+
+    private Long status;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 
     @PrePersist
-    void onCreate() {
+    protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
-
     @PreUpdate
-    void onUpdate() {
+    protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 }
-

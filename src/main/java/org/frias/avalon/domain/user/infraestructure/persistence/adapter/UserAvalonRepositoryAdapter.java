@@ -1,10 +1,11 @@
-package org.frias.avalon.domain.user.infraestruture.persistence.adapter;
+package org.frias.avalon.domain.user.infraestructure.persistence.adapter;
 
+import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapper;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
-import org.frias.avalon.domain.user.infraestruture.persistence.entity.UserAvalon;
-import org.frias.avalon.domain.user.infraestruture.persistence.repository.JpaUserAvalonRepository;
+import org.frias.avalon.domain.user.infraestructure.persistence.entity.UserAvalon;
+import org.frias.avalon.domain.user.infraestructure.persistence.repository.JpaUserAvalonRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,10 +16,12 @@ public class UserAvalonRepositoryAdapter implements UserAvalonRepositoryPort {
 
     private final JpaUserAvalonRepository jpa;
     private final UserAvalonMapper mapper;
+    private final PersonRepositoryPort personRepositoryPort;
 
-    public UserAvalonRepositoryAdapter(JpaUserAvalonRepository jpa, UserAvalonMapper mapper) {
+    public UserAvalonRepositoryAdapter(JpaUserAvalonRepository jpa, UserAvalonMapper mapper, PersonRepositoryPort personRepositoryPort) {
         this.jpa = jpa;
         this.mapper = mapper;
+        this.personRepositoryPort = personRepositoryPort;
     }
 
 
@@ -66,4 +69,12 @@ public class UserAvalonRepositoryAdapter implements UserAvalonRepositoryPort {
 
         return jpa.findByUserName(userName).map(mapper::toDomain);
     }
+
+    @Override
+    public Optional<UserAvalonDomain> findByIdentifier(String identifier) {
+
+        return jpa.findByIdentifier(identifier).map(mapper::toDomain);
+    }
+
+
 }

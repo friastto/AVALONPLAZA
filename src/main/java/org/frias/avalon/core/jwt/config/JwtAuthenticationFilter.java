@@ -37,11 +37,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.treeProvider = treeProvider;
         this.userDetailsService = userDetailsService;
     }
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        // Si la petición va a auth o a la creación de usuario, el filtro NO se ejecuta
+        return path.startsWith("/avalon/auth") || path.startsWith("/avalon/user/create");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException, java.io.IOException {
+        /*String path = request.getRequestURI();
+        // Si es la ruta de auth, saltarse la validación del token
+        if (path.startsWith("/avalon/auth")|| path.startsWith("/avalon/user/create")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
+         */
      try{ // Es buena práctica envolver esto para limpiar el contexto al final
             final String authHeader = request.getHeader("Authorization");
 

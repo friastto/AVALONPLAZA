@@ -58,7 +58,7 @@ public class LoginUseCaseImpl implements LoginUseCase{
     @Override
     public AuthResponse execute(AuthRequest request) {
 
-        UserAvalonDomain user = userPort.findByUserName(request.userName())
+        UserAvalonDomain user = userPort.findByIdentifier(request.identifier())
                 .orElseThrow(() -> new EntityNotFoundException("usuario no encontrado"));
 
         var tree = masterTreeProvider.getTree();
@@ -78,7 +78,7 @@ public class LoginUseCaseImpl implements LoginUseCase{
 
         // --- Lógica de generación de JWT ---
         // 1. Obtener UserDetails completo con roles y estado de cuenta
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.userName());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUserName());
         // 2. Verificar que el UserDetails obtenido es válido (ej. no está bloqueado, etc.)
         //    La lógica de CustomUserDetailsService ya maneja esto al construir el UserDetails.
         //    Si el usuario no está habilitado, el UserDetails.isEnabled() será false.

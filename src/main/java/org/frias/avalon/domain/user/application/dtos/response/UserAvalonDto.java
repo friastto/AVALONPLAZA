@@ -15,7 +15,9 @@ public record UserAvalonDto(
 
         String address,
 
-        String sexId
+        String sexId,
+
+        String statusId
 
 ) {
 }

@@ -6,6 +6,9 @@ import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.person.domain.model.PersonDomain;
+import org.frias.avalon.domain.person.infraestructure.persistence.entity.PersonEntity;
+import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -62,11 +65,13 @@ private final MasterTreeProvider treeProvider;
             case "CSTNDR":
                 permissions.add("VIEW_MARKETPLACE");
                 permissions.add("BUY_PRODUCTS");
+                permissions.add("AUTO_ASSIGN_CONSUMER_ROLE"); // CSTNDR también pued
                 break;
 
             case "USANONIMO":
                 permissions.add("VIEW_MARKETPLACE");
                 permissions.add("AUTO_ASSIGN_CONSUMER_ROLE"); // Nuevo permiso para ANONIMO
+                permissions.add("AUTO_ASSIGN_CONSUMER_ROLE"); // CSTNDR también pued
                 break;
         }
 
@@ -137,12 +142,19 @@ private final MasterTreeProvider treeProvider;
      //* @param roleToAssignMasterRoot El MasterRoot del rol que se intenta auto-asignar.
      * @return true si el usuario actual está autorizado a auto-asignarse este rol, false en caso contrario.
      */
-    public boolean canAutoAssignConsumerRole() {
+    public boolean canAutoAssignConsumerRole(MasterRoot roleToAssignMasterRoot) {
         MasterTree tree = treeProvider.getTree();
         // Un usuario anónimo solo puede auto-asignarse un rol de consumidor estándar
         // y solo si el rol a asignar es un descendiente de CLIENTE
-        return (SecurityUtils.hasRole("ROLE_ANONIMO") || SecurityUtils.hasRole("ROLE_CSTNDR"));
+        // Un usuario ANÓNIMO o CONSUMIDOR (CSTNDR) puede auto-asignarse el rol CSTNDR
+        boolean isAnonimoOrCstndr = SecurityUtils.hasRole("ROLE_ANONIMO") || SecurityUtils.hasRole("ROLE_CSTNDR");
+
+        // El rol a auto-asignar debe ser específicamente CSTNDR y ser un descendiente de CLIENTE
+        boolean isCstndrRole = roleToAssignMasterRoot.getShortName().equals("CSTNDR") && tree.isChildOf(roleToAssignMasterRoot, "CLIENTE");
+
+        return isAnonimoOrCstndr && isCstndrRole;
     }
+
 }
 
     /**
