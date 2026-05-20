@@ -5,7 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.frias.avalon.core.jwt.util.JwtUtils;
+import org.frias.avalon.core.jwt.service.JwtTokenProviderPort;
 import org.frias.avalon.core.jwt.util.SecurityUtils;
 import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
@@ -26,14 +26,14 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
-    private final JwtUtils jwtUtils;
+    private final JwtTokenProviderPort jwtTokenProvider;
     private final MasterTreeProvider treeProvider;
 
 
     private final CustomUserDetailsService userDetailsService;
 
-    public JwtAuthenticationFilter(JwtUtils jwtUtils, MasterTreeProvider treeProvider, CustomUserDetailsService userDetailsService) {
-        this.jwtUtils = jwtUtils;
+    public JwtAuthenticationFilter(JwtTokenProviderPort jwtTokenProvider, MasterTreeProvider treeProvider, CustomUserDetailsService userDetailsService) {
+        this.jwtTokenProvider = jwtTokenProvider;
         this.treeProvider = treeProvider;
         this.userDetailsService = userDetailsService;
     }
@@ -47,14 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException, java.io.IOException {
-        /*String path = request.getRequestURI();
-        // Si es la ruta de auth, saltarse la validación del token
-        if (path.startsWith("/avalon/auth")|| path.startsWith("/avalon/user/create")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
-         */
      try{ // Es buena práctica envolver esto para limpiar el contexto al final
             final String authHeader = request.getHeader("Authorization");
 
@@ -62,18 +55,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String jwt = authHeader.substring(7); // quitamos "Bearer "
 
-               /* if (jwtUtils.validateToken(jwt)) {
-                    System.out.println("✅ TOKEN VALIDADO CORRECTAMENTE PARA: " + jwtUtils.extractUsername(jwt));
-
-                } else {
-                    System.out.println("EL TOKEN NO ES VÁLIDO O ESTÁ EXPIRADO");
-                }*/
                 // 2. Validamos el token antes de hacer nada más
-                if (jwtUtils.validateToken(jwt)) {
+                if (jwtTokenProvider.validateToken(jwt)) {
 
                     // 3. Extraemos username y rol desde el token
-                    String username = jwtUtils.extractUsername(jwt);
-                    List<String> rolesFromJwt = jwtUtils.extractRoles(jwt);
+                    String username = jwtTokenProvider.extractUsername(jwt);
+                    List<String> rolesFromJwt = jwtTokenProvider.extractRoles(jwt);
 
                     // 4. Si no hay una autenticación activa en el contexto
                     Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
@@ -98,7 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             .getAuthorities()
                             .forEach(a -> System.out.println("AUTH: " + a.getAuthority()));
 
-                    Long outletIdFromJwt = jwtUtils.extractParent(jwt,"outlet_Id");
+                    Long outletIdFromJwt = jwtTokenProvider.extractOutletId(jwt);
 
                     String tenantHeader = request.getHeader("X-Tenant-Id");
 
@@ -108,7 +95,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
 
                     // si viene header, lo se parsea seguro
-                    Long companyId = jwtUtils.extractParent(jwt, "empresa_Id");
+                    Long companyId = jwtTokenProvider.extractClaimAsLong(jwt, "empresa_Id");
 
                     if (tenantHeader != null) {
                         try {
@@ -188,37 +175,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     }
 }
-/**
- * Se ejecuta en cada request para validar el JWT
-
-@Override
-protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws ServletException, IOException, java.io.IOException {
-
-    final String authHeader = request.getHeader("Authorization");
-
-    // Validamos que el header comience con "Bearer "
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-        String jwt = authHeader.substring(7); // quitamos "Bearer "
-        String username = jwtUtils.extractUsername(jwt);
-        String rol = jwtUtils.extractRol(jwt);
-
-        // Si hay un username y no hay autenticación previa
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-            // Validamos el token
-            if (jwtUtils.validateToken(jwt)) {
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-
-                // Establecemos el usuario autenticado en el contexto de seguridad
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            }
-        }
-    }
-
-    filterChain.doFilter(request, response); // continúa con la cadena
-}
-}
-*/

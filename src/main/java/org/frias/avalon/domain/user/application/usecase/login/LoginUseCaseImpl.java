@@ -3,7 +3,7 @@ package org.frias.avalon.domain.user.application.usecase.login;
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.core.jwt.config.CustomUserDetailsService;
-import org.frias.avalon.core.jwt.util.JwtUtils;
+import org.frias.avalon.core.jwt.service.JwtTokenProviderPort; // <-- CAMBIO: Importar el puerto
 import org.frias.avalon.core.validation.PassSecure;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
@@ -30,8 +30,6 @@ import java.util.List;
 @Service
 public class LoginUseCaseImpl implements LoginUseCase{
 
-    //private final RoleAssignmentRepositoryPort roleAssignmentPort;
-
     private final UserAvalonRepositoryPort userPort;
     private final OutletRepositoryPort outletPort;
     private final MasterTreeProvider masterTreeProvider;
@@ -39,10 +37,10 @@ public class LoginUseCaseImpl implements LoginUseCase{
     private final  AuthorizationMachine authMachine;
     private final ModesMachine mode;
     private final RoleAssignmentRepositoryPort rolesPort;
-    private final JwtUtils jwtUtils;
+    private final JwtTokenProviderPort jwtTokenProvider; // <-- CAMBIO: Inyectar el puerto
     private final CustomUserDetailsService userDetailsService;
 
-    public LoginUseCaseImpl(UserAvalonRepositoryPort userPort, OutletRepositoryPort outletPort, MasterTreeProvider masterTreeProvider, UserAvalonMapper mapper, AuthorizationMachine authMachine, ModesMachine mode, RoleAssignmentRepositoryPort rolesPort, JwtUtils jwtUtils, CustomUserDetailsService userDetailsService) {
+    public LoginUseCaseImpl(UserAvalonRepositoryPort userPort, OutletRepositoryPort outletPort, MasterTreeProvider masterTreeProvider, UserAvalonMapper mapper, AuthorizationMachine authMachine, ModesMachine mode, RoleAssignmentRepositoryPort rolesPort, JwtTokenProviderPort jwtTokenProvider, CustomUserDetailsService userDetailsService) { // <-- CAMBIO: Inyectar el puerto
         this.userPort = userPort;
         this.outletPort = outletPort;
         this.masterTreeProvider = masterTreeProvider;
@@ -50,7 +48,7 @@ public class LoginUseCaseImpl implements LoginUseCase{
         this.authMachine = authMachine;
         this.mode = mode;
         this.rolesPort = rolesPort;
-        this.jwtUtils = jwtUtils;
+        this.jwtTokenProvider = jwtTokenProvider; // <-- CAMBIO: Asignar el puerto
         this.userDetailsService = userDetailsService;
     }
 
@@ -73,21 +71,14 @@ public class LoginUseCaseImpl implements LoginUseCase{
             throw new IllegalStateException("Usuario no puede autenticarse");
         }
 
-       if( PassSecure.verifyPassword(request.password(), user.getHashSalt(),user.getHashPassword()))
+       if( !PassSecure.verifyPassword(request.password(), user.getHashSalt(),user.getHashPassword())) // <-- CORRECCIÓN: La lógica estaba invertida
            throw new IllegalStateException("Credenciales inválidas");
 
-        // --- Lógica de generación de JWT ---
-        // 1. Obtener UserDetails completo con roles y estado de cuenta
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUserName());
-        // 2. Verificar que el UserDetails obtenido es válido (ej. no está bloqueado, etc.)
-        //    La lógica de CustomUserDetailsService ya maneja esto al construir el UserDetails.
-        //    Si el usuario no está habilitado, el UserDetails.isEnabled() será false.
-        //    Podrías añadir una verificación aquí si quieres lanzar una excepción específica de negocio.
+        
         if (!userDetails.isEnabled() || !userDetails.isAccountNonLocked()) {
             throw new IllegalStateException("La cuenta del usuario no está activa o está bloqueada.");
         }
-        // --- Fin Lógica de generación de JWT ---
-
 
         AuthorizationResult authz = authMachine.resolve(user);
 
@@ -106,34 +97,25 @@ public class LoginUseCaseImpl implements LoginUseCase{
                 .findFirst()
                 .orElse(null);
 
-
-        // se deve buscar la outlet si el usuario tiene un empleado
-
         OutletDomain outlet = null;
         if (employeeAssignment != null){
             outlet = outletPort.findById(employeeAssignment.getOutletId())
                     .orElseThrow(() -> new BusinessException("este usuario tiene un perfil de empleado pero no esta asignado a una tienda dentro de avalon"));
         }
 
-
-
         ModesResult modesResult = mode.resolve(roleAssigned,outlet);
-
 
         UserAvalonResponseDto userDto = mapper.toResponse(user,status);
 
         ModesResponseDto modesResponse = mode.mapperToResponse(modesResult);
 
-
-String token = jwtUtils.generateToken(userDetails, outlet != null ? outlet.getId() : null);
+        // <-- CAMBIO: Usar el puerto para generar el token
+        String token = jwtTokenProvider.generateAccessToken(userDetails, outlet != null ? outlet.getId() : null);
 
         return new AuthResponse(
                 token,
                 userDto,
-                //authz.roles(),
-               // authz.permissions(),
                 modesResponse
-
         );
     }
 }

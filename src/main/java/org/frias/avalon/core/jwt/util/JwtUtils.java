@@ -22,7 +22,8 @@ public class JwtUtils {
     @Value(value = "${app.jwt.secret}")
     private String jwtSecret;
 
-    private final long jwtExpirationMs = 86400000;
+    @Value(value = "${app.jwt.expiration-ms}")
+    private long jwtExpirationMs;
 
     // 1. Generar el Token (Nuevo Builder)
     public String generateToken(UserDetails userDetails, Long outletId) {
