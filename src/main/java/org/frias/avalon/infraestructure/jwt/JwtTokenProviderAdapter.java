@@ -73,8 +73,13 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
     }
 
     @Override
-    public String generateRefreshTokenFromId(Long userId) {
-        return UUID.randomUUID().toString();
+    public UUID generateRefreshToken() {
+        return UUID.randomUUID();
+    }
+
+    @Override
+    public Instant timeRefreshTokenExpiration() {
+        return Instant.now().plusMillis(refreshTokenExpirationMs);
     }
 
     @Override

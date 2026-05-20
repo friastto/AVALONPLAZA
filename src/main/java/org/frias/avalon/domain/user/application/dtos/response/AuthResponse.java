@@ -7,15 +7,8 @@ import org.frias.avalon.domain.user.application.dtos.response.modes.ModesRespons
 import java.util.List;
 
 public record AuthResponse(
-        String token,
+        String accessToken, // Renombrado para mayor claridad
+        String refreshToken, // Nuevo campo para el refresh token
         UserAvalonResponseDto user,
-       // List<String> roles,
-        //List<String> permissions,
         ModesResponseDto modes
-
-
 ) {}
-
-/*
-Modes
- */

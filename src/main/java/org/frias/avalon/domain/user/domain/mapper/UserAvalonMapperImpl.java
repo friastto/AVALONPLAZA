@@ -30,6 +30,19 @@ public class UserAvalonMapperImpl implements UserAvalonMapper {
 
         );
 
+    }@Override
+    public UserAvalonDomain toDomainAdvance(UserAvalon entity) {
+
+        return UserAvalonDomain.fromPersistenceAdvanced(
+                entity.getId(),
+                entity.getPersonId(),
+                entity.getUserName(),
+                entity.getHashSalt(),
+                entity.getHashPassword(),
+                entity.getStatusId()
+
+        );
+
     }
 
     @Override

@@ -20,7 +20,7 @@ public class ExtractRoleAssignedService {
     }
 
     public  List<RoleAssignmentDomain> extract(UserAvalonDomain user){
-       return rolePort.findByUser(user.getId());
+       return rolePort.findByUserAvalonId(user.getId());
     }
     public List<String> extract(List<RoleAssignmentDomain> rolesDomain){
 

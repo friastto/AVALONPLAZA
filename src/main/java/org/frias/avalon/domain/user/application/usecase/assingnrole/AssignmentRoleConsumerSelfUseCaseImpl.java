@@ -1,9 +1,7 @@
 package org.frias.avalon.domain.user.application.usecase.assingnrole;
 
-import com.twelvemonkeys.imageio.metadata.tiff.IFD;
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.exeptions.BusinessException;
-import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
@@ -18,7 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -70,7 +67,7 @@ public class AssignmentRoleConsumerSelfUseCaseImpl implements AssignmentRoleCons
         }
 
         // --- 5. Verificar si el usuario ya tiene el rol CSTNDR activo ---
-        Optional<RoleAssignmentDomain> existingCstndrAssignment = rolePort.findByUser(user.getId()).stream()
+        Optional<RoleAssignmentDomain> existingCstndrAssignment = rolePort.findByUserAvalonId(user.getId()).stream()
                 .filter(assignment -> {
                     MasterRoot assignedRole = tree.getById(assignment.getRoleId());
                     MasterRoot assignmentStatus = tree.getById(assignment.getStatus());

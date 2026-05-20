@@ -36,7 +36,7 @@ public class AuthorizationMachineImpl implements AuthorizationMachine {
         var tree = treeProvider.getTree();
 
         // 1. Obtener asignaciones
-        var assignments = roleAssignmentPort.findByUser(user.getId());
+        var assignments = roleAssignmentPort.findByUserAvalonId(user.getId());
 
         // 2. Obtener roles (MasterRoot)
         List<MasterRoot> roles = assignments.stream()

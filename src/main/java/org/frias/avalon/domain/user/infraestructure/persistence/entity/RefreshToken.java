@@ -19,7 +19,7 @@ public class RefreshToken {
     private UUID id;
 
     @Column(nullable = false, unique = true)
-    private String token;
+    private String refreshToken;
 
     @Column(nullable = false)
     private Long userAvalonId;

@@ -32,7 +32,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable) // Deshabilitamos CSRF para APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/avalon/auth/login").permitAll()
+                        .requestMatchers("/avalon/auth/**").permitAll()
                         .requestMatchers("/avalon/user/create").permitAll()
                         .requestMatchers("/avalon/user/{userId}/assignment/role").hasAnyRole("ADMINTI","ADMIN","GERGEN")
                         .requestMatchers("/avalon/user/assignment/role/consumer/self").permitAll()

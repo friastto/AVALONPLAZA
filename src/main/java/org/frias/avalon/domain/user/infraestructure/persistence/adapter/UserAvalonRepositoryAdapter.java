@@ -73,7 +73,7 @@ public class UserAvalonRepositoryAdapter implements UserAvalonRepositoryPort {
     @Override
     public Optional<UserAvalonDomain> findByIdentifier(String identifier) {
 
-        return jpa.findByIdentifier(identifier).map(mapper::toDomain);
+        return jpa.findByIdentifier(identifier).map(mapper::toDomainAdvance);
     }
 
 

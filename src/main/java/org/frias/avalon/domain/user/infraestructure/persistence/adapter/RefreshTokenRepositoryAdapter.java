@@ -27,12 +27,10 @@ private final RefreshTokenMapper mapper;
     }
 
     @Override
-    public Optional<RefreshTokenDomain> findByToken(String token) {
-
-
-
-        return jpa.findByToken(token).map(mapper::toDomain);
+    public Optional<RefreshTokenDomain> findByRefreshToken(String refreshTokenValue) {
+        return jpa.findByRefreshToken(refreshTokenValue).map(mapper::toDomain);
     }
+
 
     @Override
     public void deleteByUser(Long userAvalonId) {
@@ -45,7 +43,8 @@ private final RefreshTokenMapper mapper;
     }
 
     @Override
-    public void deleteByToken(String token) {
-
+    public void deleteByRefreshToken(String refreshTokenValue) {
+        jpa.deleteByRefreshToken(refreshTokenValue);
     }
+
 }

@@ -11,7 +11,7 @@ public class RefreshTokenMapperImpl implements RefreshTokenMapper{
 
         return new RefreshTokenDomain(
                 refreshToken.getId(),
-                refreshToken.getToken(),
+                refreshToken.getRefreshToken(),
                 refreshToken.getUserAvalonId(),
                 refreshToken.getExpiryDate(),
                 refreshToken.isRevoked(),
@@ -29,7 +29,7 @@ public class RefreshTokenMapperImpl implements RefreshTokenMapper{
         // Mapeo limpio hacia la capa de persistencia
         return new RefreshToken(
                 domain.getId(),
-                domain.getToken(),
+                domain.getRefreshToken(),
                 domain.getUserAvalonId(),
                 domain.getExpiryDate(),
                 domain.isRevoked(),

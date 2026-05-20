@@ -2,7 +2,6 @@ package org.frias.avalon.core.jwt.config;
 
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
@@ -56,7 +55,7 @@ public class CustomUserDetailsService implements UserDetailsService { // Impleme
         boolean accountNonExpired = true;    // Asumimos que la cuenta no expira por defecto
 
         // 4. Cargar y procesar los roles asignados al usuario
-        List<RoleAssignmentDomain> roleAssignments = rolePort.findByUser(usuario.getId());
+        List<RoleAssignmentDomain> roleAssignments = rolePort.findByUserAvalonId(usuario.getId());
 
         Collection<SimpleGrantedAuthority> authorities = roleAssignments.stream()
                 .filter(assignment -> {

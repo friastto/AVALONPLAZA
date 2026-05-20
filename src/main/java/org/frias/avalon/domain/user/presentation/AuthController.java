@@ -6,7 +6,7 @@ import org.frias.avalon.domain.user.application.dtos.request.AuthRequest;
 import org.frias.avalon.domain.user.application.dtos.request.TokenRefreshRequest;
 import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
 import org.frias.avalon.domain.user.application.dtos.response.TokenRefreshResult;
-import org.frias.avalon.domain.user.application.usecase.accesrefreshtoken.AccessRefreshTokenUseCase;
+import org.frias.avalon.domain.user.application.usecase.accesrefreshtoken.GenerateAccessTokenAndRefreshTokenUseCase;
 import org.frias.avalon.domain.user.application.usecase.login.LoginUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
 private final LoginUseCase loginUseCase;
-private final AccessRefreshTokenUseCase refreshTokenUseCase;
-    public AuthController(LoginUseCase loginUseCase, AccessRefreshTokenUseCase refreshTokenUseCase) {
+private final GenerateAccessTokenAndRefreshTokenUseCase refreshTokenUseCase;
+    public AuthController(LoginUseCase loginUseCase, GenerateAccessTokenAndRefreshTokenUseCase refreshTokenUseCase) {
         this.loginUseCase = loginUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
     }
@@ -41,9 +41,9 @@ private final AccessRefreshTokenUseCase refreshTokenUseCase;
                 );
     }
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<TokenRefreshResult>> refresh(@RequestBody TokenRefreshRequest oldToken) {
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody TokenRefreshRequest oldToken) {
 
-        TokenRefreshResult newAccessToken = refreshTokenUseCase.execute(oldToken.refreshToken());
+        AuthResponse newAccessToken = refreshTokenUseCase.execute(oldToken.refreshToken());
 
         return ResponseEntity.ok(new ApiResponse<>(
                 200,

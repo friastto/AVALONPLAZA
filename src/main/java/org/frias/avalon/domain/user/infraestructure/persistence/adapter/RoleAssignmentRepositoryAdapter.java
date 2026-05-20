@@ -30,7 +30,7 @@ public class RoleAssignmentRepositoryAdapter implements RoleAssignmentRepository
     }
 
     @Override
-    public List<RoleAssignmentDomain> findByUser(Long id) {
+    public List<RoleAssignmentDomain> findByUserAvalonId(Long id) {
         List<RoleAssignment> roleAssignment = jpa.findByUserId(id);
 
         return roleAssignment.stream().map(mapper::toDomain).toList();

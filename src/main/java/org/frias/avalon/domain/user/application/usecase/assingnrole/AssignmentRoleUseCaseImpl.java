@@ -2,7 +2,6 @@ package org.frias.avalon.domain.user.application.usecase.assingnrole;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.exeptions.BusinessException;
-import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
@@ -63,7 +62,7 @@ public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase{
         if (!tree.isChildOf(role, "ROL")) { throw new RuntimeException("No es un rol válido"); }
 
 
-        List<RoleAssignmentDomain> roleAssigned = rolePort.findByUser(user.getId());
+        List<RoleAssignmentDomain> roleAssigned = rolePort.findByUserAvalonId(user.getId());
 
         RoleAssignmentDomain consumerRole = roleAssigned.stream()
                 .filter(assignment ->

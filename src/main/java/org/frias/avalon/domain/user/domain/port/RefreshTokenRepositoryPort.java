@@ -1,21 +1,18 @@
 package org.frias.avalon.domain.user.domain.port;
 
 import org.frias.avalon.domain.user.domain.model.RefreshTokenDomain;
-import org.frias.avalon.domain.user.infraestructure.persistence.entity.RefreshToken;
 
 import java.util.Optional;
 import java.util.UUID;
 
 public interface RefreshTokenRepositoryPort {
-    RefreshTokenDomain save(RefreshTokenDomain refreshToken) ;
+    RefreshTokenDomain save(RefreshTokenDomain refreshToken);
 
-    Optional<RefreshTokenDomain> findByToken(String token) ;
+    Optional<RefreshTokenDomain> findByRefreshToken(String refreshTokenValue);
 
-    void deleteByUser(Long userAvalonId) ;
+    void deleteByUser(Long userAvalonId);
 
-   void delete(UUID refreshToken) ;
+    void delete(UUID id);
 
-   void deleteByToken(String token);
-
-
+    void deleteByRefreshToken(String refreshTokenValue);
 }
