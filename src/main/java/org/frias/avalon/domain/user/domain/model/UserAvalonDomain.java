@@ -24,6 +24,7 @@ public class UserAvalonDomain {
         this.userName = userName;
         this.statusId = statusId;
     }
+
     public UserAvalonDomain(
             Long id,
             Long personId,
@@ -66,7 +67,7 @@ public class UserAvalonDomain {
             String hashSalt,
             String hashPassword,
             Long statusId
-    ){
+    ) {
 
         return new UserAvalonDomain(
                 userName,
@@ -77,12 +78,12 @@ public class UserAvalonDomain {
     }
 
 
-
     public static UserAvalonDomain fromPersistenceBasic(Long id, Long personId, String userName, Long statusId) {
 
-        return new UserAvalonDomain( id,personId,  userName, statusId);
+        return new UserAvalonDomain(id, personId, userName, statusId);
 
     }
+
     public static UserAvalonDomain fromPersistenceAdvanced(
             Long id,
             Long personId,
@@ -101,11 +102,6 @@ public class UserAvalonDomain {
                 statusId);
 
     }
-
-
-
-
-
 
 
 }

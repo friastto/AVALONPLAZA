@@ -36,7 +36,6 @@ public class RefreshTokenDomain {
     }
 
 
-
     public boolean isRevoked() {
         return revoked;
     }

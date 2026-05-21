@@ -11,7 +11,6 @@ import org.frias.avalon.domain.person.application.dto.request.CreatePersonReques
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonDto;
-import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
 import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapper;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
@@ -42,7 +41,7 @@ class AssignPersonToUserUseCaseImpl implements AssignPersonToUserUseCase {
             throw new BusinessException("El usuario ya tiene una persona vinculada");
         }
 
-        MasterRoot status = masterDataRepositoryPort.getActiveStatus().orElseThrow(()->new BusinessException("no se puede activar esta persona para el usuario actual"));
+        MasterRoot status = masterDataRepositoryPort.getActiveStatus().orElseThrow(() -> new BusinessException("no se puede activar esta persona para el usuario actual"));
 
         // 3. Crear el objeto de dominio de la nueva Persona
         PersonDomain newPerson = PersonDomain.createBasic(
@@ -62,15 +61,15 @@ class AssignPersonToUserUseCaseImpl implements AssignPersonToUserUseCase {
 
         // 5. Asignar el ID de la nueva persona al objeto de dominio del usuario
 
-         UserAvalonDomain userWithNewPerson = UserAvalonDomain.fromPersistenceAdvanced(
-                 user.getId(),
-                 savedPerson.getId(),
-                 user.getUserName(),
-                 user.getHashSalt(),
-                 user.getHashPassword(),
-                 user.getStatusId()
-         );
+        UserAvalonDomain userWithNewPerson = UserAvalonDomain.fromPersistenceAdvanced(
+                user.getId(),
+                savedPerson.getId(),
+                user.getUserName(),
+                user.getHashSalt(),
+                user.getHashPassword(),
+                user.getStatusId()
+        );
         // 6. Actualizar el usuario en la base de datos
-        return userAvalonMapper.toResponseWithPersonData(userRepositoryPort.save(userWithNewPerson),savedPerson, tree.getById(userWithNewPerson.getStatusId()));
+        return userAvalonMapper.toResponseWithPersonData(userRepositoryPort.save(userWithNewPerson), savedPerson, tree.getById(userWithNewPerson.getStatusId()));
     }
 }

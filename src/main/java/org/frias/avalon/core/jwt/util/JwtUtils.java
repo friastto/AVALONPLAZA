@@ -30,7 +30,7 @@ public class JwtUtils {
 
         io.jsonwebtoken.JwtBuilder tknBuilder = Jwts.builder()
                 .subject(userDetails.getUsername())
-                .claim("rol",extractCleanRole(userDetails))
+                .claim("rol", extractCleanRole(userDetails))
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs));
 
@@ -100,7 +100,8 @@ public class JwtUtils {
             return null;
         }
     }
-    public Long extractParent(String token,String parentName) {
+
+    public Long extractParent(String token, String parentName) {
         Claims claims = extractAllClaims(token);
 
         // get() devolverá null si la llave "empresa_Id" no fue incluida en el builder
@@ -120,6 +121,7 @@ public class JwtUtils {
             return null;
         }
     }
+
     // 6. Validar Token
     public boolean validateToken(String token) {
         try {

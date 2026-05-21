@@ -63,7 +63,7 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
     @Override
     public List<OutletDomain> findNearbyByRadius(LocationDomain location, int radius) {
 
-        List<Outlet> outletsList = jpa.findNearByOrderByDistance(location.longitude(),location.latitude(),radius);
+        List<Outlet> outletsList = jpa.findNearByOrderByDistance(location.longitude(), location.latitude(), radius);
 
         return outletsList.stream().map(outletMapper::toDomain).toList();
     }

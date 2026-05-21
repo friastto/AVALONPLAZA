@@ -1,6 +1,7 @@
 package org.frias.avalon.domain.person.application.dto.response;
 
-import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto; // Importar MasterDataResponseDto
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
+
 import java.time.LocalDateTime;
 
 public record PersonResponse(

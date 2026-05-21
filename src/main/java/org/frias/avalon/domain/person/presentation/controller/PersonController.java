@@ -31,10 +31,12 @@ public class PersonController {
                         "Persona creada exitosamente",
                         personResponse
                 ));
-    } @PostMapping("/{idPerson}/change/statusTo/{idStatus}")
-    public ResponseEntity<ApiResponse<PersonResponse>> changeStatus(@PathVariable Long idPerson,@PathVariable Long idStatus) {
+    }
 
-        PersonResponse personResponse = changeStatusUsecase.execute(idPerson,idStatus);
+    @PostMapping("/{idPerson}/change/statusTo/{idStatus}")
+    public ResponseEntity<ApiResponse<PersonResponse>> changeStatus(@PathVariable Long idPerson, @PathVariable Long idStatus) {
+
+        PersonResponse personResponse = changeStatusUsecase.execute(idPerson, idStatus);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(
                         HttpStatus.CREATED.value(),

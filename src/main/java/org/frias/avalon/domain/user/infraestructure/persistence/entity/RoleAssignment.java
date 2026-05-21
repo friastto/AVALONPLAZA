@@ -25,11 +25,11 @@ public class RoleAssignment {
     private Long roleId;
 
 
-   private Long outletId;
+    private Long outletId;
 
     //private Long scope;
 
-   // private Long schedule;
+    // private Long schedule;
 
     private Long status;
 
@@ -41,6 +41,7 @@ public class RoleAssignment {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();

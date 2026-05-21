@@ -44,8 +44,8 @@ public class CreateUserAvalonUseCaseImpl implements CreateUserAvalonUseCase {
 
         MasterTree tree = masterTreeProvider.getTree();
 
-        if(! tree.isChildOf( statusActive,"STSGEN")) throw new RuntimeException("no se pudo establecer el estado del usuario");
-
+        if (!tree.isChildOf(statusActive, "STSGEN"))
+            throw new RuntimeException("no se pudo establecer el estado del usuario");
 
 
         String salt = PassSecure.generateSalt();

@@ -2,30 +2,15 @@ package org.frias.avalon.domain.user.application.usecase.accesrefreshtoken;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
-import org.frias.avalon.core.exeptions.BusinessException;
-import org.frias.avalon.core.jwt.service.JwtTokenProviderPort;
-import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
-import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
-import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
-import org.frias.avalon.domain.user.application.dtos.response.TokenRefreshResult;
 import org.frias.avalon.domain.user.application.service.BuildAuthenticationResponse;
-import org.frias.avalon.domain.user.application.service.TokenOrchestrationService;
-import org.frias.avalon.domain.user.application.service.UserAvalonOutletResolverService;
 import org.frias.avalon.domain.user.domain.model.RefreshTokenDomain;
-import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.RefreshTokenRepositoryPort;
-import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -74,6 +59,6 @@ public class GenerateAccessTokenAndRefreshTokenUseCaseImpl implements GenerateAc
         oldRefreshToken.revoke();
         refreshTokenPort.save(oldRefreshToken);
 
-        return buildAuthenticationResponse.buildAuthenticationResponse(userAvalonDomain,userDetails);
+        return buildAuthenticationResponse.buildAuthenticationResponse(userAvalonDomain, userDetails);
     }
 }

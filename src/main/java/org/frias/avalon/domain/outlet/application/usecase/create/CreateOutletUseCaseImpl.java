@@ -34,7 +34,7 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
         this.locationMapper = locationMapper;
     }
 
-@Transactional
+    @Transactional
     @Override
     public OutletResponseDto execute(OutletCreateRequestDto dto) {
 
@@ -44,7 +44,7 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
 
         MasterTree tree = masterTreeProvider.getTree();
 
-        LocationDomain location = new LocationDomain(  dto.location().lat(),dto.location().lon());
+        LocationDomain location = new LocationDomain(dto.location().lat(), dto.location().lon());
 
         OutletDomain outletDomain = OutletDomain.create(
                 dto.name(),
@@ -52,16 +52,16 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
                 dto.phone(),
                 status.getId(),
                 location
-                );
+        );
 
-       OutletDomain outletSaved =  outletPort.save(outletDomain);
+        OutletDomain outletSaved = outletPort.save(outletDomain);
 
-       StatusResponseDto statusResponse = new StatusResponseDto(status.getId(), status.getShortName(),status.getFullName());
+        StatusResponseDto statusResponse = new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName());
 
-    LocationDto locationDto = locationMapper.domainToDto(outletSaved.getLocation());
+        LocationDto locationDto = locationMapper.domainToDto(outletSaved.getLocation());
 
 
-       return new OutletResponseDto(
+        return new OutletResponseDto(
                 outletSaved.getId(),
                 outletSaved.getCode(),
                 outletSaved.getName(),

@@ -9,11 +9,17 @@ import java.util.Optional;
 public interface OutletRepositoryPort {
 
     OutletDomain save(OutletDomain domain);
+
     Optional<OutletDomain> findById(Long id);
+
     OutletDomain findAll();
+
     List<OutletDomain> nearbyByName(String domain);
+
     OutletDomain update(OutletDomain domain);
+
     OutletDomain delete(OutletDomain domain);
+
     List<OutletDomain> findNearbyByRadius(LocationDomain location, int radius);
 
 

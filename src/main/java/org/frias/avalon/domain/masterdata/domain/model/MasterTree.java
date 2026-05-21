@@ -48,6 +48,7 @@ public class MasterTree {
         }
         return node;
     }
+
     public boolean is(MasterRoot node, String code) {
         if (node == null || code == null) {
             return false;

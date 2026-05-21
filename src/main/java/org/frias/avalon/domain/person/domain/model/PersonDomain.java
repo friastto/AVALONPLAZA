@@ -5,7 +5,6 @@ import lombok.Getter;
 import org.frias.avalon.core.exeptions.BusinessException;
 
 import java.time.LocalDateTime;
-
 import java.util.regex.Pattern;
 
 @Getter
@@ -28,13 +27,14 @@ public class PersonDomain {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
     // Constructor privado: Nadie puede hacer 'new' desde fuera, obligando a usar los Factory Methods
-    private PersonDomain() {}
+    private PersonDomain() {
+    }
 
     /**
      * createBasic: Utilizado para la creación inicial (Negocio).
      * Aquí aplicamos reglas estrictas de lo que es "obligatorio" para que una persona exista.
      */
-    public static PersonDomain createBasic(Long typeIdentificationId,String numberid, String name, String lastName, Long phoneNumber, String email,Long statusId) {
+    public static PersonDomain createBasic(Long typeIdentificationId, String numberid, String name, String lastName, Long phoneNumber, String email, Long statusId) {
         validateRequired(numberid, "El número de identificación es requerido");
         validateRequired(name, "El nombre es requerido");
         validateRequired(lastName, "El apellido es requerido");

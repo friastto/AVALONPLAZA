@@ -6,5 +6,6 @@ import org.frias.avalon.domain.user.infraestructure.persistence.entity.RefreshTo
 public interface RefreshTokenMapper {
 
     RefreshTokenDomain toDomain(RefreshToken refreshToken);
+
     RefreshToken toEntity(RefreshTokenDomain domain);
 }

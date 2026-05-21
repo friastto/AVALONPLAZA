@@ -6,7 +6,6 @@ import org.frias.avalon.domain.outlet.application.dto.request.OutletNearbyByRadi
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.frias.avalon.domain.outlet.application.usecase.create.CreateOutletUseCase;
 import org.frias.avalon.domain.outlet.application.usecase.find.FindOutletNearbyByRadiusUseCase;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,25 +27,27 @@ public class OutletController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<OutletResponseDto>> create(@RequestBody OutletCreateRequestDto data){
+    public ResponseEntity<ApiResponse<OutletResponseDto>> create(@RequestBody OutletCreateRequestDto data) {
 
         OutletResponseDto newOutlet;
-try {
-    newOutlet = createUseCase.execute(data);
-} catch (Exception e) {
-    e.printStackTrace();
-    throw new RuntimeException(e);
-}
+        try {
+            newOutlet = createUseCase.execute(data);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
         return ResponseEntity.status(201)
                 .body(new ApiResponse<>(
-                        201,
-                        "se creo la tienda exitosamente",
-                        newOutlet
+                                201,
+                                "se creo la tienda exitosamente",
+                                newOutlet
                         )
                 );
 
-    } @PostMapping("/nearby/v1")
-    public ResponseEntity<ApiResponse<List<OutletResponseDto>>> nearbyByRadius(@RequestBody OutletNearbyByRadiusRequestDto data){
+    }
+
+    @PostMapping("/nearby/v1")
+    public ResponseEntity<ApiResponse<List<OutletResponseDto>>> nearbyByRadius(@RequestBody OutletNearbyByRadiusRequestDto data) {
 
         List<OutletResponseDto> newOutlet;
         try {
@@ -58,8 +59,8 @@ try {
 
         return ResponseEntity.status(200)
                 .body(new ApiResponse<>(
-                        newOutlet.isEmpty()?404:200,
-                                newOutlet.isEmpty()?"no tiene tiendas cerca":"se encontraron tiendas cercanas",
+                                newOutlet.isEmpty() ? 404 : 200,
+                                newOutlet.isEmpty() ? "no tiene tiendas cerca" : "se encontraron tiendas cercanas",
                                 newOutlet
                         )
                 );

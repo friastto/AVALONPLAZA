@@ -10,8 +10,12 @@ import org.frias.avalon.domain.user.infraestructure.persistence.entity.UserAvalo
 public interface UserAvalonMapper {
 
     UserAvalonDomain toDomain(UserAvalon entity);
+
     UserAvalonDomain toDomainAdvance(UserAvalon entity);
+
     UserAvalon toEntity(UserAvalonDomain dominio);
+
     UserAvalonResponseDto toResponse(UserAvalonDomain domain, MasterRoot status);
+
     UserAvalonDto toResponseWithPersonData(UserAvalonDomain domain, PersonDomain personData, MasterRoot status);
 }

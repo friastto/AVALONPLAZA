@@ -1,3 +1,11 @@
+-- Limpieza de tablas en orden de dependencia para evitar errores de FK
+DELETE FROM refresh_token;
+DELETE FROM role_assignment;
+DELETE FROM user_avalon;
+DELETE FROM person;
+DELETE FROM outlet;
+DELETE FROM master_data;
+
 -- 1. Insertar el estado 'ACTIVO' primero, ya que todos los demás dependen de él.
 -- Luego, se actualiza su propio status_id para que apunte a sí mismo.
 INSERT INTO master_data (full_name, short_name, parent_id, status_id) VALUES ('ACTIVO', 'ACT', NULL, NULL);

@@ -21,9 +21,6 @@ public class ChangeStatusUserAvalonUseCaseImpl implements ChangeStatusUserAvalon
     public UserAvalonResponseDto execute(ChangeUserAvalonStatusRequest request) {
 
 
-
-
-
         return null;
     }
 }

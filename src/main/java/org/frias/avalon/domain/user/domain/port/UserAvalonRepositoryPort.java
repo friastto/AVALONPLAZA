@@ -1,6 +1,5 @@
 package org.frias.avalon.domain.user.domain.port;
 
-import org.frias.avalon.domain.person.infraestructure.persistence.entity.PersonEntity;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 
 import java.util.List;

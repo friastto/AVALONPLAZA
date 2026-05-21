@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 import org.frias.avalon.core.exeptions.DomainValidationException;
 
-import java.awt.*;
-
 import java.util.UUID;
 
 
@@ -29,16 +27,18 @@ public class OutletDomain {
     private LocationDomain location;
 
 
-    public static OutletDomain create(String name, String address, String phone,Long status, LocationDomain location) {
+    public static OutletDomain create(String name, String address, String phone, Long status, LocationDomain location) {
 
-        if(name.isBlank() ) {
+        if (name.isBlank()) {
             throw new DomainValidationException("el nombre de la Tienda no pude estar vavcio");
         }
-        if(address.isBlank()){
+        if (address.isBlank()) {
             throw new DomainValidationException("la direccion de la tienda no puede estar vacio");
-        }if(phone.isBlank()){
+        }
+        if (phone.isBlank()) {
             throw new DomainValidationException("el telefono de latienda no puede estar vacio");
-        }if(location.longitude() ==null||location.latitude() ==null){
+        }
+        if (location.longitude() == null || location.latitude() == null) {
             throw new DomainValidationException("la ubicacion geografica no puede estar vacia");
         }
 
@@ -53,7 +53,7 @@ public class OutletDomain {
                 .build();
     }
 
-    public static OutletDomain fromPersistence(Long id,String code, String name, String address, String phone,Long status,LocationDomain location){
+    public static OutletDomain fromPersistence(Long id, String code, String name, String address, String phone, Long status, LocationDomain location) {
 
         return OutletDomain.builder()
                 .id(id)
@@ -77,9 +77,9 @@ public class OutletDomain {
         return "Oult-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
-    public boolean isActive(String status){
+    public boolean isActive(String status) {
 
-        if("ACT".equals(status)) {
+        if ("ACT".equals(status)) {
             return true;
         }
 

@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase{
+public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase {
 
     private final UserAvalonRepositoryPort userPort;
     private final RoleAssignmentRepositoryPort rolePort;
@@ -49,17 +49,19 @@ public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase{
         var tree = treeProvider.getTree();
 
         UserAvalonDomain user = userPort.findById(request.userId())
-                    .orElseThrow(()-> new EntityNotFoundException("no se pudo encontrar el usuario"));
+                .orElseThrow(() -> new EntityNotFoundException("no se pudo encontrar el usuario"));
 
         MasterRoot userStatus = masterPort.findById(user.getStatusId())
-                .orElseThrow(()-> new EntityNotFoundException("no se pudo validar el estado del usuario"));
+                .orElseThrow(() -> new EntityNotFoundException("no se pudo validar el estado del usuario"));
 
         MasterRoot role = masterPort.findById(request.roleId())
-                .orElseThrow(()-> new EntityNotFoundException("no se pudo encontrar el rol para asignar"));
+                .orElseThrow(() -> new EntityNotFoundException("no se pudo encontrar el rol para asignar"));
 
 
         // 1. Validar que es rol
-        if (!tree.isChildOf(role, "ROL")) { throw new RuntimeException("No es un rol válido"); }
+        if (!tree.isChildOf(role, "ROL")) {
+            throw new RuntimeException("No es un rol válido");
+        }
 
 
         List<RoleAssignmentDomain> roleAssigned = rolePort.findByUserAvalonId(user.getId());
@@ -70,7 +72,7 @@ public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase{
                                 && tree.isChildOf(
                                 tree.getById(assignment.getRoleId()),
                                 "EMP")
-                                && tree.is(tree.getById(assignment.getStatus()),"ACT")
+                                && tree.is(tree.getById(assignment.getStatus()), "ACT")
 
                 )
                 .findFirst()
@@ -80,7 +82,8 @@ public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase{
 
 
         //se regunta si tiene el rol de empleado activo si no lanza la exepcion para qeu el suaurio lo active
-        if(!currentRoleStatus.isActive("ACT"))throw new IllegalStateException("este usuario tiene un rol de empleado desactivado");
+        if (!currentRoleStatus.isActive("ACT"))
+            throw new IllegalStateException("este usuario tiene un rol de empleado desactivado");
 
         OutletDomain outletScope;
 
@@ -90,35 +93,33 @@ public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase{
 
         }
         MasterRoot statusActive = masterPort.getActiveStatus()
-                .orElseThrow(()-> new EntityNotFoundException("no se pudo activar el rol al usuario"));
+                .orElseThrow(() -> new EntityNotFoundException("no se pudo activar el rol al usuario"));
 
-        if(permissionService.canAssignRole(role,request.outletId())){
+        if (permissionService.canAssignRole(role, request.outletId())) {
 
             outletScope = outletRepositoryPort.findById(request.outletId())
-                    .orElseThrow(()-> new EntityNotFoundException("no se encontro la tienda. no se puede asignar el rol a esta tienda"));
+                    .orElseThrow(() -> new EntityNotFoundException("no se encontro la tienda. no se puede asignar el rol a esta tienda"));
 
 
             if (tree.isChildOf(role, "OPT") && request.outletId() == null) {
                 throw new RuntimeException("Rol operativo requiere scope");
             }
 
-            if(!outletScope.isActive(tree.getById(outletScope.getStatusId()).getShortName())){
-                throw new BusinessException("la tienda no esta activa, no se pude asignar un usario con el rol -> "+role.getFullName());
+            if (!outletScope.isActive(tree.getById(outletScope.getStatusId()).getShortName())) {
+                throw new BusinessException("la tienda no esta activa, no se pude asignar un usario con el rol -> " + role.getFullName());
             }
 
 
-
             rolePort.create(RoleAssignmentDomain.create(
-                            user.getId(),role.getId(), outletScope.getId(), statusActive.getId()
+                            user.getId(), role.getId(), outletScope.getId(), statusActive.getId()
                     )
             );
 
-        }else{
+        } else {
             throw new BusinessException("no tiene los permisos para asignar el rol");
         }
 
 
-
-        return  mapper.toResponse(user,userStatus, role, statusActive,outletScope.getId());
+        return mapper.toResponse(user, userStatus, role, statusActive, outletScope.getId());
     }
 }

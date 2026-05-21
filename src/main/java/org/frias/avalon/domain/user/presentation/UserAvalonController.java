@@ -1,14 +1,11 @@
 package org.frias.avalon.domain.user.presentation;
 
-import jakarta.validation.Valid;
 import org.frias.avalon.core.exeptions.ApiResponse;
 import org.frias.avalon.domain.person.application.dto.request.CreatePersonRequest;
 import org.frias.avalon.domain.user.application.dtos.request.AssignmentRoleRequestDto;
-import org.frias.avalon.domain.user.application.dtos.request.AuthRequest;
 import org.frias.avalon.domain.user.application.dtos.request.ChangeUserAvalonStatusRequest;
 import org.frias.avalon.domain.user.application.dtos.request.UserNewDto;
 import org.frias.avalon.domain.user.application.dtos.response.AssignmentRoleResponse;
-import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonDto;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
 import org.frias.avalon.domain.user.application.usecase.asignmentPerson.AssignPersonToUserUseCase;
@@ -91,7 +88,7 @@ public class UserAvalonController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse<>(
                                 200,
-                                "se cambio el rol del usuario a -> "+userUpdated.role().fullName(),
+                                "se cambio el rol del usuario a -> " + userUpdated.role().fullName(),
                                 userUpdated
                         )
                 );
@@ -134,7 +131,7 @@ public class UserAvalonController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse<>(
                                 200,
-                                "se creo el rol -> "+userUpdated.role().fullName(),
+                                "se creo el rol -> " + userUpdated.role().fullName(),
                                 userUpdated
                         )
                 );
@@ -143,7 +140,7 @@ public class UserAvalonController {
     @PatchMapping("/{idUser}/assignment/person/")
     public ResponseEntity<ApiResponse<UserAvalonDto>> assignmentPerson(@PathVariable Long idUser, @RequestBody CreatePersonRequest newPersonData) {
 
-        UserAvalonDto userUpdated = assignmentPerson.execute(idUser,newPersonData);
+        UserAvalonDto userUpdated = assignmentPerson.execute(idUser, newPersonData);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse<>(
                                 200,

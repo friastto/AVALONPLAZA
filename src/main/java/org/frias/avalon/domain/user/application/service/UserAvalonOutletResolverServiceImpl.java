@@ -13,7 +13,7 @@ import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class UserAvalonOutletResolverServiceImpl implements UserAvalonOutletResolverService{
+public class UserAvalonOutletResolverServiceImpl implements UserAvalonOutletResolverService {
     private final OutletRepositoryPort outletPort;
     private final MasterTreeProvider masterTreeProvider;
 

@@ -2,8 +2,8 @@ package org.frias.avalon.domain.user.infraestructure.persistence.adapter;
 
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapper;
-import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
+import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.frias.avalon.domain.user.infraestructure.persistence.entity.UserAvalon;
 import org.frias.avalon.domain.user.infraestructure.persistence.repository.JpaUserAvalonRepository;
 import org.springframework.stereotype.Component;
@@ -65,7 +65,7 @@ public class UserAvalonRepositoryAdapter implements UserAvalonRepositoryPort {
 
     @Override
     public Optional<UserAvalonDomain> findByUserName(String userName) {
-        System.out.println("el susaurio buscado es "+userName);
+        System.out.println("el susaurio buscado es " + userName);
 
         return jpa.findByUserName(userName).map(mapper::toDomain);
     }

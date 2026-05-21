@@ -7,9 +7,10 @@ import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 public interface OutletMapper {
 
     OutletDomain toDomain(Outlet o);
-    Outlet toEntity(OutletDomain od);
-    OutletResponseDto toResponse(OutletDomain od);
 
+    Outlet toEntity(OutletDomain od);
+
+    OutletResponseDto toResponse(OutletDomain od);
 
 
 }

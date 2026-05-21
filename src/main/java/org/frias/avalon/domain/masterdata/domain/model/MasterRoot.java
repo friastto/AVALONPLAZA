@@ -19,7 +19,7 @@ public class MasterRoot {
         this.statusId = statusId;
     }
 
-    public static MasterRoot create(String shortName,String fullName,  Long parentId, Long statusId) {
+    public static MasterRoot create(String shortName, String fullName, Long parentId, Long statusId) {
 
 
         if (shortName == null || shortName.isBlank()) {
@@ -29,7 +29,7 @@ public class MasterRoot {
             throw new RuntimeException("fullName requerido");
         }
 
-        return new MasterRoot(null,  shortName, fullName,parentId, statusId);
+        return new MasterRoot(null, shortName.toUpperCase(), fullName.toUpperCase(), parentId, statusId);
 
     }
 
@@ -48,7 +48,7 @@ public class MasterRoot {
             throw new IllegalStateException("Data corrupta en BD: fullName null");
         }
         if (id == null) {
-            throw new IllegalStateException("Data corrupta en BD: id null "+shortName);
+            throw new IllegalStateException("Data corrupta en BD: id null " + shortName);
         }
 
         return new MasterRoot(id, shortName, fullName, parentId, statusId);

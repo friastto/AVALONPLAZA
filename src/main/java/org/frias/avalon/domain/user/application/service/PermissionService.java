@@ -6,9 +6,6 @@ import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
-import org.frias.avalon.domain.person.domain.model.PersonDomain;
-import org.frias.avalon.domain.person.infraestructure.persistence.entity.PersonEntity;
-import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +16,7 @@ import java.util.Set;
 
 @Component
 public class PermissionService {
-private final MasterTreeProvider treeProvider;
+    private final MasterTreeProvider treeProvider;
 
     public PermissionService(MasterTreeProvider treeProvider) {
         this.treeProvider = treeProvider;
@@ -36,11 +33,13 @@ private final MasterTreeProvider treeProvider;
 
         return new ArrayList<>(permissions);
     }
+
     public List<String> resolvePermissions(MasterRoot role) {
 
         return new ArrayList<>(permisos(role));
     }
-    private Set<String> permisos(MasterRoot role){
+
+    private Set<String> permisos(MasterRoot role) {
         Set<String> permissions = new HashSet<>();
         switch (role.getShortName()) {
             case "ADMIN":
@@ -84,7 +83,7 @@ private final MasterTreeProvider treeProvider;
      * Esta es la lógica central de autorización para la asignación de roles.
      *
      * @param roleToAssignMasterRoot El MasterRoot del rol que se intenta asignar.
-     * @param requestOutletId El ID del outlet especificado en la solicitud de asignación.
+     * @param requestOutletId        El ID del outlet especificado en la solicitud de asignación.
      * @return true si el usuario actual está autorizado, false en caso contrario.
      */
     public boolean canAssignRole(MasterRoot roleToAssignMasterRoot, Long requestOutletId) {
@@ -138,8 +137,9 @@ private final MasterTreeProvider treeProvider;
     /**
      * Verifica si el usuario actual tiene permiso para auto-asignarse un rol de consumidor.
      * Este método es más específico para el escenario de auto-registro.
+     * <p>
+     * //* @param roleToAssignMasterRoot El MasterRoot del rol que se intenta auto-asignar.
      *
-     //* @param roleToAssignMasterRoot El MasterRoot del rol que se intenta auto-asignar.
      * @return true si el usuario actual está autorizado a auto-asignarse este rol, false en caso contrario.
      */
     public boolean canAutoAssignConsumerRole(MasterRoot roleToAssignMasterRoot) {
@@ -157,9 +157,9 @@ private final MasterTreeProvider treeProvider;
 
 }
 
-    /**
-     * cuando  coloque en el arbol de permisos enmasterdata de permisos por rol
-     */
+/**
+ * cuando  coloque en el arbol de permisos enmasterdata de permisos por rol
+ */
     /*
     @Component
 public class PermissionService {

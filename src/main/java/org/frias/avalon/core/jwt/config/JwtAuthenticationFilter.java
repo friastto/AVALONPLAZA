@@ -37,6 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.treeProvider = treeProvider;
         this.userDetailsService = userDetailsService;
     }
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
@@ -48,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException, java.io.IOException {
 
-     try{ // Es buena práctica envolver esto para limpiar el contexto al final
+        try { // Es buena práctica envolver esto para limpiar el contexto al final
             final String authHeader = request.getHeader("Authorization");
 
             // 1. Validamos que el header comience con "Bearer "
@@ -79,7 +80,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
 
 
-                    if(rolesFromJwt != null && !rolesFromJwt.isEmpty() ) System.out.println("ROLES DEL TOKEN "+ rolesFromJwt.toString());
+                    if (rolesFromJwt != null && !rolesFromJwt.isEmpty())
+                        System.out.println("ROLES DEL TOKEN " + rolesFromJwt.toString());
 
                     SecurityContextHolder.getContext().getAuthentication()
                             .getAuthorities()
@@ -108,9 +110,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     // 8. Continuamos con el resto del pipeline
                     //ponemos el company y el outlet en el contexto
-                    if (companyId != null ) {
+                    if (companyId != null) {
                         TenantContext.setTenantId(companyId);
-                    }if (outletIdFromJwt != null ) {
+                    }
+                    if (outletIdFromJwt != null) {
                         TenantContext.setTenantOutletId(outletIdFromJwt);
 
                     }
@@ -130,7 +133,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     employeeRoleCode = roleCode;
                                     // Si este es un rol de empleado de OUTLET y el JWT tiene un outletId, lo asociamos
                                     if (outletIdFromJwt == null) {
-                                        throw  new SecurityException("se detecto qeu el suuario tiene un rol de empleado pero no tiene una outlet asignada no pude continuar con la autenticacion");
+                                        throw new SecurityException("se detecto qeu el suuario tiene un rol de empleado pero no tiene una outlet asignada no pude continuar con la autenticacion");
                                     }
                                     employeeOutletIdForContext = outletIdFromJwt;
                                 }
@@ -166,7 +169,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
             }
-                filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
         } finally {
             // 🚀 IMPORTANTE: Limpiar el ID al terminar la petición para que no se "filtre" a otro usuario
             TenantContext.clear();

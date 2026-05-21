@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "master_data",
         uniqueConstraints = {
-        @UniqueConstraint(columnNames = "short_name"),
+                @UniqueConstraint(columnNames = "short_name"),
                 @UniqueConstraint(columnNames = "full_name")
 
         })

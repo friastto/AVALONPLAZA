@@ -30,7 +30,9 @@ public class UserAvalonMapperImpl implements UserAvalonMapper {
 
         );
 
-    }@Override
+    }
+
+    @Override
     public UserAvalonDomain toDomainAdvance(UserAvalon entity) {
 
         return UserAvalonDomain.fromPersistenceAdvanced(
@@ -84,7 +86,6 @@ public class UserAvalonMapperImpl implements UserAvalonMapper {
 
 
         MasterTree tree = masterTreeProvider.getTree();
-
 
 
         return new UserAvalonDto(

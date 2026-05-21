@@ -2,9 +2,6 @@ package org.frias.avalon.domain.person.application.usecase.changestatus;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.core.exeptions.BusinessException;
-import org.frias.avalon.core.jwt.util.SecurityUtils;
-import org.frias.avalon.core.permissions.UserContext;
-import org.frias.avalon.core.permissions.validchangestatus.StatusChangeValidator;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.model.StatusRules;
@@ -14,18 +11,11 @@ import org.frias.avalon.domain.person.application.dto.response.PersonResponse;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.person.infraestructure.mapper.PersonMapper;
-import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
-import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
-import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
-import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
-import org.hibernate.query.sqm.EntityTypeException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
-public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase{
+public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase {
 
     private final PersonRepositoryPort personPort;
     private final MasterTreeProvider treeProvider;
@@ -55,7 +45,7 @@ public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase{
         this.mapper = mapper;
     }
 
-@Transactional
+    @Transactional
     @Override
     public PersonResponse execute(Long idPerson, Long idStatus) {
 
@@ -63,17 +53,17 @@ public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase{
         //UserContext currentUserContext = SecurityUtils.getCurrentUserContext();
 
         PersonDomain person = personPort.findById(idPerson)
-                .orElseThrow(()->  new EntityNotFoundException("la persona no se encontro en la base de datos"));
+                .orElseThrow(() -> new EntityNotFoundException("la persona no se encontro en la base de datos"));
 
         MasterRoot oldStatus = masterPort.findById(person.getStatusId())
-                .orElseThrow(()-> new BusinessException("no se puede establecer este estado al la persona"));
+                .orElseThrow(() -> new BusinessException("no se puede establecer este estado al la persona"));
 
         MasterRoot newStatus = masterPort.findById(idStatus)
-                .orElseThrow(()-> new BusinessException("no se puede establecer este estado al la persona"));
+                .orElseThrow(() -> new BusinessException("no se puede establecer este estado al la persona"));
 
         MasterTree tree = treeProvider.getTree();
 
-        if(!tree.isChildOf(newStatus,"STSGEN")){
+        if (!tree.isChildOf(newStatus, "STSGEN")) {
             throw new IllegalStateException("no se puede establecer este estado");
         }
 
@@ -104,7 +94,7 @@ public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase{
         }
 */
         // Si la validación pasa, procede con la lógica de negocio para cambiar el estado
-        StatusRules.validateTransition(oldStatus,newStatus); // Re-ubicado aquí después de la validación de permisos
+        StatusRules.validateTransition(oldStatus, newStatus); // Re-ubicado aquí después de la validación de permisos
 
         person.changeStatus(newStatus.getId()); // Suponiendo que PersonDomain tiene este método
         PersonDomain peronStatusChanged = personPort.save(person); // Guardar la instancia modificada

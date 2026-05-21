@@ -10,19 +10,19 @@ import java.util.List;
 @Repository
 public interface JpaOutletRepository extends JpaRepository<Outlet, Long> {
     @Query(value = """
-    SELECT *,
-           ST_Distance(
-               location::geography,
-               ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography
-           ) AS distance
-    FROM outlet
-    WHERE ST_DWithin(
-        location::geography,
-        ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
-        :radius
-    )
-    ORDER BY distance
-""", nativeQuery = true)
+                SELECT *,
+                       ST_Distance(
+                           location::geography,
+                           ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography
+                       ) AS distance
+                FROM outlet
+                WHERE ST_DWithin(
+                    location::geography,
+                    ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
+                    :radius
+                )
+                ORDER BY distance
+            """, nativeQuery = true)
     List<Outlet> findNearByOrderByDistance(
             double lat,
             double lon,

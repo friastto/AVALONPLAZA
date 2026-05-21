@@ -16,10 +16,10 @@ public interface JpaPersonRepository extends JpaRepository<PersonEntity, Long> {
     Optional<PersonEntity> findByIdentificationIdAndNumberId(Long identificationId, String numberId);
 
     @Query("""
-            SELECT p FROM PersonEntity p 
-            JOIN UserAvalon u ON u.personId = p.id 
-            WHERE u.userName = :userName
-           """)
+             SELECT p FROM PersonEntity p 
+             JOIN UserAvalon u ON u.personId = p.id 
+             WHERE u.userName = :userName
+            """)
     Optional<PersonEntity> findByUserUsername(@Param("userName") String userName);
 
 

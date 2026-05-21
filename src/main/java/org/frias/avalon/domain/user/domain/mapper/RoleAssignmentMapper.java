@@ -9,7 +9,9 @@ import org.frias.avalon.domain.user.infraestructure.persistence.entity.RoleAssig
 public interface RoleAssignmentMapper {
 
     RoleAssignment toEntity(RoleAssignmentDomain domain);
+
     RoleAssignmentDomain toDomain(RoleAssignment role);
+
     AssignmentRoleResponse toResponse(RoleAssignmentDomain domain);
 
 

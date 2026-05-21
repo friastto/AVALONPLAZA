@@ -1,14 +1,14 @@
 package org.frias.avalon.domain.person.infraestructure.mapper;
 
-import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto; // Importar MasterDataResponseDto
+import lombok.RequiredArgsConstructor;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
-import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService; // Importar MasterDataMapperService
+import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
 import org.frias.avalon.domain.person.application.dto.response.PersonResponse;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.infraestructure.persistence.entity.PersonEntity;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -80,7 +80,7 @@ public class PersonMapper {
         // Obtener y mapear MasterData para status
         MasterRoot statusMasterRoot = masterTree.getByIdOrThrow(domain.getStatusId());
         MasterDataResponseDto statusDto = masterDataMapperService.toResponse(statusMasterRoot);
-        
+
         return new PersonResponse(
                 domain.getId(),
                 domain.getNumberid(),

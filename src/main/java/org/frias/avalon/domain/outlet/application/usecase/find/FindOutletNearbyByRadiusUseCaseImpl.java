@@ -19,7 +19,7 @@ import java.util.List;
 
 @Service
 
-public class FindOutletNearbyByRadiusUseCaseImpl implements FindOutletNearbyByRadiusUseCase{
+public class FindOutletNearbyByRadiusUseCaseImpl implements FindOutletNearbyByRadiusUseCase {
 
     private final OutletRepositoryPort outletPort;
     private final MasterDataRepositoryPort masterPort;
@@ -43,10 +43,10 @@ public class FindOutletNearbyByRadiusUseCaseImpl implements FindOutletNearbyByRa
 
         MasterTree tree = masterTreeProvider.getTree();
 
-        return outletFind.stream().map( outletDomain-> {
+        return outletFind.stream().map(outletDomain -> {
                     MasterRoot status = tree.getById(outletDomain.getStatusId());
 
-            LocationDto currentLocation = locationMapper.domainToDto( outletDomain.getLocation());
+                    LocationDto currentLocation = locationMapper.domainToDto(outletDomain.getLocation());
 
                     return new OutletResponseDto(
                             outletDomain.getId(),
@@ -55,7 +55,7 @@ public class FindOutletNearbyByRadiusUseCaseImpl implements FindOutletNearbyByRa
                             outletDomain.getAddress(),
                             outletDomain.getPhone(),
                             currentLocation,
-                            new StatusResponseDto(status.getId(), status.getShortName(),status.getFullName())
+                            new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName())
                     );
                 }
         ).toList();

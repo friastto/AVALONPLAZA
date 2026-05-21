@@ -1,7 +1,7 @@
 package org.frias.avalon.core.permissions.validchangestatus;
 
 import org.frias.avalon.core.permissions.UserContext;
-import org.frias.avalon.domain.masterdata.domain.model.MasterTree; // Importar MasterTree
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 
 /**
  * Estrategia de validación para cambios de estado realizados por gerentes o administradores.
@@ -29,7 +29,7 @@ public class ManagerOrAdminChangeValidationStrategy implements StatusChangeValid
 
         // Un gerente (según el MasterTree) puede realizar el cambio si es de la misma compañía que el usuario objetivo.
         if (isUserAGerente(currentUser, masterTree) &&
-            currentUser.employeeOutletId() != null ) {
+                currentUser.employeeOutletId() != null) {
             // El gerente puede usar estados generales o específicos de usuario.
             return true;
         }
@@ -70,8 +70,9 @@ public class ManagerOrAdminChangeValidationStrategy implements StatusChangeValid
 
     /**
      * Verifica si el usuario actual tiene un rol que es un administrador o un hijo de la categoría de administrador.
+     *
      * @param currentUser El contexto del usuario.
-     * @param masterTree El árbol de datos maestros.
+     * @param masterTree  El árbol de datos maestros.
      * @return true si el usuario es un administrador, false en caso contrario.
      */
     private boolean isUserAnAdmin(UserContext currentUser, MasterTree masterTree) {
@@ -86,8 +87,9 @@ public class ManagerOrAdminChangeValidationStrategy implements StatusChangeValid
 
     /**
      * Verifica si el usuario actual tiene un rol que es un gerente o un hijo de la categoría de gerente.
+     *
      * @param currentUser El contexto del usuario.
-     * @param masterTree El árbol de datos maestros.
+     * @param masterTree  El árbol de datos maestros.
      * @return true si el usuario es un gerente, false en caso contrario.
      */
     private boolean isUserAGerente(UserContext currentUser, MasterTree masterTree) {

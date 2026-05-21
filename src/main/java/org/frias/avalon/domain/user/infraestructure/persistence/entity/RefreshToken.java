@@ -1,6 +1,9 @@
 package org.frias.avalon.domain.user.infraestructure.persistence.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +33,6 @@ public class RefreshToken {
     @Column(nullable = false)
     private boolean revoked; // 🔐 Necesario para el negocio
 
-    @Column( nullable = false)
+    @Column(nullable = false)
     private Instant issuedAt; // 📊 Necesario para el negocio
 }

@@ -28,7 +28,7 @@ public class FindByPersonNumberIdCaseImpl implements FindByPersonNumberIdUseCase
 
     @Override
     public UserAvalonResponseDto execute(String numberId) {
-Long nummberOfIdentification = Long.valueOf(numberId);
+        Long nummberOfIdentification = Long.valueOf(numberId);
 
         UserAvalonDomain user = userPort.findByUserName(numberId)
                 .orElseThrow(() -> new EntityNotFoundException("usuario no encontrado"));

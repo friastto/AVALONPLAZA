@@ -1,9 +1,9 @@
 package org.frias.avalon.domain.user.application.dtos.request;
 
-public record AssignmentRoleRequestDto (
+public record AssignmentRoleRequestDto(
         Long userId,
         Long roleId,
         Long outletId
 
-){
+) {
 }

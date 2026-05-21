@@ -4,12 +4,11 @@ import org.frias.avalon.domain.outlet.application.dto.LocationDto;
 import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
-
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 
 @Service
-public class LocationMapperImpl implements LocationMapper{
+public class LocationMapperImpl implements LocationMapper {
     private final GeometryFactory geometryFactory;
 
     public LocationMapperImpl(GeometryFactory geometryFactory) {
@@ -44,12 +43,12 @@ public class LocationMapperImpl implements LocationMapper{
     @Override
     public LocationDomain dtoToDomain(LocationDto dto) {
 
-        return new LocationDomain(dto.lat(), dto.lon() );
+        return new LocationDomain(dto.lat(), dto.lon());
     }
 
     @Override
     public LocationDto domainToDto(LocationDomain domain) {
-        return new LocationDto(domain.longitude(),domain.latitude());
+        return new LocationDto(domain.longitude(), domain.latitude());
     }
 
 }

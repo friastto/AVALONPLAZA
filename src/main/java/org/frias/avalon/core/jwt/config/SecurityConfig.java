@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/avalon/auth/**").permitAll()
                         .requestMatchers("/avalon/user/create").permitAll()
-                        .requestMatchers("/avalon/user/{userId}/assignment/role").hasAnyRole("ADMINTI","ADMIN","GERGEN")
+                        .requestMatchers("/avalon/user/{userId}/assignment/role").hasAnyRole("ADMINTI", "ADMIN", "GERGEN")
                         .requestMatchers("/avalon/user/assignment/role/consumer/self").permitAll()
 
 

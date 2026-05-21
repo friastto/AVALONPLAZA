@@ -8,4 +8,5 @@ public record UserNewLinkPersonDto(
 
         Long personId,
         Long outletId
-) implements BaseNewUserDto{}
+) implements BaseNewUserDto {
+}

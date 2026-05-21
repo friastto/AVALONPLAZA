@@ -8,9 +8,9 @@ import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Component;
 
 @Component
-public class OutletMapperImpl implements OutletMapper{
+public class OutletMapperImpl implements OutletMapper {
 
-private final LocationMapper locationMapper;
+    private final LocationMapper locationMapper;
 
 
     public OutletMapperImpl(LocationMapper locationMapper) {

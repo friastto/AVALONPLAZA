@@ -32,7 +32,7 @@ public class CreateAllMasterDataUseCaseImpl implements CreateAllMasterDataUseCas
 
         List<MasterRoot> mdList2 = new ArrayList<>();
 
-        for(MasterDataNewDto dto : request) {
+        for (MasterDataNewDto dto : request) {
 
             Long parentId = masterDataRepositoryPort.getIdByCode(dto.parentShortName());
 
@@ -44,7 +44,7 @@ public class CreateAllMasterDataUseCaseImpl implements CreateAllMasterDataUseCas
                     parentId,
                     statusId);
 
-            mdList.add( mapper.toResponse(masterDataRepositoryPort.save(domain)));
+            mdList.add(mapper.toResponse(masterDataRepositoryPort.save(domain)));
         }
 
 

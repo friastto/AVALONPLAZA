@@ -26,7 +26,8 @@ public class RoleAssignmentDomain {
 
         this.status = status;
     }
-    public RoleAssignmentDomain(Long userId, Long roleId, Long outletId,Long status) {
+
+    public RoleAssignmentDomain(Long userId, Long roleId, Long outletId, Long status) {
 
         this.userId = userId;
         this.roleId = roleId;
@@ -35,7 +36,7 @@ public class RoleAssignmentDomain {
         this.status = status;
     }
 
-    public static RoleAssignmentDomain create(Long userId,Long roleId, Long outletId, Long statusId){
+    public static RoleAssignmentDomain create(Long userId, Long roleId, Long outletId, Long statusId) {
 
         if (userId == null || roleId == null || statusId == null) {
             throw new IllegalArgumentException("Campos obligatorios faltantes");
@@ -49,10 +50,7 @@ public class RoleAssignmentDomain {
         );
 
 
-
-
     }
-
 
 
 }

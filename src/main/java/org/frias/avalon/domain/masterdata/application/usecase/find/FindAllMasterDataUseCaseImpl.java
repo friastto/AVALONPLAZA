@@ -8,10 +8,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static org.hibernate.spatial.dialect.hana.HANASpatialFunctions.m;
-
 @Service
-public class FindAllMasterDataUseCaseImpl implements FindAllMasterDataUseCase{
+public class FindAllMasterDataUseCaseImpl implements FindAllMasterDataUseCase {
 
     private final MasterDataRepositoryPort masterPort;
     private final MasterDataMapperService mapper;

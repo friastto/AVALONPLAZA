@@ -1,15 +1,11 @@
 package org.frias.avalon.core.tenant;
 
-import java.util.Collections;
-import java.util.List;
-
 public class TenantContext {
 
     private static final ThreadLocal<Long> currentTenant = new ThreadLocal<>();
     private static final ThreadLocal<Long> currentTenantOutlet = new ThreadLocal<>();
     private static final ThreadLocal<String> currentTenantRolEmployee = new ThreadLocal<>();
     private static final ThreadLocal<String> currentTenantRolConsumer = new ThreadLocal<>();
-
 
 
     public static Long getTenantId() {
@@ -31,6 +27,7 @@ public class TenantContext {
     public static String getTenantRolEmployee() {
         return currentTenantRolEmployee.get();
     }
+
     public static String getTenantRolConsumer() {
         return currentTenantRolConsumer.get();
     }
@@ -38,6 +35,7 @@ public class TenantContext {
     public static void setTenantRolEmployee(String rolEmployee) {
         currentTenantRolEmployee.set(rolEmployee); // CORREGIDO: Ahora establece el rol de empleado
     }
+
     public static void setTenantRolConsumer(String rolConsumer) { // RENOMBRADO para consistencia
         currentTenantRolConsumer.set(rolConsumer);
     }

@@ -23,6 +23,6 @@ public interface JwtTokenProviderPort {
     List<String> extractRoles(String token);
 
     Long extractOutletId(String token);
-    
+
     Long extractClaimAsLong(String token, String claimName);
 }

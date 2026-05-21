@@ -1,7 +1,7 @@
 package org.frias.avalon.core.jwt.util;
 
 import org.frias.avalon.core.permissions.UserContext;
-import org.frias.avalon.core.tenant.TenantContext; // Asegurarse de que esta importación esté presente
+import org.frias.avalon.core.tenant.TenantContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;

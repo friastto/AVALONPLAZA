@@ -6,4 +6,5 @@ public record AuthorizationResult(
         List<String> roles,
         List<String> permissions,
         List<String> scopes
-) {}
+) {
+}

@@ -6,4 +6,5 @@ public record RoleAccessDto(
         String roleCode,
         String roleName,
         List<String> permissions
-) {}
+) {
+}

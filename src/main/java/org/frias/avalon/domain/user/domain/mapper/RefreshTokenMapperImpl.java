@@ -5,7 +5,7 @@ import org.frias.avalon.domain.user.infraestructure.persistence.entity.RefreshTo
 import org.springframework.stereotype.Component;
 
 @Component
-public class RefreshTokenMapperImpl implements RefreshTokenMapper{
+public class RefreshTokenMapperImpl implements RefreshTokenMapper {
     @Override
     public RefreshTokenDomain toDomain(RefreshToken refreshToken) {
 
@@ -19,9 +19,8 @@ public class RefreshTokenMapperImpl implements RefreshTokenMapper{
         );
 
 
-
-
     }
+
     @Override
     public RefreshToken toEntity(RefreshTokenDomain domain) {
         if (domain == null) return null;

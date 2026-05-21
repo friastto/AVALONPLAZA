@@ -12,7 +12,7 @@ import org.frias.avalon.domain.user.infraestructure.persistence.entity.RoleAssig
 import org.springframework.stereotype.Component;
 
 @Component
-public class RoleAssignmentMapperImpl implements RoleAssignmentMapper{
+public class RoleAssignmentMapperImpl implements RoleAssignmentMapper {
 
     private final UserAvalonMapper userMapper;
     private final MasterDataMapperService masterMapper;
@@ -58,7 +58,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper{
     @Override
     public AssignmentRoleResponse toResponse(UserAvalonDomain user, MasterRoot userStatus, MasterRoot role, MasterRoot statusActive, Long outletId) {
 
-       UserAvalonResponseDto userDto = userMapper.toResponse(user,userStatus);
+        UserAvalonResponseDto userDto = userMapper.toResponse(user, userStatus);
 
         MasterDataResponseDto rolevalid = masterMapper.toResponse(role);
 
@@ -66,7 +66,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper{
                 userDto,
                 rolevalid,
                 outletId,
-                new StatusResponseDto(statusActive.getId(),statusActive.getShortName(),statusActive.getFullName())
+                new StatusResponseDto(statusActive.getId(), statusActive.getShortName(), statusActive.getFullName())
 
         );
     }

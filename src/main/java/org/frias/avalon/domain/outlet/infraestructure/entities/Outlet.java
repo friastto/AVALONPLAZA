@@ -3,8 +3,8 @@ package org.frias.avalon.domain.outlet.infraestructure.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import org.locationtech.jts.geom.Point;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -35,12 +35,12 @@ public class Outlet {
     /*@Column(nullable = false)
     private boolean isMain = false;
      */
-   private Long statusId;
+    private Long statusId;
 
     @Column(columnDefinition = "Geometry(Point, 4326)")
     private Point location;
 
-   // private Long company;
+    // private Long company;
 
     private LocalDateTime createdAt;
 

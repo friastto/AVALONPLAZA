@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 public class MasterDataMapperServiceImpl implements MasterDataMapperService {
 
 
-
     public MasterDataResponseDto toDto(MasterData masterData) {
 
         return new MasterDataResponseDto(

@@ -19,14 +19,15 @@ public class ExtractRoleAssignedService {
         this.treeProvider = treeProvider;
     }
 
-    public  List<RoleAssignmentDomain> extract(UserAvalonDomain user){
-       return rolePort.findByUserAvalonId(user.getId());
+    public List<RoleAssignmentDomain> extract(UserAvalonDomain user) {
+        return rolePort.findByUserAvalonId(user.getId());
     }
-    public List<String> extract(List<RoleAssignmentDomain> rolesDomain){
+
+    public List<String> extract(List<RoleAssignmentDomain> rolesDomain) {
 
         MasterTree tree = treeProvider.getTree();
 
-        return rolesDomain.stream().map(rol-> tree.getById(rol.getRoleId()).getShortName()).toList();
+        return rolesDomain.stream().map(rol -> tree.getById(rol.getRoleId()).getShortName()).toList();
 
     }
 

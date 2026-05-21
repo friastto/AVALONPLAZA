@@ -1,7 +1,7 @@
 package org.frias.avalon.core.permissions.validchangestatus;
 
 import org.frias.avalon.core.permissions.UserContext;
-import org.frias.avalon.domain.masterdata.domain.model.MasterTree; // Importar MasterTree
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 
 /**
  * Estrategia de validación que prohíbe a un empleado con rol 'OPT' cambiarse su propio estado.
@@ -39,8 +39,9 @@ public class EmployeeSelfChangeValidationStrategy implements StatusChangeValidat
 
     /**
      * Verifica si el usuario actual tiene un rol que es un operador o un hijo de la categoría de operador.
+     *
      * @param currentUser El contexto del usuario.
-     * @param masterTree El árbol de datos maestros.
+     * @param masterTree  El árbol de datos maestros.
      * @return true si el usuario es un operador, false en caso contrario.
      */
     private boolean isUserAnOperator(UserContext currentUser, MasterTree masterTree) {

@@ -8,7 +8,7 @@ public class StatusResponseDto {
     private final String code;
     private final String name;
 
-    public StatusResponseDto(Long id, String code,String name) {
+    public StatusResponseDto(Long id, String code, String name) {
         this.id = id;
         this.code = code;
         this.name = name;

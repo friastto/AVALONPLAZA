@@ -1,7 +1,7 @@
 package org.frias.avalon.core.permissions.validchangestatus;
 
 import org.frias.avalon.core.permissions.UserContext;
-import org.frias.avalon.domain.masterdata.domain.model.MasterTree; // Importar MasterTree
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 
 /**
  * Estrategia de validación para cambios de estado donde el usuario objetivo es un usuario "AVALON".
@@ -41,8 +41,9 @@ public class AvalonUserTargetValidationStrategy implements StatusChangeValidatio
 
     /**
      * Verifica si el usuario actual tiene un rol que es un administrador o un hijo de la categoría de administrador.
+     *
      * @param currentUser El contexto del usuario.
-     * @param masterTree El árbol de datos maestros.
+     * @param masterTree  El árbol de datos maestros.
      * @return true si el usuario es un administrador, false en caso contrario.
      */
     private boolean isUserAnAdmin(UserContext currentUser, MasterTree masterTree) {

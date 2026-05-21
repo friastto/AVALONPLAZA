@@ -16,9 +16,8 @@ import org.frias.avalon.domain.user.application.dtos.results.ModesResult;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections; // Importar Collections
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 @Component
 public class ModesMachineImpl implements ModesMachine {

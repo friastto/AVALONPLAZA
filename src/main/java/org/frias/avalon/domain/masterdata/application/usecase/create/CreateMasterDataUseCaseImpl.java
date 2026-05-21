@@ -21,11 +21,18 @@ public class CreateMasterDataUseCaseImpl implements CreateMasterDataUseCase {
     @Override
     public Long execute(MasterDataNewDto request) {
 
+        if (request.shortName() == null || request.shortName().isBlank()) {
+            throw new RuntimeException("shortName requerido");
+        }
+        if (request.fullName() == null || request.fullName().isBlank()) {
+            throw new RuntimeException("fullName requerido");
+        }
+
         Long parentId = masterDataRepositoryPort.getIdByCode(request.parentShortName());
 
         Long statusId = masterDataRepositoryPort.getIdByCode("ACT");
 
-        MasterRoot domain = MasterRoot.create(request.shortName().toUpperCase(), request.fullName().toUpperCase(), parentId, statusId);
+        MasterRoot domain = MasterRoot.create(request.shortName(), request.fullName(), parentId, statusId);
 
         masterTreeProvider.refresh();
 

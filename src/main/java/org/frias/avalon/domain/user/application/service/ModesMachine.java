@@ -10,6 +10,7 @@ import java.util.List;
 public interface ModesMachine {
 
     ModesResult resolve(List<RoleAssignmentDomain> byUser, OutletDomain outletDomain);
+
     ModesResponseDto mapperToResponse(ModesResult mode);
 
 }

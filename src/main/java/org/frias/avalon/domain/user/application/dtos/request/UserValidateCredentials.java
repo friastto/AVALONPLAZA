@@ -7,4 +7,5 @@ public record UserValidateCredentials(
         String userName,
 
         @NotBlank(message = "digite la contraseña")
-        String password) {}
+        String password) {
+}

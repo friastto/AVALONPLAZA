@@ -3,7 +3,6 @@ package org.frias.avalon.domain.user.infraestructure.persistence.adapter;
 import org.frias.avalon.domain.user.domain.mapper.RefreshTokenMapper;
 import org.frias.avalon.domain.user.domain.model.RefreshTokenDomain;
 import org.frias.avalon.domain.user.domain.port.RefreshTokenRepositoryPort;
-import org.frias.avalon.domain.user.infraestructure.persistence.entity.RefreshToken;
 import org.frias.avalon.domain.user.infraestructure.persistence.repository.RefreshTokenRepository;
 import org.springframework.stereotype.Component;
 
@@ -12,8 +11,9 @@ import java.util.UUID;
 
 @Component
 public class RefreshTokenRepositoryAdapter implements RefreshTokenRepositoryPort {
-private final RefreshTokenRepository jpa;
-private final RefreshTokenMapper mapper;
+    private final RefreshTokenRepository jpa;
+    private final RefreshTokenMapper mapper;
+
     public RefreshTokenRepositoryAdapter(RefreshTokenRepository jpa, RefreshTokenMapper mapper) {
         this.jpa = jpa;
         this.mapper = mapper;

@@ -2,14 +2,15 @@ package org.frias.avalon.domain.outlet.infraestructure.mapper;
 
 import org.frias.avalon.domain.outlet.application.dto.LocationDto;
 import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
-
 import org.locationtech.jts.geom.Point;
 
 public interface LocationMapper {
 
     LocationDomain toLocation(Point point);
-    Point toPoint (LocationDomain locattion);
+
+    Point toPoint(LocationDomain locattion);
 
     LocationDomain dtoToDomain(LocationDto dto);
+
     LocationDto domainToDto(LocationDomain domain);
 }
