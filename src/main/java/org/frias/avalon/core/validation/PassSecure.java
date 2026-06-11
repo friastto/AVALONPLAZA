@@ -32,10 +32,19 @@ public class PassSecure {
 
     // Genera el hash de la contraseña con el salt
     public static String hashPassword(String password, String salt) {
+        if (password == null || salt == null || salt.trim().isEmpty()) {
+            throw new IllegalArgumentException("La contraseña o el salt no pueden estar vacíos");
+        }
+        
         try {
+            byte[] decodedSalt = Base64.getDecoder().decode(salt);
+            if (decodedSalt.length == 0) {
+                throw new IllegalArgumentException("El salt decodificado está vacío");
+            }
+            
             PBEKeySpec spec = new PBEKeySpec(
                     password.toCharArray(),
-                    Base64.getDecoder().decode(salt),
+                    decodedSalt,
                     ITERATIONS,
                     KEY_LENGTH
             );
@@ -48,15 +57,11 @@ public class PassSecure {
         }
     }
 
-    /*/ Verifica si la contraseña ingresada coincide con el hash almacenado
-    public static boolean verifyPassword(String password, String salt, String expectedHash) throws InvalidKeySpecException {
-        String pwdHash = hashPassword(password, salt);
-        return pwdHash.equals(expectedHash);
-    }
-
-     */
     public static boolean verifyPassword(String password, String salt, String expectedHash) {
         try {
+            if (password == null || salt == null || salt.trim().isEmpty() || expectedHash == null) {
+                return false; // Credenciales inválidas de forma segura
+            }
             String pwdHash = hashPassword(password, salt);
             return pwdHash.equals(expectedHash);
         } catch (Exception e) {

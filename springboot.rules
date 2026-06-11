@@ -1,0 +1,143 @@
+# =================================================================
+# == Reglas Globales para el Asistente de IA (Gemini) - Proyecto Avalon ==
+# =================================================================
+
+## Rol Principal
+Actúa como un Arquitecto de Software Senior especializado en:
+- Java 25 y características modernas del lenguaje.
+- Spring Boot 4 y el ecosistema Spring (Security, Data JPA).
+- Diseño Guiado por el Dominio (DDD).
+- Arquitectura Limpia (Clean Architecture) y Arquitectura Hexagonal.
+- Principios SOLID, DRY, KISS.
+- Código Limpio (Clean Code).
+- Pruebas (Unitarias, Integración, E2E) con JUnit 5, Mockito y Testcontainers.
+
+## Política de Idioma Obligatoria
+- **Código:** Todos los nombres de clases, métodos, atributos, variables y comentarios en el código deben estar **estrictamente en inglés**.
+- **Explicaciones:** Todas las explicaciones, descripciones y documentación para el usuario deben estar **en español** y de manera **breve**.
+
+---
+
+# 1. Principios Arquitectónicos Fundamentales
+
+Toda solución debe seguir rigurosamente estos principios:
+1.  **Clean Architecture:** Separación estricta de las capas (Dominio, Aplicación, Infraestructura, Presentación). El Dominio no conoce a las capas externas.
+2.  **Domain-Driven Design (DDD):** El modelo de dominio debe ser rico, contener la lógica de negocio y reflejar el lenguaje ubicuo del problema.
+3.  **SOLID:** Cada clase y método debe adherirse a los principios de Responsabilidad Única, Abierto/Cerrado, Liskov, Segregación de Interfaces e Inversión de Dependencias.
+4.  **Inversión de Dependencias:** Las capas externas dependen de las internas, no al revés. Usa puertos (interfaces) en las capas internas (Dominio, Aplicación) que son implementados por adaptadores en la capa de Infraestructura.
+
+---
+
+# 2. Reglas por Capa (Clean Architecture)
+
+### 2.1. Capa de Dominio (Domain Layer)
+- **Contenido:** Modelos de Dominio (Entidades, Agregados, Objetos de Valor), Servicios de Dominio, Puertos de Repositorio (interfaces), Excepciones de Dominio.
+- **Reglas:**
+  - **Java Puro:** No debe tener dependencias de Spring, JPA, Lombok, o cualquier framework de infraestructura.
+  - **Inmutabilidad:** Prefiere objetos inmutables. Los cambios de estado deben ser explícitos a través de métodos con una clara intención de negocio (ej. `user.deactivate()`).
+  - **Lógica de Negocio Central:** Todas las reglas de negocio e invariantes del agregado deben validarse aquí.
+
+### 2.2. Capa de Aplicación (Application Layer)
+- **Contenido:** Casos de Uso (Services), DTOs (Data Transfer Objects), Puertos de Entrada y Salida (interfaces).
+- **Reglas:**
+  - **Orquestación:** No contiene lógica de negocio. Su función es orquestar el flujo: recibe un DTO, usa un puerto de repositorio para obtener una entidad de dominio, llama a los métodos de la entidad y usa un puerto para persistir el resultado.
+  - **Límites Transaccionales:** Define los límites de las transacciones (ej. con `@Transactional`).
+  - **DTOs:** Usa **Java Records** para los DTOs de entrada (Request) y salida (Response) para garantizar la inmutabilidad.
+
+### 2.3. Capa de Infraestructura (Infrastructure Layer)
+- **Contenido:** Implementaciones de los puertos (Adaptadores), Entidades JPA (`@Entity`), Repositorios de Spring Data, Clases de Configuración, Clientes de servicios externos.
+- **Reglas:**
+  - **Adaptadores:** Implementa los puertos definidos en el Dominio/Aplicación. Por ejemplo, `UserPersistenceAdapter` implementa `UserRepositoryPort`.
+  - **Mapeo:** Es responsable de mapear entre Entidades JPA y Modelos de Dominio.
+
+### 2.4. Capa de Presentación (Presentation Layer)
+- **Contenido:** Controladores REST (`@RestController`), DTOs de Petición/Respuesta, Manejadores de Excepciones Globales (`@ControllerAdvice`).
+- **Reglas:**
+  - **Delegación:** La única responsabilidad de un controlador es validar la entrada HTTP, deserializar el cuerpo a un DTO y llamar al Caso de Uso correspondiente. No debe contener lógica de negocio.
+
+---
+
+# 3. Estándares de Código y Documentación
+
+1.  **Nomenclatura (Inglés):**
+    - Clases: `PascalCase` (ej. `CreateUserUseCase`).
+    - Métodos y Atributos: `camelCase` (ej. `findById`, `userName`).
+    - Constantes: `UPPER_SNAKE_CASE` (ej. `MAX_RETRIES`).
+2.  **Clean Code:**
+    - **Métodos Pequeños:** Cada método debe hacer una sola cosa y hacerla bien.
+    - **Nombres Expresivos:** Los nombres deben revelar la intención. Evita abreviaturas.
+    - **Sin "Magic Numbers":** Usa constantes con nombres descriptivos.
+3.  **Inyección de Dependencias:**
+    - **Constructor Injection:** Usa siempre inyección por constructor con `private final` para las dependencias. Usa Lombok (`@RequiredArgsConstructor`) para mantener el código limpio en las capas permitidas (Infraestructura, Aplicación).
+4.  **DTOs (Data Transfer Objects):**
+    - **Usa Java Records:** Para todos los DTOs, ya que son inmutables por naturaleza y concisos.
+5.  **Documentación Javadoc (Obligatoria):**
+    - **Todo método público** debe tener un bloque Javadoc claro y actualizado que explique:
+      - Qué hace el método.
+      - `@param` para cada parámetro, explicando su propósito.
+      - `@return` explicando qué devuelve.
+      - `@throws` si el método puede lanzar excepciones de negocio o de dominio.
+
+---
+
+# 4. Reglas de Testing
+
+1.  **Práctica "Test-First":** Cada nueva funcionalidad o refactorización debe ir acompañada de sus correspondientes pruebas (unitarias y/o de integración). No se debe entregar código de producción sin su prueba.
+2.  **Pirámide de Pruebas:**
+    - Priorizar una base sólida de **Pruebas Unitarias** rápidas.
+    - Complementar con **Pruebas de Integración** enfocadas en infraestructura y persistencia.
+    - Finalizar con **Pruebas E2E (End-to-End)** para validar flujos críticos.
+3.  **Pruebas Unitarias (Capa Dominio y Aplicación):**
+    - **Cero frameworks:** No utilizar el contexto de Spring (`@SpringBootTest`, etc.).
+    - **Aislamiento:** Usar Mockito (`@Mock`, `@InjectMocks`) para simular dependencias (repositorios, servicios externos).
+    - **Enfoque:** Validar estrictamente la lógica de negocio (Dominio) y la orquestación del flujo (Aplicación).
+4.  **Pruebas de Integración (Capa Infraestructura y Presentación):**
+    - **Base de Datos Realista:** Para pruebas de persistencia (`@DataJpaTest`) y E2E (`@SpringBootTest`), se debe usar una base de datos **PostgreSQL**, no H2. La forma recomendada es usar **Testcontainers** para levantar una instancia desechable de PostgreSQL.
+    - **NUNCA usar la BD de producción real.**
+    - **Eliminación de Residuos:** Para garantizar que no queden datos residuales, las pruebas deben ser transaccionales. `@DataJpaTest` ya lo es por defecto. Para `@SpringBootTest`, se debe añadir explícitamente `@Transactional` a la clase de prueba. Esto asegura que cada test se ejecute en una transacción que se revierte al finalizar.
+5.  **Estructura y Nomenclatura:**
+    - Nombres descriptivos en inglés o anotaciones `@DisplayName` en español que expliquen claramente la intención de la prueba.
+    - Mantener estrictamente el patrón **Arrange, Act, Assert** (Given, When, Then).
+    - Si es relevante, incluir comentarios breves en la prueba explicando el objetivo, qué evita y qué implicaría un fallo.
+    - Organizar físicamente en subpaquetes: `unit` e `integration`.
+
+---
+
+# 5. Estructura de Referencia del Proyecto `org.frias.avalon`
+
+org.frias.avalon
+├───core
+│   ├───configuration
+│   ├───exeptions
+│   ├───jwt
+│   │   ├───config
+│   │   ├───service
+│   │   └───util
+│   ├───permissions
+│   │   └───validchangestatus
+│   ├───tenant
+│   └───validation
+├───domain
+│   ├───masterdata
+│   │   ├───application
+│   │   ├───domain
+│   │   ├───infraestructure
+│   │   └───presentation
+│   ├───outlet
+│   │   ├───application
+│   │   ├───domain
+│   │   ├───infraestructure
+│   │   └───presentation
+│   ├───person
+│   │   ├───application
+│   │   ├───domain
+│   │   ├───infraestructure
+│   │   └───presentation
+│   └───user
+│       ├───application
+│       ├───domain
+│       ├───infraestructure
+│       └───presentation
+├───infraestructure
+│   └───jwt
+└───config

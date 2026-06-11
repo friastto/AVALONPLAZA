@@ -50,6 +50,7 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
                 dto.name(),
                 dto.address(),
                 dto.phone(),
+                dto.nit(),
                 status.getId(),
                 location
         );
@@ -67,6 +68,7 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
                 outletSaved.getName(),
                 outletSaved.getAddress(),
                 outletSaved.getPhone(),
+                outletSaved.getNit(),
                 locationDto,
                 statusResponse
 

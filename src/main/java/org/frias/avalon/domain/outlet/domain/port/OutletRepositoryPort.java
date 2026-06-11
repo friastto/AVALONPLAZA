@@ -12,6 +12,8 @@ public interface OutletRepositoryPort {
 
     Optional<OutletDomain> findById(Long id);
 
+    Optional<OutletDomain> findByNit(String nit);
+
     OutletDomain findAll();
 
     List<OutletDomain> nearbyByName(String domain);
@@ -21,6 +23,5 @@ public interface OutletRepositoryPort {
     OutletDomain delete(OutletDomain domain);
 
     List<OutletDomain> findNearbyByRadius(LocationDomain location, int radius);
-
 
 }

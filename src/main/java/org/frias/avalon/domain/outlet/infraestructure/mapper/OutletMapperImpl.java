@@ -1,5 +1,9 @@
 package org.frias.avalon.domain.outlet.infraestructure.mapper;
 
+import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.application.dto.LocationDto;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
@@ -11,10 +15,11 @@ import org.springframework.stereotype.Component;
 public class OutletMapperImpl implements OutletMapper {
 
     private final LocationMapper locationMapper;
+    private final MasterTreeProvider masterTreeProvider;
 
-
-    public OutletMapperImpl(LocationMapper locationMapper) {
+    public OutletMapperImpl(LocationMapper locationMapper, MasterTreeProvider masterTreeProvider) {
         this.locationMapper = locationMapper;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
 
@@ -29,6 +34,7 @@ public class OutletMapperImpl implements OutletMapper {
                 o.getName(),
                 o.getAddress(),
                 o.getPhone(),
+                o.getNit(),
                 o.getStatusId(),
                 location
         );
@@ -44,6 +50,7 @@ public class OutletMapperImpl implements OutletMapper {
                 .name(od.getName())
                 .address(od.getAddress())
                 .phone(od.getPhone())
+                .nit(od.getNit())
                 .statusId(od.getStatusId())
                 .location(point)
                 .build();
@@ -51,6 +58,19 @@ public class OutletMapperImpl implements OutletMapper {
 
     @Override
     public OutletResponseDto toResponse(OutletDomain od) {
-        return null;
+        MasterRoot status = masterTreeProvider.getTree().getById(od.getStatusId());
+        LocationDto locationDto = locationMapper.domainToDto(od.getLocation());
+        StatusResponseDto statusResponseDto = new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName());
+
+        return new OutletResponseDto(
+                od.getId(),
+                od.getCode(),
+                od.getName(),
+                od.getAddress(),
+                od.getPhone(),
+                od.getNit(),
+                locationDto,
+                statusResponseDto
+        );
     }
 }

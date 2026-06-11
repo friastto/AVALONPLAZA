@@ -2,8 +2,6 @@ package org.frias.avalon.domain.masterdata.domain.model;
 
 import lombok.Getter;
 import org.frias.avalon.core.exeptions.DomainValidationException;
-
-@Getter
 public class MasterRoot {
     private final Long id;
     private final String shortName;
@@ -81,4 +79,23 @@ public class MasterRoot {
                 && !"BLOK".equals(statusCode);
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public String getShortName() {
+        return shortName;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public Long getStatusId() {
+        return statusId;
+    }
 }

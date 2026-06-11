@@ -6,9 +6,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface JpaOutletRepository extends JpaRepository<Outlet, Long> {
+    
+    Optional<Outlet> findByNit(String nit);
+    
     @Query(value = """
                 SELECT *,
                        ST_Distance(

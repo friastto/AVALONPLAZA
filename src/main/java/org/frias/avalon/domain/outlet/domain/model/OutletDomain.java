@@ -22,12 +22,14 @@ public class OutletDomain {
 
     private String phone;
 
+    private String nit;
+
     private Long statusId;
 
     private LocationDomain location;
 
 
-    public static OutletDomain create(String name, String address, String phone, Long status, LocationDomain location) {
+    public static OutletDomain create(String name, String address, String phone, String nit, Long status, LocationDomain location) {
 
         if (name.isBlank()) {
             throw new DomainValidationException("el nombre de la Tienda no pude estar vavcio");
@@ -37,6 +39,9 @@ public class OutletDomain {
         }
         if (phone.isBlank()) {
             throw new DomainValidationException("el telefono de latienda no puede estar vacio");
+        }
+        if (nit.isBlank()) {
+            throw new DomainValidationException("el nit de la tienda no puede estar vacio");
         }
         if (location.longitude() == null || location.latitude() == null) {
             throw new DomainValidationException("la ubicacion geografica no puede estar vacia");
@@ -48,12 +53,13 @@ public class OutletDomain {
                 .name(name)
                 .address(address)
                 .phone(phone)
+                .nit(nit)
                 .statusId(status)
                 .location(location)
                 .build();
     }
 
-    public static OutletDomain fromPersistence(Long id, String code, String name, String address, String phone, Long status, LocationDomain location) {
+    public static OutletDomain fromPersistence(Long id, String code, String name, String address, String phone, String nit, Long status, LocationDomain location) {
 
         return OutletDomain.builder()
                 .id(id)
@@ -61,6 +67,7 @@ public class OutletDomain {
                 .name(name)
                 .address(address)
                 .phone(phone)
+                .nit(nit)
                 .location(location)
                 .statusId(status)
                 .build();

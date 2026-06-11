@@ -37,6 +37,17 @@ public class SecurityConfig {
                         .requestMatchers("/avalon/user/{userId}/assignment/role").hasAnyRole("ADMINTI", "ADMIN", "GERGEN")
                         .requestMatchers("/avalon/user/assignment/role/consumer/self").permitAll()
 
+                        .requestMatchers("/avalon/outlet/**").hasAnyAuthority("ADMINTI")
+
+
+                        .requestMatchers("/avalon/products/create").hasAnyAuthority("ADMINTI", "ADMIN", "GERGEN")
+                        .requestMatchers("/avalon/products/barcode").hasAnyAuthority("ADMINTI", "ADMIN", "GERGEN","CJPRINCIPAL","CJTURNO")
+                        .requestMatchers("/avalon/products/catalog/**").permitAll()
+                        .requestMatchers("/avalon/products/catalog").permitAll()
+
+
+
+
 
                         /*
                                                .requestMatchers("/avalon/public/**").permitAll()
@@ -77,4 +88,3 @@ public class SecurityConfig {
 
 
 }
-

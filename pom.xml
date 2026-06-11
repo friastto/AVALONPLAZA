@@ -28,8 +28,8 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
-
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<testcontainers.version>1.19.8</testcontainers.version>
     </properties>
 	<dependencies>
 
@@ -67,12 +67,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-	<!--	<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-
-		</dependency>
-		-->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
@@ -111,9 +105,19 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Testcontainers para pruebas de integración con BD real -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
 
-
-		<!-- Base de datos H2 -->
+		<!-- Base de datos H2 (se puede mantener para otras pruebas si es necesario) -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
@@ -124,7 +128,7 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
-			<version>2.20.143</version> <!-- Ajusta a la última versión -->
+			<version>2.20.143</version>
 		</dependency>
 <!--
 		<dependency>
@@ -184,6 +188,18 @@
 
     </dependencies>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers-bom</artifactId>
+				<version>${testcontainers.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<build>
 		<!-- Añade este bloque de recursos justo aquí -->
 		<resources>
@@ -208,7 +224,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-
                 <configuration>
                     <annotationProcessorPaths>
                         <path>

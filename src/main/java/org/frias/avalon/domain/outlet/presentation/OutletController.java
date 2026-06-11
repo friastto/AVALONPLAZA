@@ -1,16 +1,15 @@
 package org.frias.avalon.domain.outlet.presentation;
 
 import org.frias.avalon.core.exeptions.ApiResponse;
+import org.frias.avalon.domain.outlet.application.dto.request.FindOutletRequestDto;
 import org.frias.avalon.domain.outlet.application.dto.request.OutletCreateRequestDto;
 import org.frias.avalon.domain.outlet.application.dto.request.OutletNearbyByRadiusRequestDto;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.frias.avalon.domain.outlet.application.usecase.create.CreateOutletUseCase;
 import org.frias.avalon.domain.outlet.application.usecase.find.FindOutletNearbyByRadiusUseCase;
+import org.frias.avalon.domain.outlet.application.usecase.find.FindOutletUseCase;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,10 +19,12 @@ public class OutletController {
 
     private final CreateOutletUseCase createUseCase;
     private final FindOutletNearbyByRadiusUseCase findOutletNearbyByRadiusUseCase;
+    private final FindOutletUseCase findOutletUseCase;
 
-    public OutletController(CreateOutletUseCase createUseCase, FindOutletNearbyByRadiusUseCase findOutletNearbyByRadiusUseCase) {
+    public OutletController(CreateOutletUseCase createUseCase, FindOutletNearbyByRadiusUseCase findOutletNearbyByRadiusUseCase, FindOutletUseCase findOutletUseCase) {
         this.createUseCase = createUseCase;
         this.findOutletNearbyByRadiusUseCase = findOutletNearbyByRadiusUseCase;
+        this.findOutletUseCase = findOutletUseCase;
     }
 
     @PostMapping("/create")
@@ -44,6 +45,22 @@ public class OutletController {
                         )
                 );
 
+    }
+
+    @GetMapping("/find")
+    public ResponseEntity<ApiResponse<List<OutletResponseDto>>> find(
+            @RequestParam(required = false) String nit,
+            @RequestParam(required = false) String name
+    ) {
+        FindOutletRequestDto request = new FindOutletRequestDto(name, nit);
+        List<OutletResponseDto> outlets = findOutletUseCase.execute(request);
+        return ResponseEntity.status(200)
+                .body(new ApiResponse<>(
+                                outlets.isEmpty() ? 404 : 200,
+                                outlets.isEmpty() ? "No se encontraron tiendas con los criterios proporcionados" : "Se encontraron tiendas",
+                                outlets
+                        )
+                );
     }
 
     @PostMapping("/nearby/v1")

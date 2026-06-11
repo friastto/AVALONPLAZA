@@ -9,6 +9,7 @@ public record OutletResponseDto(
         String name,
         String address,
         String phone,
+        String nit,
         LocationDto location,
         StatusResponseDto statusResponseDto
 

@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -68,8 +69,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     if (username != null && (currentAuth == null || currentAuth instanceof AnonymousAuthenticationToken)) {
 
-                        // 5. Creamos autoridad desde el rol del token
-                        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + rolesFromJwt));
+                        // 5. Creamos autoridades desde los roles del token de forma individual
+                        List<GrantedAuthority> authorities = rolesFromJwt.stream()
+                                .map(role -> new SimpleGrantedAuthority(role))
+                                .collect(Collectors.toList());
 
                         // 6. Creamos autenticación con username y autoridad (sin password ni detalles)
                         UsernamePasswordAuthenticationToken auth =

@@ -36,6 +36,9 @@ build/
 .env
 env
 
+#reglas de agentes
+.md
+
 # Archivos de configuración con datos sensibles
 src/main/resources/application-local.properties
 

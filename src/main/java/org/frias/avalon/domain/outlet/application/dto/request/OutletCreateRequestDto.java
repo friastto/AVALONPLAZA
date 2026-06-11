@@ -6,6 +6,7 @@ public record OutletCreateRequestDto(
         String name,
         String address,
         String phone,
+        String nit,
         LocationDto location
 
 ) {

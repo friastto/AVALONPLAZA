@@ -41,6 +41,11 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
     }
 
     @Override
+    public Optional<OutletDomain> findByNit(String nit) {
+        return jpa.findByNit(nit).map(outletMapper::toDomain);
+    }
+
+    @Override
     public OutletDomain findAll() {
         return null;
     }
