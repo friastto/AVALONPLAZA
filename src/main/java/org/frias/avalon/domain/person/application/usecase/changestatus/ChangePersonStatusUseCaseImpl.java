@@ -76,7 +76,7 @@ public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase 
         String newStatusType = newStatus.getType();
 
         // Determinar si es un cambio sobre el propio usuario
-        //boolean isSelfChange = currentUserContext.username().equals(person.getUsername());
+        //boolean isSelfChange = currentUserContext.userName().equals(person.getUsername());
 
         // 3. Invocar la validación
         boolean isAllowed = statusChangeValidator.validate(

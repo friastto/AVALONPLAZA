@@ -10,7 +10,7 @@ public class RefreshTokenDomain {
 
     private UUID id;
     private String refreshToken;
-    private Long userAvalonId; // Identificador del usuario (ej. username)
+    private Long userAvalonId; // Identificador del usuario (ej. userName)
     private Instant expiryDate;
     private boolean revoked;
     private Instant issuedAt;

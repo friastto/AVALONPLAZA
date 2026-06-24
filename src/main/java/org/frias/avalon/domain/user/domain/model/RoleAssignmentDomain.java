@@ -36,7 +36,7 @@ public class RoleAssignmentDomain {
         this.status = status;
     }
 
-    public static RoleAssignmentDomain create(Long userId, Long roleId, Long outletId, Long statusId) {
+public static RoleAssignmentDomain create(Long userId, Long roleId, Long outletId, Long statusId) {
 
         if (userId == null || roleId == null || statusId == null) {
             throw new IllegalArgumentException("Campos obligatorios faltantes");

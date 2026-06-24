@@ -54,7 +54,7 @@ public class SecurityUtils {
                 .filter(authority -> authority.startsWith("ROLE_")) // Asegurarse de que sean roles
                 .collect(Collectors.toList());
 
-        // Extraer username
+        // Extraer userName
         String username = authentication.getName();
 
         // Obtener companyId y employeeOutletId del TenantContext

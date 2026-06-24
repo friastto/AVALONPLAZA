@@ -1,5 +1,6 @@
 package org.frias.avalon.domain.masterdata.infraestructure.persistence.adapter;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
@@ -57,8 +58,12 @@ public class MasterDataRepositoryAdapter implements MasterDataRepositoryPort {
 
     @Override
     public MasterRoot deleteById(Long id) {
+        MasterData entityToDelete = jpa.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No se puede eliminar. No se encontró MasterData con id: " + id));
 
-        return null;
+        jpa.delete(entityToDelete);
+
+        return mapper.toDomain(entityToDelete);
     }
 
     @Override
@@ -87,6 +92,13 @@ public class MasterDataRepositoryAdapter implements MasterDataRepositoryPort {
         List<MasterData> uaList = mdList2.stream().map(mapper::toEntity).toList();
 
         return uaList.stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public List<MasterRoot> findChildrenByParentCode(String parentCode) {
+        return jpa.findChildrenByParentCode(parentCode).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
 }

@@ -41,6 +41,7 @@ public class CreatePersonUseCaseImpl implements CreatePersonUseCase {
                 request.numberid(),
                 request.name(),
                 request.lastName(),
+                request.sexId(),
                 request.phoneNumber(),
                 request.email(),
                 request.statusId()

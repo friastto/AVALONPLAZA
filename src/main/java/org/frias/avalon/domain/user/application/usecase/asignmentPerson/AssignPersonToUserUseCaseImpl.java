@@ -41,26 +41,30 @@ class AssignPersonToUserUseCaseImpl implements AssignPersonToUserUseCase {
             throw new BusinessException("El usuario ya tiene una persona vinculada");
         }
 
+        // 3. Validar que el typeIdentificationId es válido ANTES de usarlo
+        if (tree.getById(data.typeIdentificationId()) == null) {
+            throw new BusinessException("El tipo de identificación proporcionado no es válido.");
+        }
+
         MasterRoot status = masterDataRepositoryPort.getActiveStatus().orElseThrow(() -> new BusinessException("no se puede activar esta persona para el usuario actual"));
 
-        // 3. Crear el objeto de dominio de la nueva Persona
+        // 4. Crear el objeto de dominio de la nueva Persona
         PersonDomain newPerson = PersonDomain.createBasic(
                 data.typeIdentificationId(),
                 data.numberid(),
                 data.name(),
                 data.lastName(),
+                data.sexId(),
                 data.phoneNumber(),
                 data.email(),
                 status.getId()
 
         );
 
-        // 4. Guardar la persona en la base de datos a través de su puerto
-        // El repositorio de infraestructura debe retornar la persona con el ID generado por la BD
+        // 5. Guardar la persona en la base de datos a través de su puerto
         PersonDomain savedPerson = personRepositoryPort.save(newPerson);
 
-        // 5. Asignar el ID de la nueva persona al objeto de dominio del usuario
-
+        // 6. Asignar el ID de la nueva persona al objeto de dominio del usuario
         UserAvalonDomain userWithNewPerson = UserAvalonDomain.fromPersistenceAdvanced(
                 user.getId(),
                 savedPerson.getId(),
@@ -69,7 +73,12 @@ class AssignPersonToUserUseCaseImpl implements AssignPersonToUserUseCase {
                 user.getHashPassword(),
                 user.getStatusId()
         );
-        // 6. Actualizar el usuario en la base de datos
-        return userAvalonMapper.toResponseWithPersonData(userRepositoryPort.save(userWithNewPerson), savedPerson, tree.getById(userWithNewPerson.getStatusId()));
+        
+        // 7. Actualizar el usuario en la base de datos
+        return userAvalonMapper.toResponseWithPersonData(
+                userRepositoryPort.save(userWithNewPerson),
+                savedPerson, 
+                tree.getById(userWithNewPerson.getStatusId())
+        );
     }
 }

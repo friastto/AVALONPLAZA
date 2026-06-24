@@ -1,5 +1,6 @@
 package org.frias.avalon.domain.user.domain.port;
 
+import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 
 import java.util.List;
@@ -23,4 +24,6 @@ public interface UserAvalonRepositoryPort {
     Optional<UserAvalonDomain> findByUserName(String userName);
 
     Optional<UserAvalonDomain> findByIdentifier(String identifier);
+
+   // Optional<PersonDomain> findPersonId(Long id);
 }

@@ -2,10 +2,9 @@ package org.frias.avalon.domain.user.presentation;
 
 import org.frias.avalon.core.exeptions.ApiResponse;
 import org.frias.avalon.domain.person.application.dto.request.CreatePersonRequest;
-import org.frias.avalon.domain.user.application.dtos.request.AssignmentRoleRequestDto;
-import org.frias.avalon.domain.user.application.dtos.request.ChangeUserAvalonStatusRequest;
-import org.frias.avalon.domain.user.application.dtos.request.UserNewDto;
+import org.frias.avalon.domain.user.application.dtos.request.*;
 import org.frias.avalon.domain.user.application.dtos.response.AssignmentRoleResponse;
+import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonDto;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
 import org.frias.avalon.domain.user.application.usecase.asignmentPerson.AssignPersonToUserUseCase;
@@ -16,6 +15,7 @@ import org.frias.avalon.domain.user.application.usecase.create.CreateUserAvalonU
 import org.frias.avalon.domain.user.application.usecase.find.FindByUserNameUseCase;
 import org.frias.avalon.domain.user.application.usecase.find.GetAllUserAvalonUseCase;
 import org.frias.avalon.domain.user.application.usecase.login.LoginUseCase;
+import org.frias.avalon.domain.user.application.usecase.register.RegisterUserUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,8 +34,9 @@ public class UserAvalonController {
     private final LoginUseCase loginUseCase;
     private final AssignmentRoleConsumerSelfUseCase consumerSelfUseCase;
     private final AssignPersonToUserUseCase assignmentPerson;
+    private final RegisterUserUseCase registerUserUseCase;
 
-    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName, LoginUseCase loginUseCase, AssignmentRoleConsumerSelfUseCase consumerSelfUseCase, AssignPersonToUserUseCase assignmentPerson) {
+    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName, LoginUseCase loginUseCase, AssignmentRoleConsumerSelfUseCase consumerSelfUseCase, AssignPersonToUserUseCase assignmentPerson, RegisterUserUseCase registerUserUseCase) {
         this.createUser = createUser;
         this.changeStatusUser = changeStatusUser;
         this.assignmentRole = assignmentRole;
@@ -44,8 +45,21 @@ public class UserAvalonController {
         this.loginUseCase = loginUseCase;
         this.consumerSelfUseCase = consumerSelfUseCase;
         this.assignmentPerson = assignmentPerson;
+        this.registerUserUseCase = registerUserUseCase;
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody FullPersonAndUser request) {
+
+        AuthResponse authResponse = registerUserUseCase.execute(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(
+                        201,
+                        "Usuario registrado y autenticado exitosamente",
+                        authResponse
+                ));
+    }
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<UserAvalonResponseDto>> create(@RequestBody UserNewDto request) {
@@ -149,5 +163,4 @@ public class UserAvalonController {
                         )
                 );
     }
-
 }

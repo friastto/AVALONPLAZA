@@ -9,34 +9,32 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-
-public class PersonPersistenceAdapter implements PersonRepositoryPort {
+@Component
+public class PersonRepositoryAdapter implements PersonRepositoryPort {
 
     private final JpaPersonRepository jpaPersonRepository;
     private final PersonMapper personMapper;
 
-    public PersonPersistenceAdapter(JpaPersonRepository jpaPersonRepository, PersonMapper personMapper) {
+    public PersonRepositoryAdapter(JpaPersonRepository jpaPersonRepository, PersonMapper personMapper) {
         this.jpaPersonRepository = jpaPersonRepository;
         this.personMapper = personMapper;
     }
 
     @Override
-    public PersonDomain save(PersonDomain person) {
-        PersonEntity personEntity = personMapper.toEntity(person);
-        PersonEntity savedEntity = jpaPersonRepository.save(personEntity);
-        return personMapper.toDomain(savedEntity);
+    public PersonDomain save(PersonDomain personDomain) {
+        PersonEntity person = personMapper.toEntity(personDomain);
+        PersonEntity personSaved = jpaPersonRepository.save(person);
+        return personMapper.toDomain(personSaved);
     }
 
     @Override
     public Optional<PersonDomain> findById(Long id) {
-        return jpaPersonRepository.findById(id)
-                .map(personMapper::toDomain);
+        return jpaPersonRepository.findById(id).map(personMapper::toDomain);
     }
-
 
     @Override
-    public Optional<PersonDomain> findByNumberid(String numberid) {
-        return jpaPersonRepository.findByNumberId(numberid)
-                .map(personMapper::toDomain);
+    public Optional<PersonDomain> findByNumberid(String identificationNumber) {
+        return jpaPersonRepository.findByNumberId(identificationNumber).map(personMapper::toDomain);
     }
+
 }

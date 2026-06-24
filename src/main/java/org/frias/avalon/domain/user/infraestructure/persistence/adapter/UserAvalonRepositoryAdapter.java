@@ -16,12 +16,11 @@ public class UserAvalonRepositoryAdapter implements UserAvalonRepositoryPort {
 
     private final JpaUserAvalonRepository jpa;
     private final UserAvalonMapper mapper;
-    private final PersonRepositoryPort personRepositoryPort;
 
-    public UserAvalonRepositoryAdapter(JpaUserAvalonRepository jpa, UserAvalonMapper mapper, PersonRepositoryPort personRepositoryPort) {
+    public UserAvalonRepositoryAdapter(JpaUserAvalonRepository jpa, UserAvalonMapper mapper) {
         this.jpa = jpa;
         this.mapper = mapper;
-        this.personRepositoryPort = personRepositoryPort;
+
     }
 
 

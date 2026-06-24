@@ -10,8 +10,6 @@ public record AuthRequest(
 
         @NotBlank(message = "Ingrese una contraseña valida")
         String password
-
-
 ) {
 }
 

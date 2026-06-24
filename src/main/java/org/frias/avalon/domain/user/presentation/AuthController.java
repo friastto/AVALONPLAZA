@@ -2,11 +2,14 @@ package org.frias.avalon.domain.user.presentation;
 
 import jakarta.validation.Valid;
 import org.frias.avalon.core.exeptions.ApiResponse;
+import org.frias.avalon.domain.person.application.dto.response.VerificationResponseDto;
 import org.frias.avalon.domain.user.application.dtos.request.AuthRequest;
 import org.frias.avalon.domain.user.application.dtos.request.TokenRefreshRequest;
+import org.frias.avalon.domain.user.application.dtos.request.VerifyUsernameRequestDto;
 import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
 import org.frias.avalon.domain.user.application.usecase.accesrefreshtoken.GenerateAccessTokenAndRefreshTokenUseCase;
 import org.frias.avalon.domain.user.application.usecase.login.LoginUseCase;
+import org.frias.avalon.domain.user.application.usecase.verify.VerifyUsernameUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,10 +23,12 @@ public class AuthController {
 
     private final LoginUseCase loginUseCase;
     private final GenerateAccessTokenAndRefreshTokenUseCase refreshTokenUseCase;
+    private final VerifyUsernameUseCase verifyUsernameUseCase;
 
-    public AuthController(LoginUseCase loginUseCase, GenerateAccessTokenAndRefreshTokenUseCase refreshTokenUseCase) {
+    public AuthController(LoginUseCase loginUseCase, GenerateAccessTokenAndRefreshTokenUseCase refreshTokenUseCase, VerifyUsernameUseCase verifyUsernameUseCase) {
         this.loginUseCase = loginUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
+        this.verifyUsernameUseCase = verifyUsernameUseCase;
     }
 
 
@@ -50,6 +55,16 @@ public class AuthController {
                 200,
                 "Token de acceso renovado exitosamente",
                 newAccessToken
+        ));
+    }
+
+    @PostMapping("/verify-username")
+    public ResponseEntity<ApiResponse<VerificationResponseDto>> verifyUsername(@Valid @RequestBody VerifyUsernameRequestDto request) {
+        VerificationResponseDto response = verifyUsernameUseCase.execute(request);
+        return ResponseEntity.ok(new ApiResponse<>(
+                200,
+                "Verificación de nombre de usuario completada",
+                response
         ));
     }
 }

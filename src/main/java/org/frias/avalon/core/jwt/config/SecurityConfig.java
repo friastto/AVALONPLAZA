@@ -33,7 +33,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Deshabilitamos CSRF para APIs
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/avalon/auth/**").permitAll()
+
+
+
                         .requestMatchers("/avalon/user/create").permitAll()
+                        .requestMatchers("/avalon/user/register").permitAll()
                         .requestMatchers("/avalon/user/{userId}/assignment/role").hasAnyRole("ADMINTI", "ADMIN", "GERGEN")
                         .requestMatchers("/avalon/user/assignment/role/consumer/self").permitAll()
 
@@ -45,6 +49,13 @@ public class SecurityConfig {
                         .requestMatchers("/avalon/products/catalog/**").permitAll()
                         .requestMatchers("/avalon/products/catalog").permitAll()
 
+
+
+
+                        .requestMatchers("/avalon/person/verify-identification").permitAll()
+
+
+                        .requestMatchers("/avalon/masterdata/{parentCode}/children").permitAll()
 
 
 

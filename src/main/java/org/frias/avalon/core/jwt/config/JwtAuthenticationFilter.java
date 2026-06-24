@@ -60,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 2. Validamos el token antes de hacer nada más
                 if (jwtTokenProvider.validateToken(jwt)) {
 
-                    // 3. Extraemos username y rol desde el token
+                    // 3. Extraemos userName y rol desde el token
                     String username = jwtTokenProvider.extractUsername(jwt);
                     List<String> rolesFromJwt = jwtTokenProvider.extractRoles(jwt);
 
@@ -74,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 .map(role -> new SimpleGrantedAuthority(role))
                                 .collect(Collectors.toList());
 
-                        // 6. Creamos autenticación con username y autoridad (sin password ni detalles)
+                        // 6. Creamos autenticación con userName y autoridad (sin password ni detalles)
                         UsernamePasswordAuthenticationToken auth =
                                 new UsernamePasswordAuthenticationToken(username, jwt, authorities);
 

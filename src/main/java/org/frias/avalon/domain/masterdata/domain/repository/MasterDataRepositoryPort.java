@@ -26,4 +26,6 @@ public interface MasterDataRepositoryPort {
     List<MasterRoot> findAll();
 
     List<MasterRoot> saveAll(List<MasterRoot> mdList2);
+
+    List<MasterRoot> findChildrenByParentCode(String parentCode);
 }

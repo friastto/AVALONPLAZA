@@ -11,6 +11,8 @@ import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.infraestructure.persistence.entity.UserAvalon;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class UserAvalonMapperImpl implements UserAvalonMapper {
     private final MasterTreeProvider masterTreeProvider;
@@ -86,20 +88,30 @@ public class UserAvalonMapperImpl implements UserAvalonMapper {
     @Override
     public UserAvalonDto toResponseWithPersonData(UserAvalonDomain domain, PersonDomain personData, MasterRoot statusRoot) {
 
-
         MasterTree tree = masterTreeProvider.getTree();
 
+        String typeIdName = Optional.ofNullable(tree.getById(personData.getTypeIdentificationId()))
+                                    .map(MasterRoot::getFullName)
+                                    .orElse("TIPO ID DESCONOCIDO");
+
+        String sexName = Optional.ofNullable(tree.getById(personData.getSexId()))
+                                 .map(MasterRoot::getFullName)
+                                 .orElse("GÉNERO DESCONOCIDO");
+
+        String statusName = Optional.ofNullable(tree.getById(personData.getStatusId()))
+                                    .map(MasterRoot::getFullName)
+                                    .orElse("ESTADO DESCONOCIDO");
 
         return new UserAvalonDto(
                 domain.getId(),
-                tree.getById(personData.getTypeIdentificationId()).getFullName(),
+                typeIdName,
                 personData.getNumberid(),
                 domain.getUserName(),
-                "Cliente Estandar",
+                "Cliente Estandar", // Este valor parece hardcodeado, podría ser un futuro punto de mejora
                 personData.getFullName(),
                 personData.getAddress(),
-                tree.getById(personData.getSexId()).getFullName(),
-                tree.getById(personData.getStatusId()).getFullName()
+                sexName,
+                statusName
         );
     }
 

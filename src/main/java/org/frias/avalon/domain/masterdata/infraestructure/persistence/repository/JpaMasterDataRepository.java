@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -32,4 +33,10 @@ public interface JpaMasterDataRepository extends JpaRepository<MasterData, Long>
             """)
     Optional<MasterData> findParentByChildId(@Param("id") Long childId);
 
+    @Query("""
+        SELECT m FROM MasterData m WHERE m.parentId = (
+            SELECT p.id FROM MasterData p WHERE p.shortName = :parentCode
+        )
+    """)
+    List<MasterData> findChildrenByParentCode(@Param("parentCode") String parentCode);
 }

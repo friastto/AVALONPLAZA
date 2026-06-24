@@ -49,7 +49,7 @@ class JpaMasterDataRepositoryIntegrationTest {
         MasterData genEntity = jpaMasterDataRepository.findByShortName("GEN").orElseThrow();
 
         // Act
-        Long foundId = jpaMasterDataRepository.findIdByShortName("GEN");
+        Long foundId = jpaMasterDataRepository.findByShortName("GEN").map(MasterData::getId).orElse(null);
 
         // Assert
         assertNotNull(foundId);
@@ -63,7 +63,7 @@ class JpaMasterDataRepositoryIntegrationTest {
         MasterData actEntity = jpaMasterDataRepository.findByShortName("ACT").orElseThrow();
 
         // Act
-        String shortName = jpaMasterDataRepository.findShortNameById(actEntity.getId());
+        String shortName = jpaMasterDataRepository.findById(actEntity.getId()).map(MasterData::getShortName).orElse(null);
 
         // Assert
         assertEquals("ACT", shortName);
