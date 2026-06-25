@@ -27,7 +27,7 @@ public interface JpaUserAvalonRepository extends JpaRepository<UserAvalon, Long>
                         LEFT JOIN PersonEntity p ON u.personId = p.id 
                         WHERE u.userName = :identifier
                         OR p.email = :identifier
-                        OR p.numberId = :identifier
+                        OR p.numberId = :identifier                        
             """)
     Optional<UserAvalon> findByIdentifier(@Param("identifier") String identifier);
 
