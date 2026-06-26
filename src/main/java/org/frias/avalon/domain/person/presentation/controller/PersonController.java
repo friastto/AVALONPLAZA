@@ -4,10 +4,12 @@ import jakarta.validation.Valid;
 import org.frias.avalon.core.exeptions.ApiResponse;
 import org.frias.avalon.domain.person.application.dto.request.CreatePersonRequest;
 import org.frias.avalon.domain.person.application.dto.request.VerifyIdentificationRequestDto;
+import org.frias.avalon.domain.person.application.dto.response.PersonDetailResponseDto;
 import org.frias.avalon.domain.person.application.dto.response.PersonResponse;
 import org.frias.avalon.domain.person.application.dto.response.VerificationResponseDto;
 import org.frias.avalon.domain.person.application.usecase.changestatus.ChangePersonStatusUseCase;
 import org.frias.avalon.domain.person.application.usecase.create.CreatePersonUseCase;
+import org.frias.avalon.domain.person.application.usecase.find.FindPersonByDocumentUseCase;
 import org.frias.avalon.domain.person.application.usecase.verify.VerifyIdentificationUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +22,13 @@ public class PersonController {
     private final CreatePersonUseCase createPersonUseCase;
     private final ChangePersonStatusUseCase changeStatusUsecase;
     private final VerifyIdentificationUseCase verifyIdentificationUseCase;
+    private final FindPersonByDocumentUseCase findPersonByDocumentUseCase;
 
-    public PersonController(CreatePersonUseCase createPersonUseCase, ChangePersonStatusUseCase changeStatusUsecase, VerifyIdentificationUseCase verifyIdentificationUseCase) {
+    public PersonController(CreatePersonUseCase createPersonUseCase, ChangePersonStatusUseCase changeStatusUsecase, VerifyIdentificationUseCase verifyIdentificationUseCase, FindPersonByDocumentUseCase findPersonByDocumentUseCase) {
         this.createPersonUseCase = createPersonUseCase;
         this.changeStatusUsecase = changeStatusUsecase;
         this.verifyIdentificationUseCase = verifyIdentificationUseCase;
+        this.findPersonByDocumentUseCase = findPersonByDocumentUseCase;
     }
 
     @PostMapping("/create")
@@ -55,6 +59,16 @@ public class PersonController {
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
                 "Verificación completada con éxito",
+                response
+        ));
+    }
+
+    @GetMapping("/by-document/{numberid}")
+    public ResponseEntity<ApiResponse<PersonDetailResponseDto>> findByDocument(@PathVariable String numberid) {
+        PersonDetailResponseDto response = findPersonByDocumentUseCase.execute(numberid);
+        return ResponseEntity.ok(new ApiResponse<>(
+                200,
+                "Consulta de persona por documento completada",
                 response
         ));
     }

@@ -25,5 +25,7 @@ public interface UserAvalonRepositoryPort {
 
     Optional<UserAvalonDomain> findByIdentifier(String identifier);
 
+    Optional<UserAvalonDomain> findByPersonNumberid(String numberid);
+
    // Optional<PersonDomain> findPersonId(Long id);
 }

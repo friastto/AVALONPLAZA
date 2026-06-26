@@ -124,7 +124,7 @@ public class OutletController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<Page<OutletResponseDto>>> findAll(
+    public ResponseEntity<ApiResponse<org.springframework.data.web.PagedModel<OutletResponseDto>>> findAll(
             OutletSearchCriteria criteria,
             @PageableDefault(size = 10) Pageable pageable
     ) {
@@ -133,7 +133,7 @@ public class OutletController {
                 .body(new ApiResponse<>(
                                 outlets.isEmpty() ? 404 : 200,
                                 outlets.isEmpty() ? "No se encontraron tiendas registradas" : "Se encontraron tiendas registradas",
-                                outlets
+                                new org.springframework.data.web.PagedModel<>(outlets)
                         )
                 );
     }
