@@ -42,3 +42,6 @@ env
 # Archivos de configuración con datos sensibles
 src/main/resources/application-local.properties
 
+# Enlace al proyecto frontend
+/AvalonMovilApp/
+

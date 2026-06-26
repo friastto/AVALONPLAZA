@@ -7,9 +7,11 @@ import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletInfoDto;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
+import org.frias.avalon.domain.user.application.dtos.response.modes.AdminAvalonModeDto;
 import org.frias.avalon.domain.user.application.dtos.response.modes.ClientModeDto;
 import org.frias.avalon.domain.user.application.dtos.response.modes.EmployeeModeDto;
 import org.frias.avalon.domain.user.application.dtos.response.modes.ModesResponseDto;
+import org.frias.avalon.domain.user.application.dtos.results.AdminAvalonResult;
 import org.frias.avalon.domain.user.application.dtos.results.ClientResult;
 import org.frias.avalon.domain.user.application.dtos.results.EmployeeResult;
 import org.frias.avalon.domain.user.application.dtos.results.ModesResult;
@@ -38,6 +40,7 @@ public class ModesMachineImpl implements ModesMachine {
 
         ClientResult clientResult = null;
         EmployeeResult employeeResult = null;
+        AdminAvalonResult adminAvalonResult = null;
 
         // --- Manejo del escenario de usuario sin roles asignados (cliente anónimo) ---
         if (byUser.isEmpty()) {
@@ -96,17 +99,35 @@ public class ModesMachineImpl implements ModesMachine {
                             role,
                             permissionEmployee
                     );
+                }else if (tree.isChildOf(role, "SYSTEM")) {
+                    // Si se encuentran múltiples roles de empleado, se tomará el último.
+                    // Si solo se espera un rol de empleado, esto es suficiente.
+                    List<String> permissionEmployee = permissionService.resolvePermissions(role);
+
+                    // Solo crear OutletInfoDto si outletDomain NO es nulo
+                    OutletInfoDto outletInfoDto = null;
+                    if (outletDomain != null) {
+                        outletInfoDto = new OutletInfoDto(outletDomain.getId(), outletDomain.getName());
+                    }
+
+                    adminAvalonResult = new AdminAvalonResult(
+                            true, // Asumiendo que true significa activo/disponible
+                            outletInfoDto, // Puede ser null si no hay outletDomain
+                            role,
+                            permissionEmployee
+                    );
                 }
             }
         }
 
-        return new ModesResult(clientResult, employeeResult);
+        return new ModesResult(clientResult, employeeResult,adminAvalonResult);
     }
 
     @Override
     public ModesResponseDto mapperToResponse(ModesResult mode) {
         ClientModeDto client = null;
         EmployeeModeDto employee = null;
+        AdminAvalonModeDto adminAvalon = null;
         if (mode.client() != null) {
             client = new ClientModeDto(
                     mode.client().type(),
@@ -129,11 +150,27 @@ public class ModesMachineImpl implements ModesMachine {
                     role,
                     mode.employee().permissions()
             );
+        }if (mode.adminAvalon() != null) {
+            OutletInfoDto outletDto = mode.adminAvalon().outlet(); // Esto puede ser null, lo cual es manejado por OutletInfoDto
+
+            MasterDataResponseDto role = new MasterDataResponseDto(
+                    mode.adminAvalon().role().getId(),
+                    mode.adminAvalon().role().getShortName(),
+                    mode.adminAvalon().role().getFullName()
+            );
+
+            adminAvalon = new AdminAvalonModeDto(
+                    mode.adminAvalon().status(),
+                    outletDto,
+                    role,
+                    mode.adminAvalon().permissions()
+            );
         }
 
         return new ModesResponseDto(
                 client,
-                employee
+                employee,
+                adminAvalon
         );
     }
 }

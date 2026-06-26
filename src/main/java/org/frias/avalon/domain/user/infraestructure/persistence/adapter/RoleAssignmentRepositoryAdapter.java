@@ -35,4 +35,11 @@ public class RoleAssignmentRepositoryAdapter implements RoleAssignmentRepository
 
         return roleAssignment.stream().map(mapper::toDomain).toList();
     }
+
+    @Override
+    public List<RoleAssignmentDomain> findByOutletId(Long outletId) {
+        List<RoleAssignment> roleAssignment = jpa.findByOutletId(outletId);
+
+        return roleAssignment.stream().map(mapper::toDomain).toList();
+    }
 }

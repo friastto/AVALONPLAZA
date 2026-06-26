@@ -45,7 +45,7 @@ public class PermissionService {
             case "ADMIN":
             case "ADMINTI":
                 permissions.add("FULL_ADMIN_ACCESS");
-                permissions.add("ASSIGN_ANY_ROLE"); // Nuevo permiso para ADMIN/ADMINTI
+                //permissions.add("ASSIGN_ANY_ROLE"); // Nuevo permiso para ADMIN/ADMINTI
                 break;
 
             case "GERGEN":

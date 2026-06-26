@@ -10,4 +10,6 @@ public interface RoleAssignmentRepositoryPort {
 
     List<RoleAssignmentDomain> findByUserAvalonId(Long id);
 
+    List<RoleAssignmentDomain> findByOutletId(Long outletId);
+
 }

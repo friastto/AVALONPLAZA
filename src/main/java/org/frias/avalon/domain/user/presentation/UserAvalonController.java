@@ -16,6 +16,8 @@ import org.frias.avalon.domain.user.application.usecase.find.FindByUserNameUseCa
 import org.frias.avalon.domain.user.application.usecase.find.GetAllUserAvalonUseCase;
 import org.frias.avalon.domain.user.application.usecase.login.LoginUseCase;
 import org.frias.avalon.domain.user.application.usecase.register.RegisterUserUseCase;
+import org.frias.avalon.domain.user.application.usecase.find.FindOutletStaffUseCase;
+import org.frias.avalon.domain.user.application.dtos.response.StaffMemberResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,8 +37,9 @@ public class UserAvalonController {
     private final AssignmentRoleConsumerSelfUseCase consumerSelfUseCase;
     private final AssignPersonToUserUseCase assignmentPerson;
     private final RegisterUserUseCase registerUserUseCase;
+    private final FindOutletStaffUseCase findOutletStaffUseCase;
 
-    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName, LoginUseCase loginUseCase, AssignmentRoleConsumerSelfUseCase consumerSelfUseCase, AssignPersonToUserUseCase assignmentPerson, RegisterUserUseCase registerUserUseCase) {
+    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName, LoginUseCase loginUseCase, AssignmentRoleConsumerSelfUseCase consumerSelfUseCase, AssignPersonToUserUseCase assignmentPerson, RegisterUserUseCase registerUserUseCase, FindOutletStaffUseCase findOutletStaffUseCase) {
         this.createUser = createUser;
         this.changeStatusUser = changeStatusUser;
         this.assignmentRole = assignmentRole;
@@ -46,6 +49,7 @@ public class UserAvalonController {
         this.consumerSelfUseCase = consumerSelfUseCase;
         this.assignmentPerson = assignmentPerson;
         this.registerUserUseCase = registerUserUseCase;
+        this.findOutletStaffUseCase = findOutletStaffUseCase;
     }
 
     @PostMapping("/register")
@@ -162,5 +166,16 @@ public class UserAvalonController {
                                 userUpdated
                         )
                 );
+    }
+
+    @GetMapping("/outlet/{outletId}/staff")
+    public ResponseEntity<ApiResponse<List<StaffMemberResponse>>> getOutletStaff(@PathVariable Long outletId) {
+        List<StaffMemberResponse> staff = findOutletStaffUseCase.execute(outletId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(
+                        200,
+                        "Personal de la tienda obtenido exitosamente",
+                        staff
+                ));
     }
 }

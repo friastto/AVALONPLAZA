@@ -4,6 +4,8 @@ import lombok.Getter;
 import org.frias.avalon.core.exeptions.DomainValidationException;
 import org.frias.avalon.core.validation.PassSecure;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class UserAvalonDomain {
     private Long id;
@@ -13,6 +15,8 @@ public class UserAvalonDomain {
     private String hashPassword;
     private Long statusId;
     private String statusCode;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public UserAvalonDomain(Long id, String userName, Long statusId) {
         this.id = id;

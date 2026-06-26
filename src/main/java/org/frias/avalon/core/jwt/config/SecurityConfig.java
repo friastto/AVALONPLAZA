@@ -41,8 +41,12 @@ public class SecurityConfig {
                         .requestMatchers("/avalon/user/{userId}/assignment/role").hasAnyRole("ADMINTI", "ADMIN", "GERGEN")
                         .requestMatchers("/avalon/user/assignment/role/consumer/self").permitAll()
 
-                        .requestMatchers("/avalon/outlet/**").hasAnyAuthority("ADMINTI")
+                        .requestMatchers("/avalon/outlet/**").permitAll()//.hasAnyAuthority("ADMINTI")
+                        /*.requestMatchers("/avalon/outlet/nearby/v1").permitAll()
+                        .requestMatchers("/avalon/outlet/nearby/light").permitAll()
+                        .requestMatchers("/avalon/outlet/{id}/detail").permitAll()
 
+                         */
 
                         .requestMatchers("/avalon/products/create").hasAnyAuthority("ADMINTI", "ADMIN", "GERGEN")
                         .requestMatchers("/avalon/products/barcode").hasAnyAuthority("ADMINTI", "ADMIN", "GERGEN","CJPRINCIPAL","CJTURNO")

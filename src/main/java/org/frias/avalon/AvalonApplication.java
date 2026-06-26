@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @SpringBootApplication
 public class AvalonApplication {
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         SpringApplication.run(AvalonApplication.class, args);
     }
 

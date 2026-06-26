@@ -2,15 +2,23 @@ package org.frias.avalon.domain.outlet.infraestructure.persistence.adapter;
 
 import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
+import org.frias.avalon.domain.outlet.domain.model.OutletLocationInfo;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 import org.frias.avalon.domain.outlet.infraestructure.mapper.LocationMapper;
 import org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper;
 import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
+import org.frias.avalon.domain.outlet.infraestructure.repository.OutletLightProjection;
+import org.frias.avalon.domain.outlet.application.dto.request.OutletSearchCriteria;
+import org.frias.avalon.domain.outlet.infraestructure.specification.OutletSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 public class OutletRepositoryAdapter implements OutletRepositoryPort {
@@ -46,8 +54,17 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
     }
 
     @Override
-    public OutletDomain findAll() {
-        return null;
+    public Page<OutletDomain> findAll(OutletSearchCriteria criteria, Pageable pageable) {
+        Specification<Outlet> spec = Specification.allOf(
+                OutletSpecification.hasName(criteria.name()),
+                OutletSpecification.hasNit(criteria.nit()),
+                OutletSpecification.hasCode(criteria.code()),
+                OutletSpecification.hasAddress(criteria.address()),
+                OutletSpecification.hasStatusId(criteria.statusId())
+        );
+
+        return jpa.findAll(spec, pageable)
+                .map(outletMapper::toDomain);
     }
 
     @Override
@@ -71,5 +88,13 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
         List<Outlet> outletsList = jpa.findNearByOrderByDistance(location.longitude(), location.latitude(), radius);
 
         return outletsList.stream().map(outletMapper::toDomain).toList();
+    }
+
+    @Override
+    public List<OutletLocationInfo> findNearbyByRadiusLight(Double latitude, Double longitude, int radius) {
+        List<OutletLightProjection> projections = jpa.findNearbyByRadiusLight(latitude, longitude, radius);
+        return projections.stream()
+                .map(p -> new OutletLocationInfo(p.getId(), p.getName(), p.getLatitude(), p.getLongitude()))
+                .collect(Collectors.toList());
     }
 }
