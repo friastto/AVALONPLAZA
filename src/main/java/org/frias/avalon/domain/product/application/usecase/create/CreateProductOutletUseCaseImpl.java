@@ -1,7 +1,9 @@
 package org.frias.avalon.domain.product.application.usecase.create;
 
 import lombok.RequiredArgsConstructor;
+import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.core.exeptions.DomainValidationException;
+import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
@@ -22,6 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+/**
+ * Caso de uso para registrar un producto en una tienda.
+ * Valida la consistencia de los datos, la existencia del código de barras,
+ * y aplica reglas estrictas de aislamiento de tienda (Tenant Isolation).
+ */
 @Service
 @RequiredArgsConstructor
 public class CreateProductOutletUseCaseImpl implements CreateProductOutletUseCase {
@@ -33,10 +40,23 @@ public class CreateProductOutletUseCaseImpl implements CreateProductOutletUseCas
     private final MasterTreeProvider masterTreeProvider;
     private final QuantityParserService quantityParserService;
     private final BarcodeRepositoryPort barcodeRepositoryPort;
+    private final CurrentUserProviderPort currentUserProvider;
 
     @Override
     @Transactional
     public ProductResponse execute(ProductNewDataRequest request) {
+
+        // --- 0. Validar Encapsulación de Tienda (Tenant Isolation) ---
+        boolean isSystemAdmin = currentUserProvider.hasRole("ROLE_ADMIN") || currentUserProvider.hasRole("ROLE_ADMINTI");
+        if (!isSystemAdmin) {
+            Long tenantOutletId = currentUserProvider.getCurrentOutletId();
+            if (tenantOutletId == null) {
+                throw new BusinessException("No se detectó una tienda asociada en el contexto del empleado actual.");
+            }
+            if (!tenantOutletId.equals(request.outletId())) {
+                throw new BusinessException("Acceso denegado: No tienes permisos para registrar productos en otra tienda.");
+            }
+        }
 
         String barcode = request.barCode();
         // Validación de existencia por código de barras

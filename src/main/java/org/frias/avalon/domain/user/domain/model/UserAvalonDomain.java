@@ -119,4 +119,21 @@ public class UserAvalonDomain {
         // Generar un NUEVO hash con la nueva contraseña y el nuevo salt
         this.hashPassword = PassSecure.hashPassword(newRawPassword, this.hashSalt);
     }
+
+    /**
+     * Cambia el estado operativo del usuario dentro del agregado.
+     * Aplica las invariantes de negocio antes de aceptar el nuevo estado.
+     *
+     * @param newStatusId El ID del nuevo estado maestro a aplicar (ej. 1=ACT, 4=INA).
+     * @throws DomainValidationException si el nuevo estado es nulo o idéntico al actual.
+     */
+    public void changeStatus(Long newStatusId) {
+        if (newStatusId == null) {
+            throw new DomainValidationException("El nuevo estado no puede ser nulo.");
+        }
+        if (newStatusId.equals(this.statusId)) {
+            throw new DomainValidationException("El usuario ya se encuentra en el estado indicado.");
+        }
+        this.statusId = newStatusId;
+    }
 }

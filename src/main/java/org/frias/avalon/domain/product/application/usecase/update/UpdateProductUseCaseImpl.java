@@ -1,8 +1,10 @@
 package org.frias.avalon.domain.product.application.usecase.update;
 
 import lombok.RequiredArgsConstructor;
+import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.core.exeptions.DomainValidationException;
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
+import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
@@ -18,6 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
+/**
+ * Caso de uso para actualizar los detalles de un producto existente.
+ * Valida la existencia, unidades de medida y aplica reglas de aislamiento de tienda (Tenant Isolation).
+ */
 @Service
 @RequiredArgsConstructor
 public class UpdateProductUseCaseImpl implements UpdateProductUseCase {
@@ -27,6 +33,7 @@ public class UpdateProductUseCaseImpl implements UpdateProductUseCase {
     private final QuantityParserService quantityParserService;
     private final UnitConversionService unitConversionService;
     private final ProductOutletMapper productOutletMapper;
+    private final CurrentUserProviderPort currentUserProvider;
 
     @Override
     @Transactional
@@ -34,6 +41,18 @@ public class UpdateProductUseCaseImpl implements UpdateProductUseCase {
         // 1. Buscar el producto existente
         ProductDomain productDomain = productOutletRepositoryPort.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("El producto con ID " + productId + " no existe."));
+
+        // --- 1.1. Validar Encapsulación de Tienda (Tenant Isolation) ---
+        boolean isSystemAdmin = currentUserProvider.hasRole("ROLE_ADMIN") || currentUserProvider.hasRole("ROLE_ADMINTI");
+        if (!isSystemAdmin) {
+            Long tenantOutletId = currentUserProvider.getCurrentOutletId();
+            if (tenantOutletId == null) {
+                throw new BusinessException("No se detectó una tienda asociada en el contexto del empleado actual.");
+            }
+            if (!tenantOutletId.equals(productDomain.getOutletId())) {
+                throw new BusinessException("Acceso denegado: No tienes permisos para actualizar productos de otra tienda.");
+            }
+        }
 
         // 2. Parsear y validar la cantidad usando el Application Service
         BigDecimal validQuantity = quantityParserService.parseAndValidate(request.stockQuantity());

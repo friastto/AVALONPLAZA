@@ -78,12 +78,12 @@ public class AssignmentRoleUseCaseImpl implements AssignmentRoleUseCase {
                 .findFirst()
                 .orElse(null);
 
-        MasterRoot currentRoleStatus = tree.getById(consumerRole.getStatus());
-
-
-        //se regunta si tiene el rol de empleado activo si no lanza la exepcion para qeu el suaurio lo active
-        if (!currentRoleStatus.isActive("ACT"))
-            throw new IllegalStateException("este usuario tiene un rol de empleado desactivado");
+        if (consumerRole != null) {
+            MasterRoot currentRoleStatus = tree.getById(consumerRole.getStatus());
+            //se regunta si tiene el rol de empleado activo si no lanza la exepcion para qeu el suaurio lo active
+            if (!currentRoleStatus.isActive("ACT"))
+                throw new IllegalStateException("este usuario tiene un rol de empleado desactivado");
+        }
 
         OutletDomain outletScope;
 

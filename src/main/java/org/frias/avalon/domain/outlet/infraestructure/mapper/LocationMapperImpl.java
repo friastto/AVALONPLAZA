@@ -48,7 +48,7 @@ public class LocationMapperImpl implements LocationMapper {
 
     @Override
     public LocationDto domainToDto(LocationDomain domain) {
-        return new LocationDto(domain.longitude(), domain.latitude());
+        return new LocationDto(domain.latitude(), domain.longitude());
     }
 
 }

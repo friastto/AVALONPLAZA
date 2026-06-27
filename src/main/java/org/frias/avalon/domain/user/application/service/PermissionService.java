@@ -54,11 +54,27 @@ public class PermissionService {
                 permissions.add("POS_SALES");
                 permissions.add("MANAGE_INVENTORY");
                 permissions.add("ASSIGN_OPERATIVE_ROLE");
-
+                
+                // Nuevos permisos enriquecidos
+                permissions.add("MANAGE_USERS");          // Crear, editar, suspender y eliminar cuentas de empleados
+                permissions.add("CRITICAL_INVENTORY");     // Ajustar stock a mano, cambiar precios y márgenes
+                permissions.add("FINANCE_REPORTS");        // Ver reportes de ventas, ganancias, gastos
+                permissions.add("MANAGE_SUPPLIERS");       // Registrar proveedores, órdenes de compra y facturas
+                permissions.add("SYSTEM_CONFIG");          // Datos de factura, impresoras, categorías, básculas
+                permissions.add("STORE_OPERATIONS");       // Apertura/cierre local, arqueos y recepción de proveedores
+                permissions.add("CASHIER_AUTHORIZATION");   // Autorización de descuentos o cancelaciones en caja
+                
+                // El gerente también tiene acceso a las tareas del cajero
+                permissions.add("RECEIVE_INVENTORY");      // Recepción de mercancía de proveedores
+                permissions.add("QUERY_PRODUCTS");         // Consultar precios, stock y alertas
+                permissions.add("EXPIRY_CONTROL");         // Control de fechas de caducidad
                 break;
-
+ 
             case "CJTURNO":
-                permissions.add("POS_SALES");
+                permissions.add("POS_SALES");              // Apertura/cierre turno, escanear, cobrar, emitir ticket
+                permissions.add("RECEIVE_INVENTORY");      // Recepción de mercancía
+                permissions.add("QUERY_PRODUCTS");         // Consultar precios y stock
+                permissions.add("EXPIRY_CONTROL");         // Control de vencimientos
                 break;
 
             case "CSTNDR":

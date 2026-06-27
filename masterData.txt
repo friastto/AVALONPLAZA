@@ -1,0 +1,338 @@
+
+CODIGOS DE COMMIT
+feat → nueva funcionalidad ✔ (tu caso)
+fix → bug
+refactor → cambio interno
+perf → performance
+test → tests
+
+
+postgres SQL
+
+elimina la base de atos en equema 
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+
+
+En posgres usar inicialmente para insertar los datos de estado principales.
+
+INSERT INTO master_data (full_name, short_name, parent_id, status_id)
+VALUES 
+	( 'ACTIVO',  'ACT', (select id from master_data where short_name ='STSGEN' ), ( select id from master_data where short_name = 'ACT'));
+
+
+
+INSERT INTO master_data (full_name, short_name, parent_id, status_id)
+VALUES 
+	('TYPE_ESTADOS', 'ROOTSTS', null, ( select id from master_data where short_name = 'ACT'));
+	
+	INSERT INTO master_data (full_name, short_name, parent_id, status_id)
+	VALUES 
+	('ESTADOS_GENERALES', 'STSGEN',(select id from master_data where short_name = 'ROOTSTS' ), ( select id from master_data where short_name = 'ACT'));
+
+UPDATE master_data
+SET 
+    status_id = (SELECT s.id FROM master_data s WHERE s.short_name = 'ACT'),
+    parent_id = (SELECT p.id FROM master_data p WHERE p.short_name = 'STSGEN')
+WHERE short_name = 'ACT'	
+
+			
+INSERT INTO master_data (full_name, short_name, parent_id, status_id)
+VALUES 
+	('INACTIVO',  'INA',(select id from master_data where short_name = 'STSGEN' ), ( select id from master_data where short_name = 'ACT')),
+	( 'SUSPENDIDO',  'SUS', (select id from master_data where short_name = 'STSGEN' ), (select id from master_data where short_name = 'ACT')),
+	('ELIMINADO',  'DEL', (select id from master_data where short_name = 'STSGEN' ), ( select id from master_data where short_name = 'ACT'))
+
+
+
+
+
+
+
+******** no tocar es una actualización que ya se aplico a la bd.
+
+-- 1. Insertar los tipos principales (Padres)
+INSERT INTO master_data (full_name, short_name, parent_id, status_id)
+VALUES 
+    ('TYPE_SISTEM',   'SYSTEM', (SELECT id FROM master_data WHERE short_name = 'ROL'), (SELECT id FROM master_data WHERE short_name = 'ACT')),
+    ('TYPE_EMPLOYEE', 'EMP',    (SELECT id FROM master_data WHERE short_name = 'ROL'), (SELECT id FROM master_data WHERE short_name = 'ACT')),
+    ('TYPE_COSUMER',  'CONS',   (SELECT id FROM master_data WHERE short_name = 'ROL'), (SELECT id FROM master_data WHERE short_name = 'ACT'));
+
+-- 2. Update para SYSTEM (Este estaba bien, pero lo mantenemos)
+UPDATE master_data
+SET parent_id = (SELECT id FROM master_data WHERE short_name = 'SYSTEM')
+WHERE short_name = 'ADMIN';
+
+-- 3. Update para EMP (Corregido con IN)
+UPDATE master_data
+SET parent_id = (SELECT id FROM master_data WHERE short_name = 'EMP')
+WHERE short_name IN ('DIREC', 'GERENTE', 'OPT');
+
+-- 4. Update para CONS (Corregido con IN)
+UPDATE master_data
+SET parent_id = (SELECT id FROM master_data WHERE short_name = 'CONS')
+WHERE short_name IN ('CLIENTE', 'USUARIO'); 
+-- Nota: 'OPT' estaba en ambos updates en tu código original, 
+-- recuerda que un registro solo puede tener un parent_id.
+
+
+
+en la api 
+
+[
+	{"fullName": "TYPE_ESTADOS", "shortName": "ROOTSTS", "parentShortName": null, "statusId": "ACT"},
+
+		{"fullName": "ESTADOS_GENERALS", "shortName": "STSGEN", "parentShortName": "ROOTSTS","type";"STATUS", "statusId": "ACT"},
+
+			{"fullName": "ACTIVO", "shortName": "ACT", "parentShortName": "STSGEN", "statusId":"ACT"},
+			{"fullName": "INACTIVO", "shortName": "INA", "parentShortName": "STSGEN", "statusId": "ACT"},
+			{"fullName": "SUSPENDIDO", "shortName": "SUS", "parentShortName": "STSGEN", "statusId": "ACT"},
+			{"fullName": "ELIMINADO", "shortName": "DEL", "parentShortName": "STSGEN", "statusId": "ACT"},
+
+		{"fullName": "STS_USERS", "shortName": "USR_STS", "parentShortName":"ROOTSTS", "statusId": "ACT"},
+
+			{"fullName": "BLOQUEADO", "shortName": "LOKUSER", "parentShortName": "USR_STS", "statusId": "ACT"},
+			{"fullName": "PENDIENTE_VERIFICACION", "shortName": "PND", "parentShortName": "USR_STS", "statusId": "ACT"},
+			{"fullName": "VERIFICADO", "shortName": "VER", "parentShortName": "USR_STS", "statusId": "ACT"},
+			{"fullName": "BANEADO", "shortName": "BAN", "parentShortName": "USR_STS", "statusId": "ACT"},
+			{"fullName": "ANONIMO", "shortName": "ANY", "parentShortName": "USR_STS", "statusId": "ACT"},
+
+
+		{"fullName": "STS_LOGISTICS", "shortName": "STSLOGIS", "parentShortName": "ROOTSTS", "statusId": "ACT"},
+
+			{"fullName": "PENDIENTE", "shortName": "PEN", "parentShortName": "STSLOGIS", "statusId": "ACT"},
+			{"fullName": "EN_PROCESO", "shortName": "PRO", "parentShortName": "STSLOGIS", "statusId": "ACT"},
+			{"fullName": "COMPLETADO", "shortName": "COM", "parentShortName": "STSLOGIS", "statusId": "ACT"},
+			{"fullName": "CANCELADO", "shortName": "CAN", "parentShortName": "STSLOGIS", "statusId": "ACT"},
+			{"fullName": "RECHAZADO", "shortName": "REC", "parentShortName": "STSLOGIS", "statusId": "ACT"},
+
+		{"fullName": "STS_REVISION", "shortName": "STSREV", "parentShortName": "ROOTSTS", "statusId": "ACT"},
+
+			{"fullName": "BORRADOR", "shortName": "DFT", "parentShortName": "STSREV", "statusId": "ACT"},
+			{"fullName": "EN_REVISION", "shortName": "RVW", "parentShortName": "STSREV", "statusId": "ACT"},
+			{"fullName": "APROBADO", "shortName": "APR", "parentShortName": "STSREV", "statusId": "ACT"},
+			{"fullName": "OBSERVADO", "shortName": "OBS", "parentShortName": "STSREV", "statusId": "ACT"},
+		
+	
+		{"fullName": "STS_SISTEMA", "shortName": "STSSYS", "parentShortName": "ROOTSTS", "statusId": "ACT"},
+
+			{"fullName": "SYSTEM_BLOQUEADO", "shortName": "LOKSIS", "parentShortName": "STSSYS", "statusId": "ACT"},
+			{"fullName": "ERROR", "shortName": "ERR", "parentShortName": "STSSYS", "statusId": "ACT"},
+			{"fullName": "MANTENIMIENTO", "shortName": "MNT", "parentShortName": "STSSYS", "statusId": "ACT"},
+			{"fullName": "SINCRONIZADO", "shortName": "SYNC", "parentShortName": "STSSYS", "statusId": "ACT"},
+
+
+	{"fullName": "TYPE_GENERO", "shortName": "GEN", "parentShortName": null, "statusId": "ACT"},
+
+		{"fullName": "MASCULINO", "shortName": "M", "parentShortName": "GEN", "statusId": "ACT"},
+		{"fullName": "FEMENINO", "shortName": "F", "parentShortName": "GEN", "statusId": "ACT"},
+		{"fullName": "NO_BINARIO", "shortName": "NBIN", "parentShortName": "GEN", "statusId": "ACT"},
+		{"fullName": "PREFIERO_NO_DECIRLO", "shortName": "SINDET", "parentShortName": "GEN", "statusId": "ACT"},
+
+	{"fullName": "TYPE_IDENTIFICACION", "shortName": "IDENT", "parentShortName": null, "statusId": "ACT"},
+
+   		 {"fullName": "CEDULA_CIUDADANIA", "shortName": "CC", "parentShortName": "IDENT", "statusId": "ACT"},
+    		{"fullName": "TARJETA_IDENTIDAD", "shortName": "TI", "parentShortName": "IDENT", "statusId": "ACT"},
+    		{"fullName": "CEDULA_EXTRANJERIA", "shortName": "CE", "parentShortName": "IDENT", "statusId": "ACT"},
+    		{"fullName": "PASAPORTE", "shortName": "PAS", "parentShortName": "IDENT", "statusId": "ACT"},
+    		{"fullName": "REGISTRO_CIVIL", "shortName": "RC", "parentShortName": "IDENT", "statusId": "ACT"},
+    		{"fullName": "NIT", "shortName": "NIT", "parentShortName": "IDENT", "statusId": "ACT"},
+    		{"fullName": "LICENCIA_CONDUCCION", "shortName": "LICON", "parentShortName": "IDENT", "statusId": "ACT"}
+
+
+	{"fullName": "TYPE_ALIMENTOS", "shortName": "ALIM", "parentShortName": null, "statusId": "ACT"},
+
+		{"fullName": "CARNES", "shortName": "CARN", "parentShortName": "ALIM", "statusId": "ACT"},
+		{"fullName": "CARBOHIDRATOS", "shortName": "CARB", "parentShortName": "ALIM", "statusId": "ACT"},
+		{"fullName": "VEGETALES", "shortName": "VEGE", "parentShortName": "ALIM", "statusId": "ACT"},
+		{"fullName": "FRUTAS", "shortName": "FRUT", "parentShortName": "ALIM", "statusId": "ACT"},
+		{"fullName": "LACTEOS", "shortName": "LACT", "parentShortName": "ALIM", "statusId": "ACT"},
+		{"fullName": "ACEITES_Y_GRASAS", "shortName": "ACEIGRA", "parentShortName": "ALIM", "statusId": "ACT"},
+		{"fullName": "PESCADOS_Y_MARISCOS", "shortName": "PESMAR", "parentShortName": "ALIM", "statusId": "ACT"},
+		{"fullName": "GRANOS", "shortName": "GRAN", "parentShortName": "ALIM", "statusId": "ACT"},
+		{"fullName": "CONDIMENTOS_Y_ESPECIES", "shortName": "CONDESP", "parentShortName": "ALIM", "statusId": "ACT"},
+
+
+
+	{"fullName": "TYPE_BEBIDAS", "shortName": "BEBID", "parentShortName": null, "statusId": "ACT"},
+
+		{"fullName": "AGUAS", "shortName": "AGUA", "parentShortName": "BEBID", "statusId": "ACT"},
+		{"fullName": "JUGOS", "shortName": "JUGO", "parentShortName": "BEBID", "statusId": "ACT"},
+		{"fullName": "REFRESCOS_Y_GACEOSAS", "shortName": "REFRIGA", "parentShortName": "BEBID", "statusId": "ACT"},
+		{"fullName": "INFUCIONES", "shortName": "INFUCIONES", "parentShortName": "BEBID", "statusId": "ACT"},
+		{"fullName": "IZOTONICAS_Y_ENERGIZANTES", "shortName": "IZODEP", "parentShortName": "BEBID", "statusId": "ACT"},
+		{"fullName": "ALCOLICAS_DESTILADAS", "shortName": "ALCOL", "parentShortName": "BEBID", "statusId": "ACT"},
+		{"fullName": "FERMENTADAS", "shortName": "FERM", "parentShortName": "BEBID", "statusId": "ACT"},
+
+	{"fullName": "TYPE_UNIDAD_MEDIDA", "shortName": "UNIT", "parentShortName": null, "statusId": "ACT"},
+
+		{"fullName": "UNIDAD", "shortName": "UND", "parentShortName": "UNIT", "statusId": "ACT"},
+
+		{"fullName": "TYPE_MASA", "shortName": "MASA", "parentShortName": "UNIT", "statusId": "ACT"},
+
+			{"fullName": "TONELADAS", "shortName": "TON", "parentShortName": "MASA", "statusId": "ACT"},
+			{"fullName": "KILOGRAMOS", "shortName": "KG", "parentShortName": "MASA", "statusId": "ACT"},
+			{"fullName": "LIBRAS", "shortName": "LB", "parentShortName": "MASA", "statusId": "ACT"},
+			{"fullName": "GRAMOS", "shortName": "G", "parentShortName": "MASA", "statusId": "ACT"},
+			{"fullName": "ONZA", "shortName": "OZ", "parentShortName": "MASA", "statusId": "ACT"},
+			{"fullName": "ARROBA", "shortName": "@", "parentShortName": "MASA", "statusId": "ACT"},
+			{"fullName": "QUINTAL_COMERCIAL", "shortName": "QQCM", "parentShortName": "MASA", "statusId": "ACT"},
+
+		{"fullName": "TYPE_VOLUMEN", "shortName": "VOL", "parentShortName": "UNIT", "statusId": "ACT"},
+
+			{"fullName": "MILILITROS", "shortName": "ML", "parentShortName": "VOL", "statusId": "ACT"},
+			{"fullName": "CENTILITRO", "shortName": "CL", "parentShortName": "VOL", "statusId": "ACT"},
+			{"fullName": "LITRO", "shortName": "L", "parentShortName": "VOL", "statusId": "ACT"},
+			{"fullName": "METRO_CUBICO", "shortName": "M3", "parentShortName": "VOL", "statusId": "ACT"},
+			{"fullName": "ONZA_LIQUIDA", "shortName": "FL", "parentShortName": "VOL", "statusId": "ACT"},
+			{"fullName": "PINTA", "shortName": "PT", "parentShortName": "VOL", "statusId": "ACT"},
+			{"fullName": "CUATO", "shortName": "GT", "parentShortName": "VOL", "statusId": "ACT"},
+			{"fullName": "GALON", "shortName": "GAL", "parentShortName": "VOL", "statusId": "ACT"},
+			{"fullName": "BARRIL", "shortName": "BBL", "parentShortName": "VOL", "statusId": "ACT"},
+
+
+
+	{"fullName": "TYPE_ROL", "shortName": "ROL", "parentShortName": null, "statusId": "ACT"},
+
+
+		{"fullName": "TYPE_SISTEM", "shortName": "SISTEM", "parentShortName": "ROL", "statusId": "ACT"},
+
+
+			{"fullName": "ADMINISTRADOR_SISTEMA", "shortName": "ADMIN", "parentShortName": "SISTEM", "statusId": "ACT"},
+
+				{"fullName": "ADMIN_INFRAESTRUCTURA_TI", "shortName": "ADMINTI", "parentShortName": "ADMIN", "statusId": "ACT"},
+				{"fullName": "ADMIN_BASE_DE_DATOS", "shortName": "ADMINBD", "parentShortName": "ADMIN", "statusId": "ACT"},
+				{"fullName": "ADMIN_SEGURIDAD_TI", "shortName": "ADMINSEGTI", "parentShortName": "ADMIN", "statusId": "ACT"},
+
+		{"fullName": "TYPE_EMPLOYEE", "shortName": "EMP", "parentShortName": "ROL", "statusId": "ACT"},
+
+		
+			{"fullName": "TYPE_DIRECTIVO", "shortName": "DIREC", "parentShortName": "EMP", "statusId": "ACT"},
+
+				{"fullName": "FUNDADOR", "shortName": "FUN", "parentShortName": "DIREC", "statusId": "ACT"},
+				{"fullName": "DIRECTOR_OPERATIVO", "shortName": "DIROP", "parentShortName": "DIREC", "statusId": "ACT"},
+				{"fullName": "DIRECTOR_REGIONAL", "shortName": "DIRREG", "parentShortName": "DIREC", "statusId": "ACT"},
+				{"fullName": "SOCIO", "shortName": "SOCIO", "parentShortName": "DIREC", "statusId": "ACT"},
+
+
+			{"fullName": "TYPE_GERENTES", "shortName": "GERENTE", "parentShortName": "EMP", "statusId": "ACT"},
+
+				{"fullName": "GERENTE_GENERAL", "shortName": "GERGEN", "parentShortName": "GERENTE", "statusId": "ACT"},
+				{"fullName": "GERENTE_TURNO", "shortName": "GERTUR", "parentShortName": "GERENTE", "statusId": "ACT"},
+				{"fullName": "GERENTE_PISO", "shortName": "GERPI", "parentShortName": "GERENTE", "statusId": "ACT"},
+				{"fullName": "GERENTE_INVERCION_Y_ALMACEN", "shortName": "GERINVAL", "parentShortName": "GERENTE", "statusId": "ACT"},
+				{"fullName": "GERENTE_SERVICIO_AL_CLIENTE", "shortName": "GERSERVCLI", "parentShortName": "GERENTE", "statusId": "ACT"},
+				{"fullName": "GERENTE_OPERACION_LOGISTICA", "shortName": "GEROPLOGIS", "parentShortName": "GERENTE", "statusId": "ACT"},
+
+		
+			{"fullName": "TYPE_OPERATIVO", "shortName": "OPT", "parentShortName": "EMP", "statusId": "ACT"},
+
+				{"fullName": "CAJERO_PRINCIPAL", "shortName": "CJPRINCIPAL", "parentShortName": "OPT", "statusId": "ACT"},
+				{"fullName": "CAJERO_TURNO", "shortName": "CJTURNO", "parentShortName": "OPT", "statusId": "ACT"},
+				{"fullName": "VENDEDOR_PISO", "shortName": "VNDPISO", "parentShortName": "OPT", "statusId": "ACT"},
+				{"fullName": "VENDEDOR_ESPECIALIZADO", "shortName": "VNDESP", "parentShortName": "OPT", "statusId": "ACT"},
+				{"fullName": "VENDEDOR_PREVENTISTA", "shortName": "VNDPREVEN", "parentShortName": "OPT", "statusId": "ACT"},
+				{"fullName": "CAJERO_PUNTO_ENTREGA", "shortName": "CJPUNENTRY", "parentShortName": "OPT", "statusId": "ACT"},
+				{"fullName": "SUPERVISOR", "shortName": "SUPERVISOR", "parentShortName": "OPT", "statusId": "ACT"},
+
+		{"fullName": "TYPE_COSUMER", "shortName": "CONS", "parentShortName": "ROL", "statusId": "ACT"},
+
+
+			{"fullName": "TYPE_CLIENTE", "shortName": "CLIENTE", "parentShortName": "CONS", "statusId": "ACT"},
+
+				{"fullName": "ESTANDAR", "shortName": "CSTNDR", "parentShortName": "CLIENTE", "statusId": "ACT"},
+				{"fullName": "FRECUENTE", "shortName": "CFREC", "parentShortName": "CLIENTE", "statusId": "ACT"},
+				{"fullName": "VIP", "shortName": "CVIP", "parentShortName": "CLIENTE", "statusId": "ACT"},
+				{"fullName": "PREMIUM", "shortName": "CPREM", "parentShortName": "CLIENTE", "statusId": "ACT"},
+				{"fullName": "CORPORATIVO", "shortName": "CCORP", "parentShortName": "CLIENTE", "statusId": "ACT"},
+				{"fullName": "SUBCRIPCION", "shortName": "CSUBS", "parentShortName": "CLIENTE", "statusId": "ACT"},
+				{"fullName": "REFERIDO", "shortName": "CREF", "parentShortName": "CLIENTE", "statusId": "ACT"},
+
+			{"fullName": "TYPE_USUARIOS", "shortName": "USUARIO", "parentShortName": "CONS", "statusId": "ACT"},
+
+				{"fullName": "VISITANTE_WEB", "shortName": "VISWEB", "parentShortName": "USUARIO", "statusId": "ACT"},
+				{"fullName": "VISITANTE_APP", "shortName": "VISAPP", "parentShortName": "USUARIO", "statusId": "ACT"},
+				{"fullName": "PROSPECTO", "shortName": "VISPROSPEC", "parentShortName": "USUARIO", "statusId": "ACT"},
+				{"fullName": "LOCAL", "shortName": "LOCAL", "parentShortName": "USUARIO", "statusId": "ACT"},
+				{"fullName": "INVITADO", "shortName": "INVITADO", "parentShortName": "USUARIO", "statusId": "ACT"},
+				{"fullName": "USER_ANONIMO", "shortName": "USANONIMO", "parentShortName": "USUARIO", "statusId": "ACT"},
+
+
+	{"fullName": "TYPE_PROMOTION", "shortName": "PROM", "parentShortName": null, "statusId": "ACT"},
+
+		{"fullName": "TYPE_CAMPANAS", "shortName": "CAMP", "parentShortName": "PROM", "statusId": "ACT"},
+
+			{"fullName": "CYBER_DAY", "shortName": "CDAY", "parentShortName": "CAMP", "statusId": "ACT"},
+			{"fullName": "BLACK_FRIDAY", "shortName": "BCKDAYS", "parentShortName": "CAMP", "statusId": "ACT"},
+			{"fullName": "FREE_DAY", "shortName": "FRDAY", "parentShortName": "CAMP", "statusId": "ACT"},
+			{"fullName": "HOT_SALE", "shortName": "HOTSAL", "parentShortName": "CAMP", "statusId": "ACT"},
+			{"fullName": "CRISMAS_SALE", "shortName": "CSALE", "parentShortName": "CAMP", "statusId": "ACT"},
+			{"fullName": "BACK_SCHOOL", "shortName": "BKSCH", "parentShortName": "CAMP", "statusId": "ACT"},
+
+		{"fullName": "TYPE_DESCUENTO_MANUAL", "shortName": "DESMAN", "parentShortName": "PROM", "statusId": "ACT"},
+
+			{"fullName": "DESC_PORCENTUAL", "shortName": "DESPOR", "parentShortName": "DESMAN", "statusId": "ACT"},
+			{"fullName": "DESC_MONTO_FIJO", "shortName": "DESMONT", "parentShortName": "DESMAN", "statusId": "ACT"},
+			{"fullName": "PRECIO_ESPECIAL", "shortName": "PREESP", "parentShortName": "DESMAN", "statusId": "ACT"},
+			{"fullName": "DIA_SIN_IVA", "shortName": "DAYOFFIVA", "parentShortName": "DESMAN", "statusId": "ACT"},
+
+		{"fullName": "TYPE_DESCUENTO_EN_VOLUMNEN", "shortName": "DESVOL", "parentShortName": "PROM", "statusId": "ACT"},
+
+			{"fullName": "COMPRA_2_PAGA_1", "shortName": "2X1", "parentShortName": "DESVOL", "statusId": "ACT"},
+			{"fullName": "COMPRA_3_PAGA_2", "shortName": "2X3", "parentShortName": "DESVOL", "statusId": "ACT"},
+			{"fullName": "SEGUNDA_UNIDAD_CON_DESCUENTO", "shortName": "2DAPCT", "parentShortName": "DESVOL", "statusId": "ACT"},
+			{"fullName": "LLEVA_X_PAGA_Y", "shortName": "LLEVXPGY", "parentShortName": "DESVOL", "statusId": "ACT"},
+
+	{"fullName": "TYPE_METODO_DE_PAGO", "shortName": "MPG", "parentShortName": null, "statusId": "ACT"},
+
+		{"fullName": "EFECTIVO", "shortName": "EFE", "parentShortName": "MPG", "statusId": "ACT"}
+
+	{"fullName": "TYPE_STAFF", "shortName": "STAFF", "parentShortName": null, "statusId": "ACT"},
+
+			{"fullName": "CONSUMER", "shortName": "CONSMR", "parentShortName": "STAFF", "statusId": "ACT"},
+			{"fullName": "EMPLOYEE", "shortName": "EMPL", "parentShortName": "STAFF", "statusId": "ACT"},
+
+
+]
+
+activar posgist
+CREATE EXTENSION IF NOT EXISTS postgis;
+SELECT PostGIS_Version();
+SELECT * FROM pg_extension WHERE extname = 'postgis';
+CREATE INDEX idx_outlet_location_geog
+ON outlet
+USING GIST ((location::geography));
+
+
+
+
+{"fullName":"ROL_RAIZ","shortName":"ROL","parentShortName":null,"statusId":"ACT"}
+{"fullName":"ADMIN_SISTEMA","shortName":"ADMINSYS","parentShortName":"ROL","statusId":"ACT"}
+
+{"fullName":"JERARQUIA_OUTLET","shortName":"OUTLET","parentShortName":"ROL","statusId":"ACT"}
+
+{"fullName":"DUENO_OUTLET","shortName":"DUENO","parentShortName":"OUTLET","statusId":"ACT"}
+
+{"fullName":"GESTION_OUTLET","shortName":"GESTION","parentShortName":"DUENO","statusId":"ACT"}
+{"fullName":"GERENTE_GENERAL","shortName":"GERGEN","parentShortName":"GESTION","statusId":"ACT"}
+{"fullName":"GERENTE_TURNO","shortName":"GERTUR","parentShortName":"GESTION","statusId":"ACT"}
+{"fullName":"GERENTE_PISO","shortName":"GERPISO","parentShortName":"GESTION","statusId":"ACT"}
+{"fullName":"GERENTE_LOGISTICA","shortName":"GERLOG","parentShortName":"GESTION","statusId":"ACT"}
+
+{"fullName":"OPERACION_OUTLET","shortName":"OPERACION","parentShortName":"DUENO","statusId":"ACT"}
+{"fullName":"CAJERO_PRINCIPAL","shortName":"CAJPRIN","parentShortName":"OPERACION","statusId":"ACT"}
+{"fullName":"CAJERO_TURNO","shortName":"CAJTUR","parentShortName":"OPERACION","statusId":"ACT"}
+{"fullName":"VENDEDOR_PISO","shortName":"VENDPISO","parentShortName":"OPERACION","statusId":"ACT"}
+{"fullName":"VENDEDOR_ESPECIALIZADO","shortName":"VENDESP","parentShortName":"OPERACION","statusId":"ACT"}
+{"fullName":"VENDEDOR_PREVENTISTA","shortName":"VENDPREV","parentShortName":"OPERACION","statusId":"ACT"}
+{"fullName":"CAJERO_PUNTO_ENTREGA","shortName":"CAJENTREGA","parentShortName":"OPERACION","statusId":"ACT"}
+{"fullName":"SUPERVISOR","shortName":"SUPERV","parentShortName":"OPERACION","statusId":"ACT"}
+
+{"fullName":"CLIENTE_RAIZ","shortName":"CLIENTE","parentShortName":"ROL","statusId":"ACT"}
+{"fullName":"CLIENTE_ESTANDAR","shortName":"CLIEST","parentShortName":"CLIENTE","statusId":"ACT"}
+{"fullName":"CLIENTE_FRECUENTE","shortName":"CLIFREC","parentShortName":"CLIENTE","statusId":"ACT"}
+{"fullName":"CLIENTE_VIP","shortName":"CLIVIP","parentShortName":"CLIENTE","statusId":"ACT"}
+{"fullName":"CLIENTE_PREMIUM","shortName":"CLIPREM","parentShortName":"CLIENTE","statusId":"ACT"}
+{"fullName":"CLIENTE_CORPORATIVO","shortName":"CLICORP","parentShortName":"CLIENTE","statusId":"ACT"}
+{"fullName":"CLIENTE_SUSCRIPCION","shortName":"CLISUB","parentShortName":"CLIENTE","statusId":"ACT"}
+{"fullName":"CLIENTE_REFERIDO","shortName":"CLIREF","parentShortName":"CLIENTE","statusId":"ACT"}
