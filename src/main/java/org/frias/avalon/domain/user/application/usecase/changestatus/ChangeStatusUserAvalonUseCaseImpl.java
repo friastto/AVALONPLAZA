@@ -125,6 +125,10 @@ public class ChangeStatusUserAvalonUseCaseImpl implements ChangeStatusUserAvalon
             if (targetRole != null) {
                 targetUserRoleCode = targetRole.getShortName();
             }
+
+            // Actualizar el estado de la asignación del rol para reflejarlo en la lista de personal de la tienda
+            matchingAssignment.changeStatus(request.statusId());
+            roleAssignmentPort.create(matchingAssignment);
         } else {
             // Un administrador global tiene acceso a cualquier tienda
             List<RoleAssignmentDomain> targetAssignments = roleAssignmentPort.findByUserAvalonId(targetUser.getId());
@@ -136,6 +140,12 @@ public class ChangeStatusUserAvalonUseCaseImpl implements ChangeStatusUserAvalon
                 MasterRoot targetRole = tree.getById(firstAssignment.getRoleId());
                 if (targetRole != null) {
                     targetUserRoleCode = targetRole.getShortName();
+                }
+
+                // Desactivar todas sus asignaciones en las tiendas
+                for (RoleAssignmentDomain assignment : targetAssignments) {
+                    assignment.changeStatus(request.statusId());
+                    roleAssignmentPort.create(assignment);
                 }
             } else {
                 tenantOutletId = null;

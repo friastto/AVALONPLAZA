@@ -36,7 +36,7 @@ public class RoleAssignmentDomain {
         this.status = status;
     }
 
-public static RoleAssignmentDomain create(Long userId, Long roleId, Long outletId, Long statusId) {
+    public static RoleAssignmentDomain create(Long userId, Long roleId, Long outletId, Long statusId) {
 
         if (userId == null || roleId == null || statusId == null) {
             throw new IllegalArgumentException("Campos obligatorios faltantes");
@@ -48,9 +48,18 @@ public static RoleAssignmentDomain create(Long userId, Long roleId, Long outletI
                 outletId,
                 statusId
         );
-
-
     }
 
-
+    /**
+     * Cambia el estado de la asignación del rol.
+     *
+     * @param newStatus El nuevo ID del estado maestro.
+     */
+    public void changeStatus(Long newStatus) {
+        if (newStatus == null) {
+            throw new IllegalArgumentException("El estado no puede ser nulo");
+        }
+        this.status = newStatus;
+    }
 }
+

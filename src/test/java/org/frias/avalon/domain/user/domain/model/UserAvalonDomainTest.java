@@ -74,4 +74,43 @@ class UserAvalonDomainTest {
         assertEquals(hashPassword, user.getHashPassword());
         assertEquals(statusId, user.getStatusId());
     }
+
+    @Test
+    @DisplayName("Debería cambiar el estado correctamente si el nuevo estado es diferente y no nulo")
+    void shouldChangeStatusSuccessfully() {
+        // Arrange
+        UserAvalonDomain user = UserAvalonDomain.create("username", "salt", "pwd", 1L);
+
+        // Act
+        user.changeStatus(2L);
+
+        // Assert
+        assertEquals(2L, user.getStatusId());
+    }
+
+    @Test
+    @DisplayName("Debería lanzar excepción si se intenta cambiar a un estado nulo")
+    void shouldThrowExceptionWhenChangingStatusToNull() {
+        // Arrange
+        UserAvalonDomain user = UserAvalonDomain.create("username", "salt", "pwd", 1L);
+
+        // Act & Assert
+        Exception exception = assertThrows(org.frias.avalon.core.exeptions.DomainValidationException.class, () -> {
+            user.changeStatus(null);
+        });
+        assertEquals("El nuevo estado no puede ser nulo.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Debería lanzar excepción si se intenta cambiar al mismo estado actual")
+    void shouldThrowExceptionWhenChangingToSameStatus() {
+        // Arrange
+        UserAvalonDomain user = UserAvalonDomain.create("username", "salt", "pwd", 1L);
+
+        // Act & Assert
+        Exception exception = assertThrows(org.frias.avalon.core.exeptions.DomainValidationException.class, () -> {
+            user.changeStatus(1L);
+        });
+        assertEquals("El usuario ya se encuentra en el estado indicado.", exception.getMessage());
+    }
 }

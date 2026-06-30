@@ -69,9 +69,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     if (username != null && (currentAuth == null || currentAuth instanceof AnonymousAuthenticationToken)) {
 
-                        // 5. Creamos autoridades desde los roles del token de forma individual
+                        // 5. Creamos autoridades desde los roles del token de forma individual (con prefijo ROLE_)
                         List<GrantedAuthority> authorities = rolesFromJwt.stream()
-                                .map(role -> new SimpleGrantedAuthority(role))
+                                .map(role -> new SimpleGrantedAuthority(role.startsWith("ROLE_") ? role : "ROLE_" + role.toUpperCase()))
                                 .collect(Collectors.toList());
 
                         // 6. Creamos autenticación con userName y autoridad (sin password ni detalles)

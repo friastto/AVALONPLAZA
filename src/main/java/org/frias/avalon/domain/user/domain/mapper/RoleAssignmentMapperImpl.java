@@ -26,7 +26,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper {
     public RoleAssignment toEntity(RoleAssignmentDomain domain) {
 
         RoleAssignment role = new RoleAssignment();
-        role.setRoleId(domain.getId());
+        role.setId(domain.getId());
         role.setUserId(domain.getUserId());
         role.setRoleId(domain.getRoleId());
         role.setOutletId(domain.getOutletId());
