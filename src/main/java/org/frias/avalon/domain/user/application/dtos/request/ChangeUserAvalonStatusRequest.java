@@ -1,4 +1,4 @@
 package org.frias.avalon.domain.user.application.dtos.request;
 
-public record ChangeUserAvalonStatusRequest(Long userAvalonId, Long statusId) {
+public record ChangeUserAvalonStatusRequest(Long userAvalonId, String statusCode) {
 }

@@ -134,6 +134,10 @@ public class UserAvalonDomain {
         if (newStatusId.equals(this.statusId)) {
             throw new DomainValidationException("El usuario ya se encuentra en el estado indicado.");
         }
+
+
+
+
         this.statusId = newStatusId;
     }
 }

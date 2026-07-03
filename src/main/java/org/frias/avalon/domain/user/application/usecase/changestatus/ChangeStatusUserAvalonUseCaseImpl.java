@@ -60,7 +60,7 @@ public class ChangeStatusUserAvalonUseCaseImpl implements ChangeStatusUserAvalon
     /**
      * Ejecuta el cambio de estado de un usuario.
      *
-     * @param request DTO con el ID del usuario objetivo y el ID del nuevo estado maestro.
+     * @param request DTO con el ID del usuario objetivo y el código del nuevo estado maestro.
      * @return {@link UserAvalonResponseDto} con los datos actualizados del usuario.
      * @throws BusinessException si el usuario no existe, el estado no existe, la transición de estado
      *                           no está permitida, o el ejecutor no tiene permisos para realizar el cambio.
@@ -81,9 +81,9 @@ public class ChangeStatusUserAvalonUseCaseImpl implements ChangeStatusUserAvalon
                         "Estado actual del usuario no encontrado."
                 ));
 
-        MasterRoot newStatus = masterDataPort.findById(request.statusId())
+        MasterRoot newStatus = masterDataPort.findByCode(request.statusCode())
                 .orElseThrow(() -> new BusinessException(
-                        "Estado maestro no encontrado con ID: " + request.statusId()
+                        "Estado maestro no encontrado con código: " + request.statusCode()
                 ));
 
         // --- 3. Validar la transición de estados ---
@@ -127,7 +127,7 @@ public class ChangeStatusUserAvalonUseCaseImpl implements ChangeStatusUserAvalon
             }
 
             // Actualizar el estado de la asignación del rol para reflejarlo en la lista de personal de la tienda
-            matchingAssignment.changeStatus(request.statusId());
+            matchingAssignment.changeStatus(newStatus.getId());
             roleAssignmentPort.create(matchingAssignment);
         } else {
             // Un administrador global tiene acceso a cualquier tienda
@@ -144,7 +144,7 @@ public class ChangeStatusUserAvalonUseCaseImpl implements ChangeStatusUserAvalon
 
                 // Desactivar todas sus asignaciones en las tiendas
                 for (RoleAssignmentDomain assignment : targetAssignments) {
-                    assignment.changeStatus(request.statusId());
+                    assignment.changeStatus(newStatus.getId());
                     roleAssignmentPort.create(assignment);
                 }
             } else {
@@ -170,7 +170,7 @@ public class ChangeStatusUserAvalonUseCaseImpl implements ChangeStatusUserAvalon
         }
 
         // --- 8. Delegar el cambio de estado al agregado de Dominio ---
-        targetUser.changeStatus(request.statusId());
+        targetUser.changeStatus(newStatus.getId());
 
         // --- 9. Persistir el agregado actualizado ---
         UserAvalonDomain savedUser = userAvalonPort.save(targetUser);

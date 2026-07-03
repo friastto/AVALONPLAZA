@@ -71,7 +71,7 @@ class ChangeStatusUserAvalonUseCaseTest {
         Long newStatusId = 4L; // INA
         Long outletId = 10L;
 
-        ChangeUserAvalonStatusRequest request = new ChangeUserAvalonStatusRequest(targetUserId, newStatusId);
+        ChangeUserAvalonStatusRequest request = new ChangeUserAvalonStatusRequest(targetUserId, "INA");
 
         UserAvalonDomain targetUser = UserAvalonDomain.fromPersistenceBasic(targetUserId, 1L, "targetUser", activeStatusId);
         
@@ -79,10 +79,11 @@ class ChangeStatusUserAvalonUseCaseTest {
         when(oldStatus.getShortName()).thenReturn("ACT");
         MasterRoot newStatus = mock(MasterRoot.class);
         when(newStatus.getShortName()).thenReturn("INA");
+        when(newStatus.getId()).thenReturn(newStatusId);
 
         when(userAvalonPort.findById(targetUserId)).thenReturn(Optional.of(targetUser));
         when(masterDataPort.findById(activeStatusId)).thenReturn(Optional.of(oldStatus));
-        when(masterDataPort.findById(newStatusId)).thenReturn(Optional.of(newStatus));
+        when(masterDataPort.findByCode("INA")).thenReturn(Optional.of(newStatus));
 
         UserContext executorContext = new UserContext("executor", List.of("ROLE_GERGEN"), outletId);
         when(currentUserProvider.getCurrentUserContext()).thenReturn(executorContext);
@@ -126,7 +127,7 @@ class ChangeStatusUserAvalonUseCaseTest {
         Long executorOutletId = 10L;
         Long targetOutletId = 20L;
 
-        ChangeUserAvalonStatusRequest request = new ChangeUserAvalonStatusRequest(targetUserId, newStatusId);
+        ChangeUserAvalonStatusRequest request = new ChangeUserAvalonStatusRequest(targetUserId, "INA");
 
         UserAvalonDomain targetUser = UserAvalonDomain.fromPersistenceBasic(targetUserId, 1L, "targetUser", activeStatusId);
         
@@ -137,7 +138,7 @@ class ChangeStatusUserAvalonUseCaseTest {
 
         when(userAvalonPort.findById(targetUserId)).thenReturn(Optional.of(targetUser));
         when(masterDataPort.findById(activeStatusId)).thenReturn(Optional.of(oldStatus));
-        when(masterDataPort.findById(newStatusId)).thenReturn(Optional.of(newStatus));
+        when(masterDataPort.findByCode("INA")).thenReturn(Optional.of(newStatus));
 
         UserContext executorContext = new UserContext("executor", List.of("ROLE_GERGEN"), executorOutletId);
         when(currentUserProvider.getCurrentUserContext()).thenReturn(executorContext);

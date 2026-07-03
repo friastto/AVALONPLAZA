@@ -42,8 +42,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        // Si la petición va a auth o a la creación de usuario, el filtro NO se ejecuta
-        return path.startsWith("/avalon/auth") || path.startsWith("/avalon/user/create");
+        // Si la petición va a auth (y no es suplantar) o a la creación de usuario, el filtro NO se ejecuta
+        return (path.startsWith("/avalon/auth") && !path.startsWith("/avalon/auth/impersonate")) 
+                || path.startsWith("/avalon/user/create");
     }
 
     @Override

@@ -14,6 +14,7 @@ import org.frias.avalon.domain.user.application.usecase.password.RequestPassword
 import org.frias.avalon.domain.user.application.usecase.password.ResetPasswordUseCase;
 import org.frias.avalon.domain.user.application.usecase.password.VerifyPasswordResetPinUseCase;
 import org.frias.avalon.domain.user.application.usecase.verify.VerifyUsernameUseCase;
+import org.frias.avalon.domain.user.application.usecase.impersonate.ImpersonateOutletUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,8 +33,9 @@ public class AuthController {
     private final ConfirmEmailAndSendPinUseCase confirmEmailAndSendPinUseCase;
     private final VerifyPasswordResetPinUseCase verifyPasswordResetPinUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
+    private final ImpersonateOutletUseCase impersonateOutletUseCase;
 
-    public AuthController(LoginUseCase loginUseCase, GenerateAccessTokenAndRefreshTokenUseCase refreshTokenUseCase, VerifyUsernameUseCase verifyUsernameUseCase, RequestPasswordResetUseCase requestPasswordResetUseCase, ConfirmEmailAndSendPinUseCase confirmEmailAndSendPinUseCase, VerifyPasswordResetPinUseCase verifyPasswordResetPinUseCase, ResetPasswordUseCase resetPasswordUseCase) {
+    public AuthController(LoginUseCase loginUseCase, GenerateAccessTokenAndRefreshTokenUseCase refreshTokenUseCase, VerifyUsernameUseCase verifyUsernameUseCase, RequestPasswordResetUseCase requestPasswordResetUseCase, ConfirmEmailAndSendPinUseCase confirmEmailAndSendPinUseCase, VerifyPasswordResetPinUseCase verifyPasswordResetPinUseCase, ResetPasswordUseCase resetPasswordUseCase, ImpersonateOutletUseCase impersonateOutletUseCase) {
         this.loginUseCase = loginUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.verifyUsernameUseCase = verifyUsernameUseCase;
@@ -41,6 +43,7 @@ public class AuthController {
         this.confirmEmailAndSendPinUseCase = confirmEmailAndSendPinUseCase;
         this.verifyPasswordResetPinUseCase = verifyPasswordResetPinUseCase;
         this.resetPasswordUseCase = resetPasswordUseCase;
+        this.impersonateOutletUseCase = impersonateOutletUseCase;
     }
 
 
@@ -91,5 +94,12 @@ public class AuthController {
 
 
         return ResponseEntity.ok(new ApiResponse<>(200, "Su contraseña ha sido restablecida exitosamente.", null));
+    }
+
+    @PostMapping("/impersonate/{outletId}")
+    public ResponseEntity<ApiResponse<AuthResponse>> impersonate(@org.springframework.web.bind.annotation.PathVariable Long outletId) {
+        AuthResponse auth = impersonateOutletUseCase.execute(outletId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(200, "Suplantación de rol iniciada correctamente", auth));
     }
 }

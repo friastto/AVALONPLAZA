@@ -57,6 +57,24 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
     }
 
     @Override
+    public String generateImpersonationToken(UserDetails userDetails, Long outletId, List<String> roles) {
+        Instant now = Instant.now();
+        Instant expiryDate = now.plusMillis(jwtExpirationMs);
+
+        io.jsonwebtoken.JwtBuilder tknBuilder = Jwts.builder()
+                .subject(userDetails.getUsername())
+                .claim("rol", roles)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiryDate));
+
+        if (outletId != null) {
+            tknBuilder.claim("outlet_Id", outletId);
+        }
+
+        return tknBuilder.signWith(jwtSecretKey).compact();
+    }
+
+    @Override
     public String generateAccessTokenFromId(Long userId) {
         if (userId == null) {
             throw new IllegalArgumentException("El ID de usuario no puede ser nulo para generar un token de acceso.");
