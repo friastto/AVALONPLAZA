@@ -2,9 +2,12 @@ package org.frias.avalon.domain.product.infraestructure.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table
@@ -29,7 +32,9 @@ public class ProductOutlet {
     @Column(nullable = false)
     private Long unitMeasureId; // Añadido para persistir la unidad de medida
 
-    private String localImageUrl;
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "text[]")
+    private List<String> localImageUrl;
 
     @Column(nullable = false)
     private BigDecimal localPrice;

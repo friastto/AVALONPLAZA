@@ -48,6 +48,9 @@ public class ProductOutletController {
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@Valid @RequestBody ProductNewDataRequest request) {
+
+        System.out.println(request.toString());
+
         ProductResponse response = createProductOutletUseCase.execute(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(HttpStatus.CREATED.value(), "Producto creado exitosamente", response));
     }

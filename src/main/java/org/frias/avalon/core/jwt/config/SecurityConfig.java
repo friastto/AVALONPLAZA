@@ -49,8 +49,8 @@ public class SecurityConfig {
 
                          */
 
-                        .requestMatchers("/avalon/products/create").hasAnyAuthority("ADMINTI", "ADMIN", "GERGEN")
-                        .requestMatchers("/avalon/products/barcode").hasAnyAuthority("ADMINTI", "ADMIN", "GERGEN","CJPRINCIPAL","CJTURNO")
+                        .requestMatchers("/avalon/products/create").hasAnyRole("ADMINTI", "ADMIN", "GERGEN")
+                        .requestMatchers("/avalon/products/barcode").hasAnyRole("ADMINTI", "ADMIN", "GERGEN","CJPRINCIPAL","CJTURNO")
                         .requestMatchers("/avalon/products/catalog/**").permitAll()
                         .requestMatchers("/avalon/products/catalog").permitAll()
 

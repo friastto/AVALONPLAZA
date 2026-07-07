@@ -30,7 +30,7 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
                 entity.getLocalDescription(),
                 entity.getStock(),
                 entity.getUnitMeasureId(), // Mapeamos el unitMeasureId
-                entity.getLocalImageUrl(),
+                entity.getLocalImageUrl() != null ? String.join(",", entity.getLocalImageUrl()) : null,
                 entity.getLocalPrice(),
                 entity.getOutletId(),
                 entity.getStatusId(),
@@ -50,7 +50,7 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
                 .localDescription(domain.getDescription())
                 .stock(domain.getStock())
                 .unitMeasureId(domain.getUnitMeasureId()) // Mapeamos el unitMeasureId
-                .localImageUrl(domain.getImageUrl())
+                .localImageUrl(domain.getImageUrl() != null && !domain.getImageUrl().isBlank() ? java.util.Arrays.asList(domain.getImageUrl().split(",")) : java.util.Collections.emptyList())
                 .localPrice(domain.getPrice())
                 .outletId(domain.getOutletId())
                 .statusId(domain.getStatusId())
