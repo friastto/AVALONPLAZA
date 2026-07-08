@@ -17,7 +17,7 @@ public class ProductSpecification {
             if (name == null || name.trim().isEmpty()) {
                 return criteriaBuilder.conjunction(); // Devuelve una condición que siempre es verdadera si el nombre es nulo/vacío
             }
-            return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("localName")), "%" + name.toLowerCase() + "%");
         };
     }
 

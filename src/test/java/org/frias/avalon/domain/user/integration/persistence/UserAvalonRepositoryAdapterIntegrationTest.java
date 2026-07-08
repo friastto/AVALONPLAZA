@@ -5,7 +5,8 @@ import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMappe
 import org.frias.avalon.domain.person.infraestructure.mapper.PersonMapper;
 import org.frias.avalon.domain.person.infraestructure.persistence.adapter.PersonPersistenceAdapter;
 import org.frias.avalon.domain.person.infraestructure.persistence.entity.PersonEntity;
-import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapper;
+import org.frias.avalon.domain.masterdata.infraestructure.persistence.adapter.MasterDataRepositoryAdapter;
+import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapperImpl;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.infraestructure.persistence.adapter.UserAvalonRepositoryAdapter;
 import org.frias.avalon.domain.user.infraestructure.persistence.entity.UserAvalon;
@@ -30,11 +31,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({
     UserAvalonRepositoryAdapter.class,
-    UserAvalonMapper.class,
+    UserAvalonMapperImpl.class,
     PersonPersistenceAdapter.class,
     PersonMapper.class,
     MasterDataMapperServiceImpl.class,
-    MasterTreeProvider.class
+    MasterTreeProvider.class,
+    MasterDataRepositoryAdapter.class
 })
 @Sql("/data-test.sql")
 @DisplayName("Pruebas de Integración - UserAvalonRepositoryAdapter (BD Real)")

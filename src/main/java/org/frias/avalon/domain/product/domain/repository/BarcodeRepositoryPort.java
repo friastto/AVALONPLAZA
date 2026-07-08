@@ -19,4 +19,5 @@ public interface BarcodeRepositoryPort {
      * @return Un Optional que contiene el BarcodeDomain si se encuentra, o un Optional vacío si no.
      */
     Optional<BarcodeDomain> findByCode(String code);
+    java.util.List<BarcodeDomain> findByProductOutlet(Long productOutletId);
 }

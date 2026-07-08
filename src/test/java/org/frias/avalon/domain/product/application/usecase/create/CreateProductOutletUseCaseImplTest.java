@@ -12,6 +12,8 @@ import org.frias.avalon.domain.product.application.service.QuantityParserService
 import org.frias.avalon.domain.product.domain.ProductDomain;
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.mapper.ProductOutletMapper;
+import org.frias.avalon.domain.product.domain.repository.BarcodeRepositoryPort;
+import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,7 +48,11 @@ class CreateProductOutletUseCaseImplTest {
     @Mock
     private MasterTree masterTree;
     @Mock
-    private QuantityParserService quantityParserService; // Añadido el mock del nuevo servicio
+    private QuantityParserService quantityParserService;
+    @Mock
+    private BarcodeRepositoryPort barcodeRepositoryPort;
+    @Mock
+    private CurrentUserProviderPort currentUserProvider;
 
     @InjectMocks
     private CreateProductOutletUseCaseImpl createProductUseCase;
@@ -56,6 +62,9 @@ class CreateProductOutletUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(currentUserProvider.hasRole(anyString())).thenReturn(true); // Permitir admin en tests
+        lenient().when(barcodeRepositoryPort.findByCode(any())).thenReturn(java.util.Optional.empty());
+
         validRequestDto = new ProductNewDataRequest(
                 "",
                 "Test Product",
@@ -77,7 +86,7 @@ class CreateProductOutletUseCaseImplTest {
         Long activeStatusId = 1L;
         Integer convertedStock = 1500;
         BigDecimal parsedQuantity = new BigDecimal("1.5");
-        ProductResponse expectedResponse = new ProductResponse(1L, "Test Product", "Description", "1.5 KG", "url", new BigDecimal("10.0"), 100L, null, null, null);
+        ProductResponse expectedResponse = new ProductResponse(1L, "Test Product", "Description", "1.5 KG", "url", new BigDecimal("10.0"), 100L, null, "12345",null, null,null);
 
         given(masterDataRepositoryPort.getIdByCode("ACT")).willReturn(activeStatusId);
         
@@ -95,7 +104,7 @@ class CreateProductOutletUseCaseImplTest {
             ProductDomain arg = invocation.getArgument(0);
             return ProductDomain.fromPersistence(1L, arg.getName(), arg.getDescription(), arg.getStock(), arg.getUnitMeasureId(), arg.getImageUrl(), arg.getPrice(), arg.getOutletId(), arg.getStatusId(), arg.getCreatedAt(), arg.getUpdatedAt());
         });
-        given(productOutletMapper.toResponse(any(ProductDomain.class))).willReturn(expectedResponse);
+        given(productOutletMapper.toResponse(any(ProductDomain.class), any())).willReturn(expectedResponse);
 
         // Act
         ProductResponse result = createProductUseCase.execute(validRequestDto);

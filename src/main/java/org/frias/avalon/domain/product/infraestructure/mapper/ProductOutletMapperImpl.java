@@ -61,6 +61,11 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
 
     @Override
     public ProductResponse toResponse(ProductDomain domain) {
+        return toResponse(domain, null);
+    }
+
+    @Override
+    public ProductResponse toResponse(ProductDomain domain, String barCode) {
         if (domain == null) {
             return null;
         }
@@ -82,6 +87,8 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
                 domain.getPrice(),
                 domain.getOutletId(),
                 statusDto,
+                barCode,
+                domain.getUnitMeasureId(),
                 domain.getCreatedAt(),
                 domain.getUpdatedAt()
         );

@@ -18,6 +18,8 @@ public record ProductResponse(
     BigDecimal price,
     Long outletId,
     MasterDataResponseDto status,
+    String barCode,
+    Long unitMeasureId,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {

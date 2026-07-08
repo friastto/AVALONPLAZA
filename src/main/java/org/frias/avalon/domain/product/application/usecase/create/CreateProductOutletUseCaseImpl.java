@@ -117,7 +117,7 @@ public class CreateProductOutletUseCaseImpl implements CreateProductOutletUseCas
             barcodeRepositoryPort.save(newBarcode);
         }
 
-        // 8. Mapear el resultado a un DTO de respuesta
-        return productOutletMapper.toResponse(savedProductDomain);
+        // 8. Mapear el resultado a un DTO de respuesta con el código de barras
+        return productOutletMapper.toResponse(savedProductDomain, request.barCode());
     }
 }

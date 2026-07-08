@@ -30,4 +30,12 @@ public interface ProductOutletMapper {
      * @return The response DTO.
      */
     ProductResponse toResponse(ProductDomain domain);
+
+    /**
+     * Maps a ProductDomain model to a ProductResponse DTO and attaches a barcode.
+     * @param domain The domain model.
+     * @param barCode The barcode associated with the product.
+     * @return The response DTO.
+     */
+    ProductResponse toResponse(ProductDomain domain, String barCode);
 }

@@ -13,6 +13,7 @@ import org.frias.avalon.domain.product.application.usecase.create.CreateProductO
 import org.frias.avalon.domain.product.application.usecase.find.FindProductByBarcodeUseCase;
 import org.frias.avalon.domain.product.application.usecase.find.FindProductCatalogByOutletUseCase;
 import org.frias.avalon.domain.product.application.usecase.find.FindProductCatalogUseCase;
+import org.frias.avalon.domain.product.application.usecase.find.FindProductByIdUseCase;
 import org.frias.avalon.domain.product.application.usecase.linkbarcode.LinkBarcodeToProductUseCase;
 import org.frias.avalon.domain.product.application.usecase.update.UpdateProductUseCase;
 import org.springframework.data.domain.Page;
@@ -43,6 +44,7 @@ public class ProductOutletController {
     private final FindProductCatalogUseCase findProductCatalogUseCase;
     private final FindProductCatalogByOutletUseCase findProductCatalogByOutletUseCase;
     private final FindProductByBarcodeUseCase findProductByBarcodeUseCase;
+    private final FindProductByIdUseCase findProductByIdUseCase;
     private final UpdateProductUseCase updateProductUseCase;
     private final ChangeProductStatusUseCase changeProductStatusUseCase;
 
@@ -76,6 +78,12 @@ public class ProductOutletController {
     @GetMapping("/barcode/{barcode}")
     public ResponseEntity<ApiResponse<ProductResponse>> getProductByBarcode(@PathVariable String barcode) {
         ProductResponse product = findProductByBarcodeUseCase.execute(barcode);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(HttpStatus.OK.value(), "Producto encontrado exitosamente", product));
+    }
+
+    @GetMapping("/{productId}")
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable Long productId) {
+        ProductResponse product = findProductByIdUseCase.execute(productId);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(HttpStatus.OK.value(), "Producto encontrado exitosamente", product));
     }
 

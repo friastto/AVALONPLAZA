@@ -29,4 +29,11 @@ public class BarcodeRepositoryAdapter implements BarcodeRepositoryPort {
         return jpaBarcodeRepository.findByBarcode(code)
                 .map(barcodeMapper::toDomain);
     }
+
+    @Override
+    public java.util.List<BarcodeDomain> findByProductOutlet(Long productOutletId) {
+        return jpaBarcodeRepository.findByProductOutlet(productOutletId).stream()
+                .map(barcodeMapper::toDomain)
+                .toList();
+    }
 }
