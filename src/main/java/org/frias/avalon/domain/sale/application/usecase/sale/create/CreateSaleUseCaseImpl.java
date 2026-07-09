@@ -25,6 +25,9 @@ import org.frias.avalon.domain.sale.domain.SaleItemDomain;
 import org.frias.avalon.domain.sale.domain.service.SaleWeightConversionService;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
+import org.frias.avalon.domain.credit.application.port.CreditRepositoryPort;
+import org.frias.avalon.domain.credit.domain.model.CreditAccountDomain;
+import org.frias.avalon.domain.credit.domain.model.CreditTransactionDomain;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +48,7 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
     private final MasterTreeProvider masterTreeProvider;
     private final SaleWeightConversionService weightConversionService;
     private final CurrentUserProviderPort currentUserProvider;
+    private final CreditRepositoryPort creditRepositoryPort;
 
     @Override
     @Transactional
@@ -222,8 +226,42 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
         // --- 9. Guardar la Venta ---
         SaleDomain savedSale = saleRepositoryPort.save(saleDomain);
 
-        // --- 10. Mapear y Retornar la Respuesta Expandida ---
+        // --- 9.1. Si el método de pago es FIADO (FIA), aplicar cargos a la cuenta ---
         MasterRoot payMethodNode = masterTree.getById(savedSale.getPaymentMethodId());
+        if (payMethodNode != null && "FIA".equals(payMethodNode.getShortName())) {
+            BigDecimal totalAmount = savedSale.getTotalAmount();
+            
+            // Buscar o crear la cuenta de crédito del cliente
+            CreditAccountDomain creditAccount = creditRepositoryPort.findByClientIdAndOutletId(clientDomain.getId(), request.outletId())
+                    .orElseGet(() -> {
+                        CreditAccountDomain newAcc = CreditAccountDomain.create(
+                                clientDomain.getId(),
+                                request.outletId(),
+                                new BigDecimal("150000"), // Límite por defecto
+                                activeStatusId
+                        );
+                        return creditRepositoryPort.save(newAcc);
+                    });
+
+            BigDecimal oldDebt = creditAccount.getCurrentDebt();
+            creditAccount.charge(totalAmount);
+            creditRepositoryPort.save(creditAccount);
+
+            // Registrar la transacción de compra fiada
+            CreditTransactionDomain txn = CreditTransactionDomain.create(
+                    creditAccount.getId(),
+                    savedSale.getId(),
+                    "PURCHASE",
+                    totalAmount,
+                    oldDebt,
+                    creditAccount.getCurrentDebt(),
+                    "Compra fiada en POS - Ticket #" + savedSale.getSaleCode(),
+                    employeeId
+            );
+            creditRepositoryPort.save(txn);
+        }
+
+        // --- 10. Mapear y Retornar la Respuesta Expandida ---
         MasterRoot statusNode = masterTree.getById(savedSale.getStatusId());
 
         MasterDataResponseDto payDto = new MasterDataResponseDto(

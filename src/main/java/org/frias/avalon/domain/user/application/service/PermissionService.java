@@ -71,6 +71,9 @@ public class PermissionService {
                 break;
  
             case "CJTURNO":
+            case "CJPRINCIPAL": // CAJERO_PRINCIPAL (del masterdata real de la base de datos)
+            case "CAJPRIN":   // CAJERO_PRINCIPAL (árbol actualizado)
+            case "CAJTUR":    // CAJERO_TURNO (árbol actualizado)
                 permissions.add("POS_SALES");              // Apertura/cierre turno, escanear, cobrar, emitir ticket
                 permissions.add("RECEIVE_INVENTORY");      // Recepción de mercancía
                 permissions.add("QUERY_PRODUCTS");         // Consultar precios y stock
