@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Ticket de Venta - Avalon</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 15mm;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #1C1C1C;
+            margin: 0;
+            padding: 0;
+            line-height: 1.4;
+        }
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #00E673;
+            padding-bottom: 15px;
+        }
+        .logo-container {
+            float: left;
+            width: 120px;
+        }
+        .logo-img {
+            max-width: 100%;
+            height: auto;
+        }
+        .store-details {
+            float: right;
+            text-align: right;
+            font-size: 11px;
+            color: #C68E5C;
+        }
+        .store-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 0 0 5px 0;
+        }
+        .clearfix {
+            clear: both;
+        }
+        .info-section {
+            margin-bottom: 20px;
+            background-color: #F9F9F9;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #4CAF50;
+        }
+        .info-title {
+            font-weight: bold;
+            font-size: 13px;
+            color: #4CAF50;
+            margin-bottom: 8px;
+        }
+        .info-grid {
+            width: 100%;
+        }
+        .info-grid td {
+            padding: 3px 0;
+            vertical-align: top;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555555;
+            width: 120px;
+        }
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .products-table th {
+            background-color: #4CAF50;
+            color: #FFFFFF;
+            font-weight: bold;
+            text-align: left;
+            padding: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .products-table td {
+            padding: 8px;
+            border-bottom: 1px solid #EEEEEE;
+        }
+        .products-table tr:nth-child(even) {
+            background-color: #FAFAFA;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .summary-section {
+            float: right;
+            width: 250px;
+            margin-top: 10px;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .summary-table td {
+            padding: 5px 8px;
+        }
+        .summary-label {
+            text-align: right;
+            font-weight: bold;
+            color: #555555;
+        }
+        .summary-value {
+            text-align: right;
+        }
+        .total-row {
+            background-color: #FFD700;
+            font-size: 14px;
+            font-weight: bold;
+            color: #0A0A0A;
+            border-radius: 4px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #FFFFFF;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+        .status-paid {
+            background-color: #00E673;
+        }
+        .status-credit {
+            background-color: #FF4D4D;
+        }
+        .footer {
+            margin-top: 50px;
+            border-top: 1px dashed #DDDDDD;
+            padding-top: 15px;
+            text-align: center;
+        }
+        .footer-text {
+            font-size: 11px;
+            color: #777777;
+            margin-bottom: 15px;
+        }
+        .qr-container {
+            text-align: center;
+        }
+        .qr-img {
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo-container">
+            <img class="logo-img" src="data:image/png;base64,{{ logoBase64 }}" alt="Avalon Logo"/>
+        </div>
+        <div class="store-details">
+            <h1 class="store-name">AVALON</h1>
+            <div>Tienda de Barrio - Servicios POS</div>
+            <div>Soporte Digital Autorizado</div>
+            <div>Colombia</div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-title">Detalle del Comprobante</div>
+        <table class="info-grid">
+            <tr>
+                <td class="info-label">Ticket No:</td>
+                <td>Ticket #{{ sale.id }}</td>
+                <td class="info-label">Fecha y Hora:</td>
+                <td>{{ sale.saleDate }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Sales ID (CÃ³digo):</td>
+                <td style="font-family: monospace; font-size: 10px;">{{ sale.saleCode }}</td>
+                <td class="info-label">Estado Pago:</td>
+                <td>
+                    {% if sale.paymentMethod.shortName == 'FIA' %}
+                        <span class="status-badge status-credit">CrÃ©dito (Fiado)</span>
+                    {% else %}
+                        <span class="status-badge status-paid">Pagado (Efectivo)</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="info-section" style="border-left-color: #C68E5C;">
+        <div class="info-title" style="color: #C68E5C;">InformaciÃ³n del Cliente</div>
+        <table class="info-grid">
+            <tr>
+                <td class="info-label">Nombre Completo:</td>
+                <td>{{ sale.clientFullName }}</td>
+                <td class="info-label">IdentificaciÃ³n:</td>
+                <td>{{ sale.clientNumberid }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="products-table">
+        <thead>
+            <tr>
+                <th style="width: 80px;">Cant.</th>
+                <th>DescripciÃ³n del Producto</th>
+                <th class="text-right" style="width: 100px;">Precio Unit.</th>
+                <th class="text-right" style="width: 100px;">Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sale.items %}
+            <tr>
+                <td>{{ item.displayQuantity }}</td>
+                <td>{{ item.productName }}</td>
+                <td class="text-right">${{ item.unitPrice }}</td>
+                <td class="text-right">${{ item.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary-section">
+        <table class="summary-table">
+            <tr>
+                <td class="summary-label">Subtotal:</td>
+                <td class="summary-value">${{ sale.totalAmount }}</td>
+            </tr>
+            {% if sale.paymentMethod.shortName == 'FIA' %}
+                <tr>
+                    <td class="summary-label">Monto Recibido:</td>
+                    <td class="summary-value">$0.00</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="summary-label" style="color: #0A0A0A;">Saldo Fiado:</td>
+                    <td class="summary-value" style="color: #0A0A0A;">${{ sale.totalAmount }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td class="summary-label">Efectivo Recibido:</td>
+                    <td class="summary-value">${{ sale.amountReceived }}</td>
+                </tr>
+                <tr>
+                    <td class="summary-label">Cambio Devuelto:</td>
+                    <td class="summary-value">${{ sale.changeGiven }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="summary-label" style="color: #0A0A0A;">Total Pagado:</td>
+                    <td class="summary-value" style="color: #0A0A0A;">${{ sale.totalAmount }}</td>
+                </tr>
+            {% endif %}
+        </table>
+    </div>
+    <div class="clearfix"></div>
+
+    <div class="footer">
+        <div class="footer-text">
+            Conserva este ticket digital para cualquier cambio, garantÃ­a o reclamaciÃ³n en tu tienda de barrio.<br/>
+            <b>Â¡Gracias por tu compra y confianza en nosotros!</b>
+        </div>
+        <div class="qr-container">
+            <img class="qr-img" src="data:image/png;base64,{{ qrCodeBase64 }}" alt="QR Code"/>
+            <div style="font-size: 8px; color: #999999; margin-top: 5px;">Escanea para verificar compra online</div>
+        </div>
+    </div>
+
+</body>
+</html>

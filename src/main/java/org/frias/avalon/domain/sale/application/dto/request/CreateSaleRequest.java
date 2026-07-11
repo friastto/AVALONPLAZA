@@ -18,6 +18,8 @@ public record CreateSaleRequest(
         BigDecimal amountReceived,
 
         @NotEmpty(message = "Debe registrar al menos un producto en la venta")
-        List<SaleItemRequest> items
+        List<SaleItemRequest> items,
+
+        Boolean sendEmail
 ) {
 }

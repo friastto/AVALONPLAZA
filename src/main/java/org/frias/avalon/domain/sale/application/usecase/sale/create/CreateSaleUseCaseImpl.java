@@ -28,6 +28,8 @@ import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.frias.avalon.domain.credit.application.port.CreditRepositoryPort;
 import org.frias.avalon.domain.credit.domain.model.CreditAccountDomain;
 import org.frias.avalon.domain.credit.domain.model.CreditTransactionDomain;
+import org.frias.avalon.domain.notification.application.event.SaleCreatedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +51,7 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
     private final SaleWeightConversionService weightConversionService;
     private final CurrentUserProviderPort currentUserProvider;
     private final CreditRepositoryPort creditRepositoryPort;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -77,12 +80,14 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
             MasterRoot roleNode = masterTree.getByCode(shortCode);
             if (roleNode != null) {
                 // Verificar si es descendiente o igual a OPERACION, GESTION o ADMINSYS
-                if (masterTree.isChildOf(roleNode, "OPERACION") || 
+                if (masterTree.isChildOf(roleNode, "OPT") ||
                     masterTree.isChildOf(roleNode, "GESTION") || 
                     masterTree.isChildOf(roleNode, "ADMINSYS") ||
                     shortCode.equals("OPERACION") || 
                     shortCode.equals("GESTION") ||
-                    shortCode.equals("ADMIN")) {
+                    shortCode.equals("ADMINSYS") ||
+                    shortCode.equals("ADMIN") ||
+                    shortCode.equals("DUENO")) {
                     hasAuthorizedRole = true;
                     break;
                 }
@@ -220,7 +225,9 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
 
         // --- 8. Aplicar Pago si viene recibido ---
         if (request.amountReceived() != null) {
-            saleDomain.applyPayment(request.amountReceived());
+            MasterRoot payMethodNode = masterTreeProvider.getTree().getById(request.paymentMethodId());
+            boolean isFiado = payMethodNode != null && "FIA".equals(payMethodNode.getShortName());
+            saleDomain.applyPayment(request.amountReceived(), isFiado);
         }
 
         // --- 9. Guardar la Venta ---
@@ -276,7 +283,7 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
                 statusNode.getFullName()
         );
 
-        return new SaleResponse(
+        SaleResponse response = new SaleResponse(
                 savedSale.getId(),
                 savedSale.getSaleCode(),
                 savedSale.getTotalAmount(),
@@ -291,5 +298,10 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
                 savedSale.getEmployeeId(),
                 itemResponses
         );
+
+        String emailToSend = Boolean.TRUE.equals(request.sendEmail()) ? clientDomain.getEmail() : null;
+        eventPublisher.publishEvent(new SaleCreatedEvent(this, response, emailToSend));
+
+        return response;
     }
 }

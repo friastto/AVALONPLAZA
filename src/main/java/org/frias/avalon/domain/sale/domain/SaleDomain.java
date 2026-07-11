@@ -118,14 +118,22 @@ public class SaleDomain {
      * Corrige el bug de devuelto invertido: changeGiven = amountReceived - totalAmount.
      */
     public void applyPayment(BigDecimal amountReceived) {
+        applyPayment(amountReceived, false);
+    }
+
+    public void applyPayment(BigDecimal amountReceived, boolean isFiado) {
         if (amountReceived == null || amountReceived.compareTo(BigDecimal.ZERO) < 0) {
             throw new BusinessException("El monto recibido no puede ser negativo o nulo");
         }
-        if (amountReceived.compareTo(this.totalAmount) < 0) {
+        if (!isFiado && amountReceived.compareTo(this.totalAmount) < 0) {
             throw new BusinessException("El monto recibido (" + amountReceived + ") es menor que el valor total a pagar (" + this.totalAmount + ")");
         }
         this.amountReceived = amountReceived;
-        this.changeGiven = amountReceived.subtract(this.totalAmount);
+        if (isFiado) {
+            this.changeGiven = BigDecimal.ZERO;
+        } else {
+            this.changeGiven = amountReceived.subtract(this.totalAmount);
+        }
     }
 
     public Long getId() {
