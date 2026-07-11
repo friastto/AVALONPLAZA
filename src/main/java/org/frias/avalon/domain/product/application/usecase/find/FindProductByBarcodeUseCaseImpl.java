@@ -28,7 +28,7 @@ public class FindProductByBarcodeUseCaseImpl implements FindProductByBarcodeUseC
 
         // 2. Obtener el producto usando el ID vinculado al código de barras
         ProductDomain productDomain = productOutletRepositoryPort.findById(barcodeDomain.getProductOutletId())
-                .orElseThrow(() -> new ResourceNotFoundException("El producto con ID " + barcodeDomain.getProductOutletId() + " no fue encontrado en la base de datos. (Inconsistencia de datos)"));
+                .orElseThrow(() -> new ResourceNotFoundException("El producto con codigo #" + barcode + " no fue encontrado en la base de datos. (Inconsistencia de datos)"));
 
         // 3. Mapear y devolver el resultado con el código de barras
         return productOutletMapper.toResponse(productDomain, barcodeDomain.getBarcode());
