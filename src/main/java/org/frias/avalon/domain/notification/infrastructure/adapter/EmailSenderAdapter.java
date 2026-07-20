@@ -9,7 +9,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
-@Component
+// @Component
 @RequiredArgsConstructor
 public class EmailSenderAdapter implements EmailSenderPort {
 
