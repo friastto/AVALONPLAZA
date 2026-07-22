@@ -12,6 +12,7 @@ public record ReturnResponse(
         Long originalSaleId,
         BigDecimal totalRefundAmount,
         String reason,
+        String notes,
         String resolutionType,
         String status,
         String clientFullName,

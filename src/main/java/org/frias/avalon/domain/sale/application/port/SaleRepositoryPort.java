@@ -16,4 +16,12 @@ public interface SaleRepositoryPort {
     Optional<SaleDomain> findById(Long id);
 
     Page<SaleDomain> findByOutletId(Long outletId, Pageable pageable);
+
+    java.util.List<SaleDomain> flexibleSearch(Long outletId, String query, Pageable pageable);
+
+    java.util.List<SaleDomain> findRecentSales(Long outletId);
+
+    java.util.List<SaleDomain> findByOutletAndEmployeeAndDateBetween(Long outletId, Long employeeId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate);
+
+    java.util.List<SaleDomain> findByOutletAndDateBetween(Long outletId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate);
 }

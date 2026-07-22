@@ -62,6 +62,7 @@ public class FindReturnsUseCaseImpl implements FindReturnsUseCase {
                 domain.getOriginalSaleId(),
                 domain.getTotalRefundAmount(),
                 domain.getReason(),
+                domain.getNotes(),
                 domain.getResolutionType(),
                 "DEV",
                 client != null ? client.getFullName() : "Desconocido",

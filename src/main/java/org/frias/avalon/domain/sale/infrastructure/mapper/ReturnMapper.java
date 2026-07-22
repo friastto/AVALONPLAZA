@@ -21,6 +21,7 @@ public class ReturnMapper {
                 .originalSaleId(domain.getOriginalSaleId())
                 .totalRefundAmount(domain.getTotalRefundAmount())
                 .reason(domain.getReason())
+                .notes(domain.getNotes())
                 .resolutionType(domain.getResolutionType())
                 .statusId(domain.getStatusId())
                 .employeeId(domain.getEmployeeId())
@@ -67,6 +68,7 @@ public class ReturnMapper {
                 entity.getOriginalSaleId(),
                 entity.getTotalRefundAmount(),
                 entity.getReason(),
+                entity.getNotes(),
                 entity.getResolutionType(),
                 entity.getStatusId(),
                 entity.getEmployeeId(),

@@ -194,6 +194,7 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
         ReturnDomain returnDomain = ReturnDomain.create(
                 originalSale.getId(),
                 request.reason(),
+                request.notes(),
                 request.resolutionType(),
                 devStatusId,
                 employeeId,
@@ -202,8 +203,17 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                 returnItems
         );
 
-        // --- 9. Según resolución, aplicar lógica adicional ---
+        // --- 9. Según resolución, aplicar lógica adicional y validaciones de protección ---
         String resolution = request.resolutionType().toUpperCase();
+
+        MasterRoot origPayMethodNode = masterTree.getById(originalSale.getPaymentMethodId());
+        boolean origIsFiado = origPayMethodNode != null && "FIA".equals(origPayMethodNode.getShortName());
+
+        if ("REEMBOLSO".equals(resolution) && origIsFiado) {
+            throw new BusinessException(
+                    "No se permite reembolso en efectivo de una venta comprada a crédito/fiado (FIA). " +
+                    "Seleccione 'Nota de crédito' para reducir la deuda del cliente o 'Cambio por otro producto'.");
+        }
 
         if ("NOTA_CREDITO".equals(resolution)) {
             // Abonar saldo a favor en la cuenta de crédito del cliente
@@ -256,6 +266,7 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                 originalSale.getId(),
                 savedReturn.getTotalRefundAmount(),
                 savedReturn.getReason(),
+                savedReturn.getNotes(),
                 savedReturn.getResolutionType(),
                 "DEV",
                 clientDomain.getFullName(),

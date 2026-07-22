@@ -22,6 +22,7 @@ public class ReturnDomain {
     private final Long originalSaleId;
     private final BigDecimal totalRefundAmount;
     private final String reason;
+    private final String notes;
     private final String resolutionType;
     private final Long statusId;
     private final Long employeeId;
@@ -33,7 +34,7 @@ public class ReturnDomain {
     private final List<ReturnItemDomain> items;
 
     private ReturnDomain(Long id, UUID returnCode, Long originalSaleId,
-                         BigDecimal totalRefundAmount, String reason, String resolutionType,
+                         BigDecimal totalRefundAmount, String reason, String notes, String resolutionType,
                          Long statusId, Long employeeId, Long outletId, Long clientId,
                          LocalDateTime returnDate, LocalDateTime createdAt,
                          LocalDateTime updatedAt, List<ReturnItemDomain> items) {
@@ -42,6 +43,7 @@ public class ReturnDomain {
         this.originalSaleId = originalSaleId;
         this.totalRefundAmount = totalRefundAmount;
         this.reason = reason;
+        this.notes = notes;
         this.resolutionType = resolutionType;
         this.statusId = statusId;
         this.employeeId = employeeId;
@@ -53,7 +55,7 @@ public class ReturnDomain {
         this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
     }
 
-    public static ReturnDomain create(Long originalSaleId, String reason, String resolutionType,
+    public static ReturnDomain create(Long originalSaleId, String reason, String notes, String resolutionType,
                                       Long statusId, Long employeeId, Long outletId, Long clientId,
                                       List<ReturnItemDomain> items) {
         if (originalSaleId == null)
@@ -79,18 +81,18 @@ public class ReturnDomain {
 
         LocalDateTime now = LocalDateTime.now();
         return new ReturnDomain(null, UUID.randomUUID(), originalSaleId, total,
-                reason.toUpperCase(), resolutionType.toUpperCase(),
+                reason.toUpperCase(), notes, resolutionType.toUpperCase(),
                 statusId, employeeId, outletId, clientId,
                 now, now, now, items);
     }
 
     public static ReturnDomain fromPersistence(Long id, UUID returnCode, Long originalSaleId,
-                                               BigDecimal totalRefundAmount, String reason,
+                                               BigDecimal totalRefundAmount, String reason, String notes,
                                                String resolutionType, Long statusId, Long employeeId,
                                                Long outletId, Long clientId, LocalDateTime returnDate,
                                                LocalDateTime createdAt, LocalDateTime updatedAt,
                                                List<ReturnItemDomain> items) {
-        return new ReturnDomain(id, returnCode, originalSaleId, totalRefundAmount, reason,
+        return new ReturnDomain(id, returnCode, originalSaleId, totalRefundAmount, reason, notes,
                 resolutionType, statusId, employeeId, outletId, clientId,
                 returnDate, createdAt, updatedAt, items);
     }
@@ -100,6 +102,7 @@ public class ReturnDomain {
     public Long getOriginalSaleId() { return originalSaleId; }
     public BigDecimal getTotalRefundAmount() { return totalRefundAmount; }
     public String getReason() { return reason; }
+    public String getNotes() { return notes; }
     public String getResolutionType() { return resolutionType; }
     public Long getStatusId() { return statusId; }
     public Long getEmployeeId() { return employeeId; }

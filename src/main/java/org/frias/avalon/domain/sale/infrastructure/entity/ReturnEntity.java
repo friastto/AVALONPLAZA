@@ -40,6 +40,10 @@ public class ReturnEntity {
     @Column(nullable = false, length = 20)
     private String reason;
 
+    /** Observación detallada del motivo (especialmente para OTRO) */
+    @Column(length = 500)
+    private String notes;
+
     /** REEMBOLSO | NOTA_CREDITO | CAMBIO */
     @Column(nullable = false, length = 20)
     private String resolutionType;

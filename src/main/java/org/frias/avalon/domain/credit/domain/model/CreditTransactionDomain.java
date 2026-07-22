@@ -31,7 +31,7 @@ public class CreditTransactionDomain {
             BigDecimal previousDebt, BigDecimal newDebt, String notes, Long registeredBy) {
 
         if (creditAccountId == null) throw new BusinessException("Credit account ID is required");
-        if (type == null || (!type.equals("PURCHASE") && !type.equals("PAYMENT"))) {
+        if (type == null || (!type.equals("PURCHASE") && !type.equals("PAYMENT") && !type.equals("RETURN_CREDIT"))) {
             throw new BusinessException("Invalid transaction type: " + type);
         }
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {

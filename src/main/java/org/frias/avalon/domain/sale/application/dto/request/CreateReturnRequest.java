@@ -23,6 +23,8 @@ public record CreateReturnRequest(
         @NotBlank(message = "El motivo de devolución es requerido")
         String reason,
 
+        String notes,
+
         @NotBlank(message = "El tipo de resolución es requerido")
         String resolutionType,
 

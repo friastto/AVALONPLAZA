@@ -44,4 +44,32 @@ public class SaleRepositoryAdapter implements SaleRepositoryPort {
         return jpaSaleRepository.findByOutletId(outletId, pageable)
                 .map(saleMapper::toDomain);
     }
+
+    @Override
+    public java.util.List<SaleDomain> flexibleSearch(Long outletId, String query, Pageable pageable) {
+        return jpaSaleRepository.flexibleSearchSales(outletId, query, pageable).stream()
+                .map(saleMapper::toDomain)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public java.util.List<SaleDomain> findRecentSales(Long outletId) {
+        return jpaSaleRepository.findTop20ByOutletIdOrderBySaleDateDesc(outletId).stream()
+                .map(saleMapper::toDomain)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public java.util.List<SaleDomain> findByOutletAndEmployeeAndDateBetween(Long outletId, Long employeeId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate) {
+        return jpaSaleRepository.findByOutletIdAndEmployeeIdAndSaleDateBetween(outletId, employeeId, startDate, endDate).stream()
+                .map(saleMapper::toDomain)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public java.util.List<SaleDomain> findByOutletAndDateBetween(Long outletId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate) {
+        return jpaSaleRepository.findByOutletIdAndSaleDateBetween(outletId, startDate, endDate).stream()
+                .map(saleMapper::toDomain)
+                .collect(java.util.stream.Collectors.toList());
+    }
 }
