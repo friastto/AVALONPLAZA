@@ -34,6 +34,12 @@ public class SaleRepositoryAdapter implements SaleRepositoryPort {
     }
 
     @Override
+    public Optional<SaleDomain> findById(Long id) {
+        return jpaSaleRepository.findById(id)
+                .map(saleMapper::toDomain);
+    }
+
+    @Override
     public Page<SaleDomain> findByOutletId(Long outletId, Pageable pageable) {
         return jpaSaleRepository.findByOutletId(outletId, pageable)
                 .map(saleMapper::toDomain);

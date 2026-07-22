@@ -13,5 +13,7 @@ public interface SaleRepositoryPort {
 
     Optional<SaleDomain> findByCode(UUID code);
 
+    Optional<SaleDomain> findById(Long id);
+
     Page<SaleDomain> findByOutletId(Long outletId, Pageable pageable);
 }
