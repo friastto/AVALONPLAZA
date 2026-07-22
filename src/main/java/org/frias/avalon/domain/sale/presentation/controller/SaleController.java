@@ -29,6 +29,7 @@ public class SaleController {
     private final FindAllSalesUseCase findAllSalesUseCase;
     private final SearchSalesUseCase searchSalesUseCase;
 
+    @org.frias.avalon.core.idempotency.Idempotent
     @PostMapping
     public ResponseEntity<ApiResponse<SaleResponse>> createSale(
             @Valid @RequestBody CreateSaleRequest request

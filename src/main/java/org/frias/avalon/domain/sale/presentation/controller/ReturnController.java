@@ -35,6 +35,7 @@ public class ReturnController {
     private final CreateExchangeUseCase createExchangeUseCase;
     private final FindReturnsUseCase findReturnsUseCase;
 
+    @org.frias.avalon.core.idempotency.Idempotent
     @PostMapping
     public ResponseEntity<ApiResponse<ReturnResponse>> createReturn(
             @Valid @RequestBody CreateReturnRequest request
@@ -44,6 +45,7 @@ public class ReturnController {
                 .body(new ApiResponse<>(201, "Devolución procesada con éxito", response));
     }
 
+    @org.frias.avalon.core.idempotency.Idempotent
     @PostMapping("/exchange")
     public ResponseEntity<ApiResponse<ExchangeResponse>> createExchange(
             @Valid @RequestBody CreateExchangeRequest request
