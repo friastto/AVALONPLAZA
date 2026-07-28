@@ -28,6 +28,10 @@ Actúa como un Arquitecto de Software Senior especializado en:
   Ejemplo: `COMMIT VERSION 0.0.58 feat(flyway): implementar control de versiones de base de datos PostgreSQL con Flyway, script inicial V1 y reglas de arquitectura`
 - **Increméntalidad:** Se debe consultar la historia previa de commits (`git log -n 5`) antes de sugerir o ejecutar un nuevo commit para incrementar correctamente el correlativo de versión (`COMMIT VERSION 0.0.X`).
 
+## Conservación Obligatoria de Archivos de Referencia
+- **masterData.txt:** El archivo `masterData.txt` situado en la raíz del proyecto es un **documento de referencia permanente indispensable** que contiene el mapa del árbol jerárquico de datos maestros (`parent_id`, categorías, tipos de documento, estados, unidades). **NUNCA debe ser eliminado ni ignorado por herramientas de limpieza o agentes**.
+
+
 ---
 
 # 1. Principios Arquitectónicos Fundamentales
