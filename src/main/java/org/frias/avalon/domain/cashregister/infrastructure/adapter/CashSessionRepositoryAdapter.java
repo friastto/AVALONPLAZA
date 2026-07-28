@@ -22,6 +22,7 @@ public class CashSessionRepositoryAdapter implements CashSessionRepositoryPort {
 
     private final JpaCashSessionRepository jpaCashSessionRepository;
     private final JpaCashExpenseRepository jpaCashExpenseRepository;
+    private final org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashPickupRepository jpaCashPickupRepository;
     private final CashSessionMapper cashSessionMapper;
     private final CashExpenseMapper cashExpenseMapper;
 
@@ -40,7 +41,14 @@ public class CashSessionRepositoryAdapter implements CashSessionRepositoryPort {
 
     @Override
     public Optional<CashSessionDomain> findActiveSession(Long outletId, Long employeeId) {
-        return jpaCashSessionRepository.findByOutletIdAndEmployeeIdAndStatus(outletId, employeeId, "OPEN")
+        Optional<CashSessionDomain> session = jpaCashSessionRepository.findByOutletIdAndEmployeeIdAndStatus(outletId, employeeId, "OPEN")
+                .map(cashSessionMapper::toDomain);
+        if (session.isPresent()) {
+            return session;
+        }
+        // Fallback: Si existe una sesión activa abierta en esta tienda, resolverla para el empleado
+        return jpaCashSessionRepository.findByOutletIdAndStatus(outletId, "OPEN").stream()
+                .findFirst()
                 .map(cashSessionMapper::toDomain);
     }
 
@@ -79,6 +87,20 @@ public class CashSessionRepositoryAdapter implements CashSessionRepositoryPort {
         }
         return jpaCashExpenseRepository.findByCashSessionIdIn(cashSessionIds).stream()
                 .map(cashExpenseMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public org.frias.avalon.domain.cashregister.domain.CashPickupDomain savePickup(org.frias.avalon.domain.cashregister.domain.CashPickupDomain pickup) {
+        org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity entity = cashSessionMapper.toPickupEntity(pickup);
+        org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity saved = jpaCashPickupRepository.save(entity);
+        return cashSessionMapper.toPickupDomain(saved);
+    }
+
+    @Override
+    public List<org.frias.avalon.domain.cashregister.domain.CashPickupDomain> findPickupsBySessionId(Long cashSessionId) {
+        return jpaCashPickupRepository.findBySessionId(cashSessionId).stream()
+                .map(cashSessionMapper::toPickupDomain)
                 .collect(Collectors.toList());
     }
 }

@@ -18,6 +18,9 @@ public class OutletCashSummaryDomain {
     private final int activeSessionsCount;
     private final int closedSessionsCount;
     private final List<CashSessionDomain> activeSessions;
+    private final BigDecimal totalPickups;
+    private final BigDecimal cashThresholdAmount;
+    private final Boolean thresholdExceeded;
 
     public OutletCashSummaryDomain(
             Long outletId,
@@ -29,7 +32,10 @@ public class OutletCashSummaryDomain {
             BigDecimal currentExpectedCashInStore,
             int activeSessionsCount,
             int closedSessionsCount,
-            List<CashSessionDomain> activeSessions
+            List<CashSessionDomain> activeSessions,
+            BigDecimal totalPickups,
+            BigDecimal cashThresholdAmount,
+            Boolean thresholdExceeded
     ) {
         this.outletId = outletId;
         this.totalCashSales = totalCashSales != null ? totalCashSales : BigDecimal.ZERO;
@@ -41,6 +47,9 @@ public class OutletCashSummaryDomain {
         this.activeSessionsCount = activeSessionsCount;
         this.closedSessionsCount = closedSessionsCount;
         this.activeSessions = activeSessions != null ? activeSessions : List.of();
+        this.totalPickups = totalPickups != null ? totalPickups : BigDecimal.ZERO;
+        this.cashThresholdAmount = cashThresholdAmount;
+        this.thresholdExceeded = thresholdExceeded != null ? thresholdExceeded : false;
     }
 
     public Long getOutletId() {
@@ -81,5 +90,17 @@ public class OutletCashSummaryDomain {
 
     public List<CashSessionDomain> getActiveSessions() {
         return activeSessions;
+    }
+
+    public BigDecimal getTotalPickups() {
+        return totalPickups;
+    }
+
+    public BigDecimal getCashThresholdAmount() {
+        return cashThresholdAmount;
+    }
+
+    public Boolean getThresholdExceeded() {
+        return thresholdExceeded;
     }
 }

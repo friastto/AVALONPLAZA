@@ -20,7 +20,7 @@ public class CashSessionDomain {
     private BigDecimal expectedCash;
     private BigDecimal actualCash;
     private BigDecimal difference;
-    private String status; // "OPEN", "CLOSED"
+    private String status; // "OPEN", "BLIND_COUNTED", "AUDITED", "CLOSED"
     private String notes;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -85,9 +85,9 @@ public class CashSessionDomain {
         );
     }
 
-    public void close(BigDecimal actualCashContado, BigDecimal totalSalesCash, BigDecimal totalExpensesCash, String notes) {
+    public void blindCount(BigDecimal actualCashContado, BigDecimal totalSalesCash, BigDecimal totalExpensesCash, BigDecimal totalPickups, String notes) {
         if (!"OPEN".equals(this.status)) {
-            throw new BusinessException("La sesión de caja ya se encuentra cerrada");
+            throw new BusinessException("La sesión de caja no se encuentra abierta");
         }
         if (actualCashContado == null || actualCashContado.compareTo(BigDecimal.ZERO) < 0) {
             throw new BusinessException("El monto de efectivo contado no puede ser nulo o negativo");
@@ -95,16 +95,44 @@ public class CashSessionDomain {
 
         BigDecimal salesCash = totalSalesCash != null ? totalSalesCash : BigDecimal.ZERO;
         BigDecimal expensesCash = totalExpensesCash != null ? totalExpensesCash : BigDecimal.ZERO;
+        BigDecimal pickups = totalPickups != null ? totalPickups : BigDecimal.ZERO;
 
-        // Efectivo Esperado = Base Inicial + Ventas en Efectivo - Egresos
-        this.expectedCash = this.initialBase.add(salesCash).subtract(expensesCash);
+        // Efectivo Esperado = Base Inicial + Ventas en Efectivo - Egresos - Retiros
+        this.expectedCash = this.initialBase.add(salesCash).subtract(expensesCash).subtract(pickups);
         this.actualCash = actualCashContado;
         // Diferencia = Efectivo Real Contado - Efectivo Esperado
         this.difference = this.actualCash.subtract(this.expectedCash);
-        this.status = "CLOSED";
-        this.closedAt = LocalDateTime.now();
+        
+        this.status = "BLIND_COUNTED";
         this.notes = notes;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void audit() {
+        if (!"BLIND_COUNTED".equals(this.status)) {
+            throw new BusinessException("La sesión no está en estado de conteo ciego");
+        }
+        this.status = "AUDITED";
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void closeSession() {
+        if (!"AUDITED".equals(this.status) && !"BLIND_COUNTED".equals(this.status)) {
+            throw new BusinessException("La sesión no está lista para ser cerrada");
+        }
+        this.status = "CLOSED";
+        this.closedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isThresholdExceeded(BigDecimal currentCash, BigDecimal cashThresholdAmount) {
+        if (cashThresholdAmount == null || cashThresholdAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+        if (currentCash == null) {
+            return false;
+        }
+        return currentCash.compareTo(cashThresholdAmount) >= 0;
     }
 
     public Long getId() {

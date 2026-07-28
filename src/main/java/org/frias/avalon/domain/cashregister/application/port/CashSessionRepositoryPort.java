@@ -23,4 +23,8 @@ public interface CashSessionRepositoryPort {
     List<CashExpenseDomain> findExpensesBySessionId(Long cashSessionId);
 
     List<CashExpenseDomain> findExpensesBySessionIds(List<Long> cashSessionIds);
+
+    org.frias.avalon.domain.cashregister.domain.CashPickupDomain savePickup(org.frias.avalon.domain.cashregister.domain.CashPickupDomain pickup);
+
+    List<org.frias.avalon.domain.cashregister.domain.CashPickupDomain> findPickupsBySessionId(Long cashSessionId);
 }

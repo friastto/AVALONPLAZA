@@ -21,6 +21,9 @@ public class OutletCashSummaryResponse {
     private int activeSessionsCount;
     private int closedSessionsCount;
     private List<CashSessionResponse> activeSessions;
+    private BigDecimal totalPickups;
+    private BigDecimal cashThresholdAmount;
+    private Boolean thresholdExceeded;
 
     public static OutletCashSummaryResponse fromDomain(OutletCashSummaryDomain domain) {
         if (domain == null) return null;
@@ -39,6 +42,9 @@ public class OutletCashSummaryResponse {
                 .activeSessionsCount(domain.getActiveSessionsCount())
                 .closedSessionsCount(domain.getClosedSessionsCount())
                 .activeSessions(sessionResponses)
+                .totalPickups(domain.getTotalPickups())
+                .cashThresholdAmount(domain.getCashThresholdAmount())
+                .thresholdExceeded(domain.getThresholdExceeded())
                 .build();
     }
 }

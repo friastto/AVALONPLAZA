@@ -17,4 +17,18 @@ public interface CashSessionUseCasePort {
     CashSessionDomain getActiveSession(Long outletId, Long employeeId);
 
     OutletCashSummaryDomain getOutletConsolidatedSummary(Long outletId);
+
+    void configureThreshold(Long outletId, BigDecimal thresholdAmount);
+
+    org.frias.avalon.domain.cashregister.domain.CashPickupDomain registerPickup(Long sessionId, BigDecimal amount, String reason, Long registeredBy);
+
+    void submitBlindCountStep1(Long sessionId, Long employeeId, BigDecimal actualCash);
+
+    void submitBlindCountStep2(Long sessionId, Long managerId, BigDecimal managerCountedCash, String justification);
+
+    CashSessionDomain submitThreeStepAudit(Long sessionId, BigDecimal baseCash, BigDecimal remainingCash, String notes);
+
+    org.frias.avalon.domain.cashregister.presentation.dto.CashSessionResponse getActiveSessionResponse(Long outletId, Long employeeId);
+
+    org.frias.avalon.domain.cashregister.presentation.dto.OutletCashSummaryResponse getOutletConsolidatedSummaryResponse(Long outletId);
 }

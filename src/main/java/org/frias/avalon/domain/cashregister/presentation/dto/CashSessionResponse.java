@@ -22,6 +22,17 @@ public class CashSessionResponse {
     private BigDecimal difference;
     private String status;
     private String notes;
+    private Boolean thresholdExceeded;
+    private BigDecimal cashThresholdAmount;
+    private BigDecimal totalPickups;
+    private BigDecimal sessionCashSales;
+    private BigDecimal sessionDigitalSales;
+    private BigDecimal sessionCardSales;
+    private BigDecimal sessionCreditSales;
+    private BigDecimal sessionExpenses;
+    private String employeeName;
+    private String employeeNumberId;
+    private String registerName;
 
     public static CashSessionResponse fromDomain(CashSessionDomain domain) {
         if (domain == null) return null;

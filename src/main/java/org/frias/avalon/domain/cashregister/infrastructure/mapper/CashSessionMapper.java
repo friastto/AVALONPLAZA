@@ -46,4 +46,28 @@ public class CashSessionMapper {
                 entity.getUpdatedAt()
         );
     }
+
+    public org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity toPickupEntity(org.frias.avalon.domain.cashregister.domain.CashPickupDomain domain) {
+        if (domain == null) return null;
+        return org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity.builder()
+                .id(domain.getId())
+                .sessionId(domain.getSessionId())
+                .employeeId(domain.getEmployeeId())
+                .amount(domain.getAmount())
+                .reason(domain.getReason())
+                .pickupTime(domain.getPickupTime())
+                .build();
+    }
+
+    public org.frias.avalon.domain.cashregister.domain.CashPickupDomain toPickupDomain(org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity entity) {
+        if (entity == null) return null;
+        return org.frias.avalon.domain.cashregister.domain.CashPickupDomain.fromPersistence(
+                entity.getId(),
+                entity.getSessionId(),
+                entity.getEmployeeId(),
+                entity.getAmount(),
+                entity.getReason(),
+                entity.getPickupTime()
+        );
+    }
 }
