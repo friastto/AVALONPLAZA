@@ -1,6 +1,7 @@
 package org.frias.avalon.domain.outlet.application.usecase.create;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.frias.avalon.core.tenant.FlywayMultiTenantService;
 import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
@@ -25,19 +26,25 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
     private final MasterTreeProvider masterTreeProvider;
     private final OutletMapper outletMapper;
     private final LocationMapper locationMapper;
+    private final FlywayMultiTenantService flywayMultiTenantService;
 
-    public CreateOutletUseCaseImpl(OutletRepositoryPort outletPort, MasterDataRepositoryPort masterPort, MasterTreeProvider masterTreeProvider, OutletMapper outletMapper, LocationMapper locationMapper) {
+    public CreateOutletUseCaseImpl(OutletRepositoryPort outletPort,
+                                 MasterDataRepositoryPort masterPort,
+                                 MasterTreeProvider masterTreeProvider,
+                                 OutletMapper outletMapper,
+                                 LocationMapper locationMapper,
+                                 FlywayMultiTenantService flywayMultiTenantService) {
         this.outletPort = outletPort;
         this.masterPort = masterPort;
         this.masterTreeProvider = masterTreeProvider;
         this.outletMapper = outletMapper;
         this.locationMapper = locationMapper;
+        this.flywayMultiTenantService = flywayMultiTenantService;
     }
 
     @Transactional
     @Override
     public OutletResponseDto execute(OutletCreateRequestDto dto) {
-
 
         MasterRoot status = masterPort.getActiveStatus()
                 .orElseThrow(() -> new EntityNotFoundException("no se pudo activar la tienda en este moemnto "));
@@ -58,10 +65,12 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
 
         OutletDomain outletSaved = outletPort.save(outletDomain);
 
+        // Auto-provision tenant isolated schema in PostgreSQL (e.g. store_2)
+        flywayMultiTenantService.migrateTenantSchema("store_" + outletSaved.getId());
+
         StatusResponseDto statusResponse = new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName());
 
         LocationDto locationDto = locationMapper.domainToDto(outletSaved.getLocation());
-
 
         return new OutletResponseDto(
                 outletSaved.getId(),
@@ -72,7 +81,6 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
                 outletSaved.getNit(),
                 locationDto,
                 statusResponse
-
         );
     }
 }
