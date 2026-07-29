@@ -17,23 +17,21 @@ public class UserAvalonOutletResolverServiceImpl implements UserAvalonOutletReso
     private final OutletRepositoryPort outletPort;
     private final MasterTreeProvider masterTreeProvider;
 
-
     @Override
     public OutletDomain resolveActiveOutlet(List<RoleAssignmentDomain> roleAssigned) {
         MasterTree tree = masterTreeProvider.getTree();
 
-        RoleAssignmentDomain employeeAssignment = roleAssigned.stream()
+        RoleAssignmentDomain activeAssignment = roleAssigned.stream()
                 .filter(assignment ->
                         assignment.getOutletId() != null
-                                && tree.isChildOf(tree.getById(assignment.getRoleId()), "EMP")
                                 && tree.is(tree.getById(assignment.getStatus()), "ACT")
                 )
                 .findFirst()
                 .orElse(null);
 
-        if (employeeAssignment != null) {
-            return outletPort.findById(employeeAssignment.getOutletId())
-                    .orElseThrow(() -> new BusinessException("Este usuario tiene un perfil de empleado pero no está asignado a una tienda dentro de avalon"));
+        if (activeAssignment != null) {
+            return outletPort.findById(activeAssignment.getOutletId())
+                    .orElseThrow(() -> new BusinessException("Este usuario tiene una tienda asignada pero la tienda no existe dentro de avalon"));
         }
         return null;
     }
