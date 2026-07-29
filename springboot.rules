@@ -27,6 +27,9 @@ Actúa como un Arquitecto de Software Senior especializado en:
   `COMMIT VERSION X.Y.Z <tipo>(<modulo>): <descripcion breve de la funcionalidad o cambio>`
   Ejemplo: `COMMIT VERSION 0.0.58 feat(flyway): implementar control de versiones de base de datos PostgreSQL con Flyway, script inicial V1 y reglas de arquitectura`
 - **Increméntalidad:** Se debe consultar la historia previa de commits (`git log -n 5`) antes de sugerir o ejecutar un nuevo commit para incrementar correctamente el correlativo de versión (`COMMIT VERSION 0.0.X`).
+- **Atomidad y Frecuencia de Commits:** Los commits deben ser **pequeños, frecuentes y atómicos** (cada commit representa una única unidad funcional completa y probada).
+- **Prohibición de Código Roto:** NUNCA se debe realizar un commit si el código no compila o rompe las pruebas.
+- **Prohibición de Megacommits:** Queda prohibido acumular múltiples tareas o módulos masivos en un solo commit; se deben dividir en unidades lógicas independientes.
 
 ## Conservación Obligatoria de Archivos de Referencia
 - **masterData.txt:** El archivo `masterData.txt` situado en la raíz del proyecto es un **documento de referencia permanente indispensable** que contiene el mapa del árbol jerárquico de datos maestros (`parent_id`, categorías, tipos de documento, estados, unidades). **NUNCA debe ser eliminado ni ignorado por herramientas de limpieza o agentes**.

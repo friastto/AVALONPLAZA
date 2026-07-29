@@ -15,6 +15,8 @@ El español es el único idioma permitido para todas las explicaciones y descrip
 ## Reglas de Control de Versiones con Git (Commit Convention)
 - Todo commit debe seguir la nomenclatura: `COMMIT VERSION X.Y.Z <tipo>(<modulo>): <descripcion>`
 - Consultar previamente `git log -n 5` para incrementar la versión correlativa (`COMMIT VERSION 0.0.X`).
+- Los commits deben ser atómicos, pequeños y frecuentes sobre código que compila correctamente. Sin megacommits.
+
 
 ## Archivo de Referencia Obligatorio (masterData.txt)
 - `masterData.txt`: Documento de referencia permanente en la raíz con la jerarquía del árbol de datos maestros. NUNCA debe ser eliminado.
