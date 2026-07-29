@@ -52,7 +52,8 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
                 dto.phone(),
                 dto.nit(),
                 status.getId(),
-                location
+                location,
+                java.math.BigDecimal.ZERO
         );
 
         OutletDomain outletSaved = outletPort.save(outletDomain);

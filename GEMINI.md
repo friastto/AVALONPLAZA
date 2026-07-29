@@ -3,9 +3,24 @@
 ## Política de Idioma Obligatoria
 El español es el único idioma permitido para todas las explicaciones y descripciones arquitectónicas. Esta regla tiene la máxima prioridad y siempre debe cumplirse, a menos que el usuario solicite explícitamente otro idioma.
 
-## Reglas de Idioma
-- Responde siempre en español.
-- se breve en las explicaciones.
+## Reglas de Idioma y Codificación de Caracteres
+- Responde siempre en español de Latinoamérica.
+- Se breve en las explicaciones.
+- **Regla ASCII (Sin Tildes ni Ñ):** Para prevenir problemas de codificación y fallos en Maven/JVM entre Windows, Linux y Docker, todos los archivos del proyecto (`application.properties`, `.env`, fuentes Java, scripts SQL, comentarios y markdown) se escribirán con **caracteres ASCII planos (sin tildes y reemplazando 'ñ' por 'n')** (ej. `expiracion`, `configuracion`, `ano`, `diseno`).
+- **Labels de UI:** Las tildes o 'ñ' solo se usarán en etiquetas visibles de UI (usando escapes `\uXXXX` en archivos `.properties` cuando sea necesario).
+
+## Integración con IDEs (JetBrains Companion)
+- **Uso Obligatorio de MCP JetBrains Companion:** Se deben utilizar las herramientas `jetbrains-companion` (`ide_get_active_editor`, `ide_get_open_files`, `ide_get_diagnostics`, `ide_open_file`) para interactuar con los entornos de desarrollo abiertos por el usuario: **IntelliJ IDEA** (para la API Spring Boot `ApiAvalon`) y **Android Studio** (para la aplicación móvil `AvalonMovilApp`).
+
+## Reglas de Control de Versiones con Git (Commit Convention)
+- Todo commit debe seguir la nomenclatura: `COMMIT VERSION X.Y.Z <tipo>(<modulo>): <descripcion>`
+- Consultar previamente `git log -n 5` para incrementar la versión correlativa (`COMMIT VERSION 0.0.X`).
+
+## Archivo de Referencia Obligatorio (masterData.txt)
+- `masterData.txt`: Documento de referencia permanente en la raíz con la jerarquía del árbol de datos maestros. NUNCA debe ser eliminado.
+
+
+
 
 ## Estructura del Proyecto
 
@@ -179,6 +194,8 @@ Todas las soluciones generadas deben seguir estrictamente:
   - Proveedores de JWT (JWT Providers)
   - Integraciones Externas
   - Clases de Configuración
+  - Migraciones de Base de Datos (Flyway DB Migrations en `db/migration/`)
+- Regla Obligatoria de Persistencia: El versionado de la base de datos PostgreSQL debe realizarse **estrictamente con Flyway**. `spring.jpa.hibernate.ddl-auto` debe mantenerse en `validate` o `none` para asegurar que Hibernate nunca modifique automáticamente las tablas. Todas las adiciones o cambios futuros sobre la imagen de BD actual (21 tablas mapeadas) deben ser gestionados mediante scripts de migración `V<N>__<descripcion>.sql`.
 
 ### Puntos de Entrada (Presentation / Entry Points)
 - Contiene:

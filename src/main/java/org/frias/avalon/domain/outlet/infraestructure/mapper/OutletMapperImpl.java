@@ -36,7 +36,8 @@ public class OutletMapperImpl implements OutletMapper {
                 o.getPhone(),
                 o.getNit(),
                 o.getStatusId(),
-                location
+                location,
+                o.getCashThresholdAmount()
         );
     }
 
@@ -53,6 +54,7 @@ public class OutletMapperImpl implements OutletMapper {
                 .nit(od.getNit())
                 .statusId(od.getStatusId())
                 .location(point)
+                .cashThresholdAmount(od.getCashThresholdAmount())
                 .build();
     }
 

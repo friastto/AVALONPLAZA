@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+import org.frias.avalon.domain.sale.application.usecase.sale.find.SearchSalesUseCase;
+import java.util.List;
+
 @RestController
 @RequestMapping("/avalon/sales")
 @RequiredArgsConstructor
@@ -24,7 +27,9 @@ public class SaleController {
     private final CreateSaleUseCase createSaleUseCase;
     private final FindSaleByCodeUseCase findSaleByCodeUseCase;
     private final FindAllSalesUseCase findAllSalesUseCase;
+    private final SearchSalesUseCase searchSalesUseCase;
 
+    @org.frias.avalon.core.idempotency.Idempotent
     @PostMapping
     public ResponseEntity<ApiResponse<SaleResponse>> createSale(
             @Valid @RequestBody CreateSaleRequest request
@@ -34,11 +39,29 @@ public class SaleController {
                 .body(new ApiResponse<>(201, "Venta registrada con éxito", response));
     }
 
+    @GetMapping("/recent")
+    public ResponseEntity<ApiResponse<List<SaleResponse>>> getRecentSales(
+            @RequestParam(required = false) Long outletId
+    ) {
+        List<SaleResponse> response = searchSalesUseCase.getRecentSales(outletId);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Ventas recientes obtenidas", response));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<SaleResponse>>> searchSales(
+            @RequestParam String query,
+            @RequestParam(required = false) Long outletId
+    ) {
+        List<SaleResponse> response = searchSalesUseCase.search(outletId, query);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Búsqueda realizada", response));
+    }
+
     @GetMapping("/{code}")
     public ResponseEntity<ApiResponse<SaleResponse>> getSaleByCode(
-            @PathVariable UUID code
+            @PathVariable String code,
+            @RequestParam(required = false) Long outletId
     ) {
-        SaleResponse response = findSaleByCodeUseCase.execute(code);
+        SaleResponse response = searchSalesUseCase.findByFlexibleCode(code, outletId);
         return ResponseEntity.ok(
                 new ApiResponse<>(200, "Venta encontrada", response)
         );

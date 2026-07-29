@@ -6,6 +6,7 @@ import lombok.Getter;
 import org.frias.avalon.core.exeptions.DomainValidationException;
 
 import java.util.UUID;
+import java.math.BigDecimal;
 
 
 @Getter
@@ -28,8 +29,18 @@ public class OutletDomain {
 
     private LocationDomain location;
 
+    private BigDecimal cashThresholdAmount;
+
+    public void setCashThresholdAmount(BigDecimal cashThresholdAmount) {
+        this.cashThresholdAmount = cashThresholdAmount;
+    }
+
 
     public static OutletDomain create(String name, String address, String phone, String nit, Long status, LocationDomain location) {
+        return create(name, address, phone, nit, status, location, null);
+    }
+
+    public static OutletDomain create(String name, String address, String phone, String nit, Long status, LocationDomain location, BigDecimal cashThresholdAmount) {
 
         if (name.isBlank()) {
             throw new DomainValidationException("el nombre de la Tienda no pude estar vavcio");
@@ -56,10 +67,15 @@ public class OutletDomain {
                 .nit(nit)
                 .statusId(status)
                 .location(location)
+                .cashThresholdAmount(cashThresholdAmount)
                 .build();
     }
 
     public static OutletDomain fromPersistence(Long id, String code, String name, String address, String phone, String nit, Long status, LocationDomain location) {
+        return fromPersistence(id, code, name, address, phone, nit, status, location, null);
+    }
+
+    public static OutletDomain fromPersistence(Long id, String code, String name, String address, String phone, String nit, Long status, LocationDomain location, BigDecimal cashThresholdAmount) {
 
         return OutletDomain.builder()
                 .id(id)
@@ -70,6 +86,7 @@ public class OutletDomain {
                 .nit(nit)
                 .location(location)
                 .statusId(status)
+                .cashThresholdAmount(cashThresholdAmount)
                 .build();
     }
 

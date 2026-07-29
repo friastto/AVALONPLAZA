@@ -336,3 +336,11 @@ USING GIST ((location::geography));
 {"fullName":"CLIENTE_CORPORATIVO","shortName":"CLICORP","parentShortName":"CLIENTE","statusId":"ACT"}
 {"fullName":"CLIENTE_SUSCRIPCION","shortName":"CLISUB","parentShortName":"CLIENTE","statusId":"ACT"}
 {"fullName":"CLIENTE_REFERIDO","shortName":"CLIREF","parentShortName":"CLIENTE","statusId":"ACT"}
+
+-- Estado para Devoluciones y Cambios
+{"fullName":"DEVUELTO","shortName":"DEV","parentShortName":"STSGEN","statusId":"ACT"}
+
+-- SQL Directo para inserción en Base de Datos:
+-- INSERT INTO master_data (full_name, short_name, parent_id, status_id)
+-- VALUES ('DEVUELTO', 'DEV', (SELECT id FROM master_data WHERE short_name = 'STSGEN'), (SELECT id FROM master_data WHERE short_name = 'ACT'));
+

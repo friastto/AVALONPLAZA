@@ -7,6 +7,7 @@ import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.math.BigDecimal;
 
 @Entity
 @Table
@@ -41,6 +42,9 @@ public class Outlet {
     private Point location;
 
     // private Long company;
+
+    private BigDecimal cashThresholdAmount;
+
 
     private LocalDateTime createdAt;
 

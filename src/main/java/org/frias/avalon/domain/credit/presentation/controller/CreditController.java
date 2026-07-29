@@ -3,6 +3,7 @@ package org.frias.avalon.domain.credit.presentation.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.frias.avalon.core.exeptions.ApiResponse;
+import org.frias.avalon.core.idempotency.Idempotent;
 import org.frias.avalon.domain.credit.application.dto.request.RegisterPaymentRequest;
 import org.frias.avalon.domain.credit.application.dto.request.UpdateCreditLimitRequest;
 import org.frias.avalon.domain.credit.application.dto.response.CreditAccountResponse;
@@ -12,11 +13,13 @@ import org.frias.avalon.domain.credit.application.usecase.limit.UpdateCreditLimi
 import org.frias.avalon.domain.credit.application.usecase.payment.RegisterPaymentUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 /**
- * Rest Controller to expose credit account operations (Fiados) for stores and neighbors.
+ * Controller REST para la gestión de cuentas de crédito y fiados.
  */
 @RestController
 @RequestMapping("/avalon/credit")
@@ -28,13 +31,10 @@ public class CreditController {
     private final UpdateCreditLimitUseCase updateCreditLimitUseCase;
 
     /**
-     * Finds or initializes a client's credit account in a store.
-     *
-     * @param clientNumberid The client's unique identification number.
-     * @param outletId The store ID.
-     * @return The credit account balance details.
+     * Consulta o inicializa la cuenta de crédito de un cliente en una tienda.
      */
     @GetMapping("/client/{clientNumberid}")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'CJPRINCIPAL', 'CJTURNO')")
     public ResponseEntity<ApiResponse<CreditAccountResponse>> findOrCreateAccount(
             @PathVariable String clientNumberid,
             @RequestParam Long outletId) {
@@ -43,13 +43,10 @@ public class CreditController {
     }
 
     /**
-     * Retrieves the history log of payments and purchases for a client.
-     *
-     * @param clientNumberid The client identification number.
-     * @param outletId The store ID.
-     * @return The ledger history list.
+     * Obtiene el historial de transacciones (abonos y consumos).
      */
     @GetMapping("/client/{clientNumberid}/transactions")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'CJPRINCIPAL', 'CJTURNO')")
     public ResponseEntity<ApiResponse<List<CreditTransactionResponse>>> getAccountTransactions(
             @PathVariable String clientNumberid,
             @RequestParam Long outletId) {
@@ -58,12 +55,11 @@ public class CreditController {
     }
 
     /**
-     * Registers a payment/installment ("abono") to reduce debt.
-     *
-     * @param request The payment details.
-     * @return The audit transaction response.
+     * Registra un abono/pago de deuda (Operación financiera idempotente).
      */
+    @Idempotent
     @PostMapping("/pay")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'CJPRINCIPAL', 'CJTURNO')")
     public ResponseEntity<ApiResponse<CreditTransactionResponse>> registerPayment(
             @Valid @RequestBody RegisterPaymentRequest request) {
         CreditTransactionResponse response = registerPaymentUseCase.execute(request);
@@ -72,12 +68,10 @@ public class CreditController {
     }
 
     /**
-     * Configures a new credit limit threshold for a client account.
-     *
-     * @param request The credit limit details.
-     * @return The updated credit account details.
+     * Modifica el límite de crédito de una cuenta (Exclusivo Gerente / Admin).
      */
     @PostMapping("/limit")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
     public ResponseEntity<ApiResponse<CreditAccountResponse>> updateLimit(
             @Valid @RequestBody UpdateCreditLimitRequest request) {
         CreditAccountResponse response = updateCreditLimitUseCase.execute(request);
@@ -85,12 +79,10 @@ public class CreditController {
     }
 
     /**
-     * Lists all active credit accounts (debtors) in a store.
-     *
-     * @param outletId The store ID.
-     * @return The list of credit accounts.
+     * Lista todas las cuentas de crédito activas (deudores) de una tienda.
      */
     @GetMapping("/store/{outletId}")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'CJPRINCIPAL')")
     public ResponseEntity<ApiResponse<List<CreditAccountResponse>>> listStoreDebtors(
             @PathVariable Long outletId) {
         List<CreditAccountResponse> responses = findCreditAccountByClientUseCase.findAllByStore(outletId);

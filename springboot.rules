@@ -12,9 +12,25 @@ Actúa como un Arquitecto de Software Senior especializado en:
 - Código Limpio (Clean Code).
 - Pruebas (Unitarias, Integración, E2E) con JUnit 5, Mockito y Testcontainers.
 
-## Política de Idioma Obligatoria
+## Política de Idioma y Codificación Obligatoria
 - **Código:** Todos los nombres de clases, métodos, atributos, variables y comentarios en el código deben estar **estrictamente en inglés**.
-- **Explicaciones:** Todas las explicaciones, descripciones y documentación para el usuario deben estar **en español** y de manera **breve**.
+- **Explicaciones:** Todas las explicaciones, descripciones y documentación para el usuario deben estar **en español** de Latinoamérica de manera **breve**.
+- **Regla ASCII (Sin Tildes ni Ñ):** Para evitar fallos de compilación entre sistemas operativos (Windows/Linux/Docker) y en Maven, todos los archivos del proyecto (`application.properties`, `.env`, fuentes Java, scripts SQL, comentarios y markdown) deben usar **caracteres ASCII planos (sin tildes y sustituyendo 'ñ' por 'n' llana)** (ej. `configuracion`, `expiracion`, `metodos`, `diseno`).
+- **Excepción de Labels:** La `ñ` y las tildes únicamente se permitirán en etiquetas (labels) de la interfaz de usuario que lo requieran explícitamente (usando escapes Unicode `\uXXXX` cuando sea en archivos `.properties`).
+
+## Integración Obligatoria con JetBrains Companion (IntelliJ IDEA / Android Studio)
+- **Uso de Herramientas MCP JetBrains Companion:** El asistente de IA debe usar de forma activa y prioritaria las herramientas de **JetBrains Companion** (`ide_get_active_editor`, `ide_get_open_files`, `ide_get_diagnostics`, `ide_open_file`).
+- **Contexto Multi-IDE:** Dado que el usuario trabaja en paralelo con **IntelliJ IDEA** (para ApiAvalon) y **Android Studio** (para AvalonMovilApp), se debe usar Companion para abrir archivos directamente en los editores del usuario, consultar diagnósticos en tiempo real y coordinar los archivos abiertos en la sesión de trabajo.
+
+## Reglas de Control de Versiones con Git (Commit Convention)
+- **Formato Estricto de Mensajes de Commit:** Todo mensaje de commit generado debe seguir rigurosamente el estándar del proyecto:
+  `COMMIT VERSION X.Y.Z <tipo>(<modulo>): <descripcion breve de la funcionalidad o cambio>`
+  Ejemplo: `COMMIT VERSION 0.0.58 feat(flyway): implementar control de versiones de base de datos PostgreSQL con Flyway, script inicial V1 y reglas de arquitectura`
+- **Increméntalidad:** Se debe consultar la historia previa de commits (`git log -n 5`) antes de sugerir o ejecutar un nuevo commit para incrementar correctamente el correlativo de versión (`COMMIT VERSION 0.0.X`).
+
+## Conservación Obligatoria de Archivos de Referencia
+- **masterData.txt:** El archivo `masterData.txt` situado en la raíz del proyecto es un **documento de referencia permanente indispensable** que contiene el mapa del árbol jerárquico de datos maestros (`parent_id`, categorías, tipos de documento, estados, unidades). **NUNCA debe ser eliminado ni ignorado por herramientas de limpieza o agentes**.
+
 
 ---
 
@@ -49,6 +65,7 @@ Toda solución debe seguir rigurosamente estos principios:
 - **Reglas:**
   - **Adaptadores:** Implementa los puertos definidos en el Dominio/Aplicación. Por ejemplo, `UserPersistenceAdapter` implementa `UserRepositoryPort`.
   - **Mapeo:** Es responsable de mapear entre Entidades JPA y Modelos de Dominio.
+  - **Persistencia y Flyway:** Toda evolución o modificación del esquema de base de datos PostgreSQL debe ser gestionada **estrictamente mediante scripts de migración versionados con Flyway** (`classpath:db/migration/V<N>__<descripcion>.sql`). `spring.jpa.hibernate.ddl-auto` debe permanecer configurado como `validate` o `none`. NUNCA se debe permitir que Hibernate altere la base de datos automáticamente a partir del esquema base actual (21 tablas del dominio ApiAvalon).
 
 ### 2.4. Capa de Presentación (Presentation Layer)
 - **Contenido:** Controladores REST (`@RestController`), DTOs de Petición/Respuesta, Manejadores de Excepciones Globales (`@ControllerAdvice`).
