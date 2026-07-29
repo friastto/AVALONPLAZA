@@ -33,14 +33,13 @@ public class CreatePersonUseCaseImpl implements CreatePersonUseCase {
             masterTreeProvider.getTree().getByIdOrThrow(request.sexId());
         }
 
-        // Crear el objeto de dominio PersonDomain usando el Factory Method
-        // Las validaciones de negocio (ej. número de identificación, nombre, contacto)
-        // se realizan dentro del Factory Method createBasic de PersonDomain
+        // Crear el objeto de dominio PersonDomain usando el Factory Method (incluyendo la dirección)
         PersonDomain person = PersonDomain.createBasic(
                 request.typeIdentificationId(),
                 request.numberid(),
                 request.name(),
                 request.lastName(),
+                request.address(),
                 request.sexId(),
                 request.phoneNumber(),
                 request.email(),

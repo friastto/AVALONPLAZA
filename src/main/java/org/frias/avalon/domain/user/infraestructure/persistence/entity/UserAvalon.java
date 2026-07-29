@@ -34,6 +34,7 @@ public class UserAvalon {
     @Column(nullable = false)
     private Long statusId;
 
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

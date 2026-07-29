@@ -34,7 +34,7 @@ public class PersonDomain {
      * createBasic: Utilizado para la creación inicial (Negocio).
      * Aquí aplicamos reglas estrictas de lo que es "obligatorio" para que una persona exista.
      */
-    public static PersonDomain createBasic(Long typeIdentificationId, String numberid, String name, String lastName, Long sexId, Long phoneNumber, String email, Long statusId) {
+    public static PersonDomain createBasic(Long typeIdentificationId, String numberid, String name, String lastName, String address, Long sexId, Long phoneNumber, String email, Long statusId) {
         validateRequired(numberid, "El número de identificación es requerido");
         validateRequired(name, "El nombre es requerido");
         validateRequired(lastName, "El apellido es requerido");
@@ -53,6 +53,7 @@ public class PersonDomain {
         person.numberid = numberid.trim();
         person.name = name.trim().toUpperCase();
         person.lastName = lastName.trim().toUpperCase();
+        person.address = address != null ? address.trim() : null;
         person.sexId = sexId;
         person.phoneNumber = phoneNumber;
         person.email = email != null ? email.toLowerCase().trim() : null;

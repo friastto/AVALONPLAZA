@@ -48,17 +48,17 @@ class AssignPersonToUserUseCaseImpl implements AssignPersonToUserUseCase {
 
         MasterRoot status = masterDataRepositoryPort.getActiveStatus().orElseThrow(() -> new BusinessException("no se puede activar esta persona para el usuario actual"));
 
-        // 4. Crear el objeto de dominio de la nueva Persona
+        // 4. Crear el objeto de dominio de la nueva Persona (incluyendo la dirección)
         PersonDomain newPerson = PersonDomain.createBasic(
                 data.typeIdentificationId(),
                 data.numberid(),
                 data.name(),
                 data.lastName(),
+                data.address(),
                 data.sexId(),
                 data.phoneNumber(),
                 data.email(),
                 status.getId()
-
         );
 
         // 5. Guardar la persona en la base de datos a través de su puerto
