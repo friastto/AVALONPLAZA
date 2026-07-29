@@ -62,7 +62,7 @@ public class SaleEntity {
 
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<SaleItemEntity> items = new ArrayList<>();
 
