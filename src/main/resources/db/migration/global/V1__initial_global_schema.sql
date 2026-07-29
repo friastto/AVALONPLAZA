@@ -32,7 +32,28 @@ CREATE TABLE IF NOT EXISTS person (
 );
 
 -- =============================================================================
--- 2. USER & AUTHENTICATION (SHARED GLOBAL SCHEMA)
+-- 2. OUTLET (SHARED GLOBAL SCHEMA)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS outlet (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(255) NOT NULL UNIQUE,
+    nit VARCHAR(255),
+    name VARCHAR(255),
+    address VARCHAR(255),
+    phone VARCHAR(255),
+    status_id BIGINT,
+    location Geometry(Point, 4326),
+    cash_threshold_amount NUMERIC(38, 2),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- Ensure cash_threshold_amount column exists on pre-existing outlet table
+ALTER TABLE outlet ADD COLUMN IF NOT EXISTS cash_threshold_amount NUMERIC(38, 2);
+
+-- =============================================================================
+-- 3. USER & AUTHENTICATION (SHARED GLOBAL SCHEMA)
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS user_avalon (
@@ -74,7 +95,7 @@ CREATE TABLE IF NOT EXISTS refresh_token (
 );
 
 -- =============================================================================
--- 3. GLOBAL PRODUCT CATALOG
+-- 4. GLOBAL PRODUCT CATALOG
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS products (
