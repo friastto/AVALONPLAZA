@@ -22,7 +22,8 @@ Actúa como un Arquitecto de Software Senior especializado en:
 - **Uso de Herramientas MCP JetBrains Companion:** El asistente de IA debe usar de forma activa y prioritaria las herramientas de **JetBrains Companion** (`ide_get_active_editor`, `ide_get_open_files`, `ide_get_diagnostics`, `ide_open_file`).
 - **Contexto Multi-IDE:** Dado que el usuario trabaja en paralelo con **IntelliJ IDEA** (para ApiAvalon) y **Android Studio** (para AvalonMovilApp), se debe usar Companion para abrir archivos directamente en los editores del usuario, consultar diagnósticos en tiempo real y coordinar los archivos abiertos en la sesión de trabajo.
 
-## Reglas de Control de Versiones con Git (Commit Convention)
+## Reglas de Control de Versiones con Git (Commit Convention y Flujo de Ramas)
+- **Desarrollo en Rama `AV_CORE_2` Primero:** En el proyecto `ApiAvalon`, todo desarrollo de nuevas funcionalidades, refactorizaciones o cambios de código debe realizarse **primero en la rama de desarrollo `AV_CORE_2`**. NUNCA se debe desarrollar directamente sobre la rama `master`.
 - **Formato Estricto de Mensajes de Commit:** Todo mensaje de commit generado debe seguir rigurosamente el estándar del proyecto:
   `COMMIT VERSION X.Y.Z <tipo>(<modulo>): <descripcion breve de la funcionalidad o cambio>`
   Ejemplo: `COMMIT VERSION 0.0.58 feat(flyway): implementar control de versiones de base de datos PostgreSQL con Flyway, script inicial V1 y reglas de arquitectura`

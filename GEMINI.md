@@ -12,10 +12,12 @@ El español es el único idioma permitido para todas las explicaciones y descrip
 ## Integración con IDEs (JetBrains Companion)
 - **Uso Obligatorio de MCP JetBrains Companion:** Se deben utilizar las herramientas `jetbrains-companion` (`ide_get_active_editor`, `ide_get_open_files`, `ide_get_diagnostics`, `ide_open_file`) para interactuar con los entornos de desarrollo abiertos por el usuario: **IntelliJ IDEA** (para la API Spring Boot `ApiAvalon`) y **Android Studio** (para la aplicación móvil `AvalonMovilApp`).
 
-## Reglas de Control de Versiones con Git (Commit Convention)
+## Reglas de Control de Versiones con Git (Commit Convention y Flujo de Ramas)
+- Todo desarrollo de características o refactorización debe realizarse **primero en la rama `AV_CORE_2`**. Nunca en `master` directamente.
 - Todo commit debe seguir la nomenclatura: `COMMIT VERSION X.Y.Z <tipo>(<modulo>): <descripcion>`
 - Consultar previamente `git log -n 5` para incrementar la versión correlativa (`COMMIT VERSION 0.0.X`).
 - Los commits deben ser atómicos, pequeños y frecuentes sobre código que compila correctamente. Sin megacommits.
+
 
 
 ## Archivo de Referencia Obligatorio (masterData.txt)
