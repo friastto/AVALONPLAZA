@@ -47,6 +47,9 @@ public class ProductOutlet {
 
     private LocalDateTime updatedAt;
 
+    @Version
+    private Long version;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
