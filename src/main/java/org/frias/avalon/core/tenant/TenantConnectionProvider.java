@@ -34,6 +34,9 @@ public class TenantConnectionProvider implements MultiTenantConnectionProvider<S
         final Connection connection = getAnyConnection();
         try (Statement statement = connection.createStatement()) {
             if (tenantIdentifier != null && !tenantIdentifier.equalsIgnoreCase("public") && !tenantIdentifier.equalsIgnoreCase("DEFAULT")) {
+                if (!tenantIdentifier.matches("^[a-zA-Z0-9_]+$")) {
+                    throw new IllegalArgumentException("Invalid tenant identifier format: " + tenantIdentifier);
+                }
                 statement.execute(String.format("SET search_path TO %s, public", tenantIdentifier));
             } else {
                 statement.execute("SET search_path TO public");
