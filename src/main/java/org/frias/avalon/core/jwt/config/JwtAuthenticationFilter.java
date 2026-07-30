@@ -84,12 +84,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
 
 
-                    if (rolesFromJwt != null && !rolesFromJwt.isEmpty())
-                        System.out.println("ROLES DEL TOKEN " + rolesFromJwt.toString());
 
-                    SecurityContextHolder.getContext().getAuthentication()
-                            .getAuthorities()
-                            .forEach(a -> System.out.println("AUTH: " + a.getAuthority()));
 
                     Long outletIdFromJwt = jwtTokenProvider.extractOutletId(jwt);
 
@@ -137,7 +132,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     employeeRoleCode = roleCode;
                                     // Si este es un rol de empleado de OUTLET y el JWT tiene un outletId, lo asociamos
                                     if (outletIdFromJwt == null) {
-                                        throw new SecurityException("se detecto qeu el suuario tiene un rol de empleado pero no tiene una outlet asignada no pude continuar con la autenticacion");
+                                        throw new SecurityException("Employee role detected but no outlet assigned in token");
                                     }
                                     employeeOutletIdForContext = outletIdFromJwt;
                                 }
