@@ -90,8 +90,9 @@ public class MasterDataRepositoryAdapter implements MasterDataRepositoryPort {
     public List<MasterRoot> saveAll(List<MasterRoot> mdList2) {
 
         List<MasterData> uaList = mdList2.stream().map(mapper::toEntity).toList();
+        List<MasterData> savedList = jpa.saveAll(uaList);
 
-        return uaList.stream().map(mapper::toDomain).toList();
+        return savedList.stream().map(mapper::toDomain).toList();
     }
 
     @Override
