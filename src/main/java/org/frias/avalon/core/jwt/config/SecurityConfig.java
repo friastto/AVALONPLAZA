@@ -50,12 +50,13 @@ public class SecurityConfig {
                         .requestMatchers("/avalon/user/{userId}/assignment/role").hasAnyRole("ADMINTI", "ADMIN", "GERGEN")
                         .requestMatchers("/avalon/user/assignment/role/consumer/self").permitAll()
 
-                        .requestMatchers("/avalon/outlet/**").permitAll()//.hasAnyAuthority("ADMINTI")
-                        /*.requestMatchers("/avalon/outlet/nearby/v1").permitAll()
-                        .requestMatchers("/avalon/outlet/nearby/light").permitAll()
+                        .requestMatchers("/avalon/outlet/create").hasAnyRole("ADMINTI", "ADMIN", "GERGEN")
+                        .requestMatchers("/avalon/outlet/{id}/cash-cut").hasAnyRole("ADMINTI", "ADMIN", "GERGEN", "CJPRINCIPAL")
+                        .requestMatchers("/avalon/outlet/{id}/employee-dashboard").hasAnyRole("ADMINTI", "ADMIN", "GERGEN", "EMP")
+                        .requestMatchers("/avalon/outlet/nearby/**").permitAll()
                         .requestMatchers("/avalon/outlet/{id}/detail").permitAll()
-
-                         */
+                        .requestMatchers("/avalon/outlet/find").permitAll()
+                        .requestMatchers("/avalon/outlet/all").permitAll()
 
                         .requestMatchers("/avalon/products/create").hasAnyRole("ADMINTI", "ADMIN", "GERGEN")
                         .requestMatchers("/avalon/products/barcode").hasAnyRole("ADMINTI", "ADMIN", "GERGEN","CJPRINCIPAL","CJTURNO")
