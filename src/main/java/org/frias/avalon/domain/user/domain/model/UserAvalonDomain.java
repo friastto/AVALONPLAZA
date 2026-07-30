@@ -1,12 +1,10 @@
 package org.frias.avalon.domain.user.domain.model;
 
-import lombok.Getter;
 import org.frias.avalon.core.exeptions.DomainValidationException;
 import org.frias.avalon.core.validation.PassSecure;
 
 import java.time.LocalDateTime;
 
-@Getter
 public class UserAvalonDomain {
     private Long id;
     private Long personId;
@@ -56,8 +54,6 @@ public class UserAvalonDomain {
         this.id = id;
         this.personId = personId;
         this.userName = userName;
-        this.hashSalt = hashSalt;
-        this.hashPassword = hashPassword;
         this.statusId = statusId;
     }
 
@@ -140,4 +136,14 @@ public class UserAvalonDomain {
 
         this.statusId = newStatusId;
     }
+
+    public Long getId() { return id; }
+    public Long getPersonId() { return personId; }
+    public String getUserName() { return userName; }
+    public String getHashSalt() { return hashSalt; }
+    public String getHashPassword() { return hashPassword; }
+    public Long getStatusId() { return statusId; }
+    public String getStatusCode() { return statusCode; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
