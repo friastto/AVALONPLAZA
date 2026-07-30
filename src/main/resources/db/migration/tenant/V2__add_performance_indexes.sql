@@ -6,7 +6,3 @@ CREATE INDEX IF NOT EXISTS idx_product_outlet_lookup ON product_outlet (outlet_i
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX IF NOT EXISTS idx_product_outlet_name_trgm ON product_outlet USING gin (local_name gin_trgm_ops);
-
--- Anadir columna version para control de concurrencia optimista @Version
-ALTER TABLE product_outlet ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0;
-ALTER TABLE credit_account ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0;
