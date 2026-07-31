@@ -381,25 +381,38 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
 
     @Override
     public List<CashierHistorySummaryResponse> getOutletCashiersHistory(Long outletId) {
-        List<Long> employeeIds = cashSessionRepositoryPort.findDistinctEmployeeIdsByOutletId(outletId);
+        List<Long> userIds = cashSessionRepositoryPort.findDistinctEmployeeIdsByOutletId(outletId);
         List<CashierHistorySummaryResponse> result = new ArrayList<>();
-        for (Long empId : employeeIds) {
-            Optional<PersonDomain> personOpt = personRepositoryPort.findById(empId);
-            String fullName = personOpt.map(p -> (p.getName() + " " + (p.getLastName() != null ? p.getLastName() : "")).trim()).orElse("Empleado #" + empId);
-            String numberId = personOpt.map(PersonDomain::getNumberid).orElse("N/A");
-            
-            Long userId = empId;
+        for (Long userId : userIds) {
+            Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findById(userId);
+            String fullName = "Empleado #" + userId;
+            String numberId = "N/A";
             Long statusId = 1L;
-            if (personOpt.isPresent() && personOpt.get().getNumberid() != null) {
-                Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findByPersonNumberid(personOpt.get().getNumberid());
-                if (userOpt.isPresent()) {
-                    userId = userOpt.get().getId();
-                    statusId = userOpt.get().getStatusId();
+
+            if (userOpt.isPresent()) {
+                UserAvalonDomain user = userOpt.get();
+                statusId = user.getStatusId() != null ? user.getStatusId() : 1L;
+
+                if (user.getPersonId() != null) {
+                    Optional<PersonDomain> personOpt = personRepositoryPort.findById(user.getPersonId());
+                    if (personOpt.isPresent()) {
+                        PersonDomain person = personOpt.get();
+                        fullName = (person.getName() + " " + (person.getLastName() != null ? person.getLastName() : "")).trim();
+                        numberId = person.getNumberid() != null ? person.getNumberid() : "N/A";
+                    }
+                }
+            } else {
+                Optional<PersonDomain> personOpt = personRepositoryPort.findById(userId);
+                if (personOpt.isPresent()) {
+                    PersonDomain person = personOpt.get();
+                    fullName = (person.getName() + " " + (person.getLastName() != null ? person.getLastName() : "")).trim();
+                    numberId = person.getNumberid() != null ? person.getNumberid() : "N/A";
                 }
             }
+
             result.add(new CashierHistorySummaryResponse(
                     userId,
-                    empId,
+                    userId,
                     fullName,
                     numberId,
                     statusId,
@@ -497,9 +510,32 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
         Page<CashSessionDomain> domainPage = cashSessionRepositoryPort.findDiscrepanciesHistory(outletId, employeeId, discrepancyType, year, month, day, pageable);
 
         List<DiscrepancyHistoryResponse> content = domainPage.getContent().stream().map(session -> {
-            Optional<PersonDomain> personOpt = personRepositoryPort.findById(session.getEmployeeId());
-            String name = personOpt.map(p -> (p.getName() + " " + (p.getLastName() != null ? p.getLastName() : "")).trim()).orElse("Empleado #" + session.getEmployeeId());
-            String numberId = personOpt.map(PersonDomain::getNumberid).orElse("N/A");
+            String name = "Empleado #" + session.getEmployeeId();
+            String numberId = "N/A";
+            Long statusId = 1L;
+
+            if (session.getEmployeeId() != null) {
+                Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findById(session.getEmployeeId());
+                if (userOpt.isPresent()) {
+                    UserAvalonDomain user = userOpt.get();
+                    statusId = user.getStatusId() != null ? user.getStatusId() : 1L;
+                    if (user.getPersonId() != null) {
+                        Optional<PersonDomain> personOpt = personRepositoryPort.findById(user.getPersonId());
+                        if (personOpt.isPresent()) {
+                            PersonDomain person = personOpt.get();
+                            name = (person.getName() + " " + (person.getLastName() != null ? person.getLastName() : "")).trim();
+                            numberId = person.getNumberid() != null ? person.getNumberid() : "N/A";
+                        }
+                    }
+                } else {
+                    Optional<PersonDomain> personOpt = personRepositoryPort.findById(session.getEmployeeId());
+                    if (personOpt.isPresent()) {
+                        PersonDomain person = personOpt.get();
+                        name = (person.getName() + " " + (person.getLastName() != null ? person.getLastName() : "")).trim();
+                        numberId = person.getNumberid() != null ? person.getNumberid() : "N/A";
+                    }
+                }
+            }
 
             String typeStr = session.getDifference() != null && session.getDifference().compareTo(BigDecimal.ZERO) < 0 ? "SHORTAGE" : "SURPLUS";
 
@@ -509,7 +545,7 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
                     session.getEmployeeId(),
                     name,
                     numberId,
-                    1L,
+                    statusId,
                     session.getInitialBase(),
                     session.getExpectedCash(),
                     session.getActualCash(),
