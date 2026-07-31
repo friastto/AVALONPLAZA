@@ -43,7 +43,7 @@ public class FlywayMultiTenantService {
     public void migrateTenantSchema(String schemaName) {
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
-                .schemas(schemaName)
+                .schemas(schemaName, "public")
                 .locations(tenantLocations)
                 .baselineOnMigrate(true)
                 .load();
