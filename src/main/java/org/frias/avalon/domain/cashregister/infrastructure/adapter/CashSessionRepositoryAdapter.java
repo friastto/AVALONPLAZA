@@ -96,4 +96,15 @@ public class CashSessionRepositoryAdapter implements CashSessionRepositoryPort {
                 .map(cashSessionMapper::toPickupDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Long> findDistinctEmployeeIdsByOutletId(Long outletId) {
+        return jpaCashSessionRepository.findDistinctEmployeeIdsByOutletId(outletId);
+    }
+
+    @Override
+    public org.springframework.data.domain.Page<CashSessionDomain> findDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, org.springframework.data.domain.Pageable pageable) {
+        return jpaCashSessionRepository.findDiscrepanciesHistory(outletId, employeeId, discrepancyType, year, month, day, pageable)
+                .map(cashSessionMapper::toDomain);
+    }
 }

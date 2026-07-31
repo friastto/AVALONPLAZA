@@ -31,4 +31,10 @@ public interface CashSessionUseCasePort {
     org.frias.avalon.domain.cashregister.presentation.dto.CashSessionResponse getActiveSessionResponse(Long outletId, Long employeeId);
 
     org.frias.avalon.domain.cashregister.presentation.dto.OutletCashSummaryResponse getOutletConsolidatedSummaryResponse(Long outletId);
+
+    java.util.List<org.frias.avalon.domain.cashregister.presentation.dto.CashierHistorySummaryResponse> getOutletCashiersHistory(Long outletId);
+
+    org.frias.avalon.domain.cashregister.presentation.dto.PageResponseDto<org.frias.avalon.domain.cashregister.presentation.dto.ConsolidatedHistoryResponse> getConsolidatedHistory(Long outletId, Long employeeId, Integer year, Integer month, Integer day, int page, int size);
+
+    org.frias.avalon.domain.cashregister.presentation.dto.PageResponseDto<org.frias.avalon.domain.cashregister.presentation.dto.DiscrepancyHistoryResponse> getDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, int page, int size);
 }

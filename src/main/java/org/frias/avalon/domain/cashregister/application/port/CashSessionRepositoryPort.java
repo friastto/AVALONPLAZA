@@ -27,4 +27,8 @@ public interface CashSessionRepositoryPort {
     org.frias.avalon.domain.cashregister.domain.CashPickupDomain savePickup(org.frias.avalon.domain.cashregister.domain.CashPickupDomain pickup);
 
     List<org.frias.avalon.domain.cashregister.domain.CashPickupDomain> findPickupsBySessionId(Long cashSessionId);
+
+    List<Long> findDistinctEmployeeIdsByOutletId(Long outletId);
+
+    org.springframework.data.domain.Page<CashSessionDomain> findDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, org.springframework.data.domain.Pageable pageable);
 }

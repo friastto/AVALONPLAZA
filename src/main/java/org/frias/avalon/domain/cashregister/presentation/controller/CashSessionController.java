@@ -187,4 +187,41 @@ public class CashSessionController {
     ) {
         return ResponseEntity.ok(List.of());
     }
+
+    @GetMapping("/outlets/{outletId}/cashiers-history")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'CJPRINCIPAL')")
+    public ResponseEntity<List<org.frias.avalon.domain.cashregister.presentation.dto.CashierHistorySummaryResponse>> getOutletCashiersHistory(
+            @PathVariable Long outletId
+    ) {
+        return ResponseEntity.ok(cashSessionUseCasePort.getOutletCashiersHistory(outletId));
+    }
+
+    @GetMapping("/consolidated-history/{outletId}")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'CJPRINCIPAL')")
+    public ResponseEntity<org.frias.avalon.domain.cashregister.presentation.dto.PageResponseDto<org.frias.avalon.domain.cashregister.presentation.dto.ConsolidatedHistoryResponse>> getConsolidatedHistory(
+            @PathVariable Long outletId,
+            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer day,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(cashSessionUseCasePort.getConsolidatedHistory(outletId, employeeId, year, month, day, page, size));
+    }
+
+    @GetMapping("/discrepancies-history/{outletId}")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    public ResponseEntity<org.frias.avalon.domain.cashregister.presentation.dto.PageResponseDto<org.frias.avalon.domain.cashregister.presentation.dto.DiscrepancyHistoryResponse>> getDiscrepanciesHistory(
+            @PathVariable Long outletId,
+            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) String discrepancyType,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer day,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(cashSessionUseCasePort.getDiscrepanciesHistory(outletId, employeeId, discrepancyType, year, month, day, page, size));
+    }
 }

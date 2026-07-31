@@ -8,19 +8,35 @@ import org.frias.avalon.domain.cashregister.domain.CashExpenseDomain;
 import org.frias.avalon.domain.cashregister.domain.CashPickupDomain;
 import org.frias.avalon.domain.cashregister.domain.CashSessionDomain;
 import org.frias.avalon.domain.cashregister.domain.OutletCashSummaryDomain;
+import org.frias.avalon.domain.cashregister.presentation.dto.CashSessionResponse;
+import org.frias.avalon.domain.cashregister.presentation.dto.CashierHistorySummaryResponse;
+import org.frias.avalon.domain.cashregister.presentation.dto.ConsolidatedHistoryResponse;
+import org.frias.avalon.domain.cashregister.presentation.dto.DiscrepancyHistoryResponse;
+import org.frias.avalon.domain.cashregister.presentation.dto.OutletCashSummaryResponse;
+import org.frias.avalon.domain.cashregister.presentation.dto.PageResponseDto;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.sale.application.port.SaleRepositoryPort;
 import org.frias.avalon.domain.sale.domain.SaleDomain;
+import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
+import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +47,7 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
     private final SaleRepositoryPort saleRepositoryPort;
     private final OutletRepositoryPort outletRepositoryPort;
     private final PersonRepositoryPort personRepositoryPort;
+    private final UserAvalonRepositoryPort userAvalonRepositoryPort;
 
     @Override
     @Transactional
@@ -78,7 +95,7 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
                 .orElseThrow(() -> new BusinessException("No hay ninguna sesión de caja abierta para este usuario en esta tienda"));
     }
 
-    public org.frias.avalon.domain.cashregister.presentation.dto.CashSessionResponse mapAndEnrichSessionResponse(CashSessionDomain session) {
+    public CashSessionResponse mapAndEnrichSessionResponse(CashSessionDomain session) {
         if (session == null) return null;
         LocalDateTime now = LocalDateTime.now();
         List<SaleDomain> sessionSales = saleRepositoryPort.findByOutletAndEmployeeAndDateBetween(
@@ -126,7 +143,7 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
         String numberId = personOpt.map(PersonDomain::getNumberid).orElse(null);
         String regName = "Caja N° " + ((session.getId() == null || session.getId() % 2 != 0) ? "1" : "2");
 
-        org.frias.avalon.domain.cashregister.presentation.dto.CashSessionResponse response = org.frias.avalon.domain.cashregister.presentation.dto.CashSessionResponse.fromDomain(session);
+        CashSessionResponse response = CashSessionResponse.fromDomain(session);
         response.setSessionCashSales(cashSales);
         response.setSessionCardSales(cardSales);
         response.setSessionDigitalSales(digitalSales);
@@ -141,7 +158,7 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
     }
 
     @Override
-    public org.frias.avalon.domain.cashregister.presentation.dto.CashSessionResponse getActiveSessionResponse(Long outletId, Long employeeId) {
+    public CashSessionResponse getActiveSessionResponse(Long outletId, Long employeeId) {
         CashSessionDomain session = getActiveSession(outletId, employeeId);
         return mapAndEnrichSessionResponse(session);
     }
@@ -226,13 +243,13 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
     }
 
     @Override
-    public org.frias.avalon.domain.cashregister.presentation.dto.OutletCashSummaryResponse getOutletConsolidatedSummaryResponse(Long outletId) {
+    public OutletCashSummaryResponse getOutletConsolidatedSummaryResponse(Long outletId) {
         OutletCashSummaryDomain domain = getOutletConsolidatedSummary(outletId);
-        List<org.frias.avalon.domain.cashregister.presentation.dto.CashSessionResponse> enrichedSessions = domain.getActiveSessions() != null
+        List<CashSessionResponse> enrichedSessions = domain.getActiveSessions() != null
                 ? domain.getActiveSessions().stream().map(this::mapAndEnrichSessionResponse).toList()
                 : List.of();
 
-        return org.frias.avalon.domain.cashregister.presentation.dto.OutletCashSummaryResponse.builder()
+        return OutletCashSummaryResponse.builder()
                 .outletId(domain.getOutletId())
                 .totalCashSales(domain.getTotalCashSales())
                 .totalDigitalSales(domain.getTotalDigitalSales())
@@ -360,5 +377,158 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
         session.blindCount(totalActual, totalSalesCash, totalExpensesCash, totalPickups, notes);
         session.closeSession();
         return cashSessionRepositoryPort.saveSession(session);
+    }
+
+    @Override
+    public List<CashierHistorySummaryResponse> getOutletCashiersHistory(Long outletId) {
+        List<Long> employeeIds = cashSessionRepositoryPort.findDistinctEmployeeIdsByOutletId(outletId);
+        List<CashierHistorySummaryResponse> result = new ArrayList<>();
+        for (Long empId : employeeIds) {
+            Optional<PersonDomain> personOpt = personRepositoryPort.findById(empId);
+            String fullName = personOpt.map(p -> (p.getName() + " " + (p.getLastName() != null ? p.getLastName() : "")).trim()).orElse("Empleado #" + empId);
+            String numberId = personOpt.map(PersonDomain::getNumberid).orElse("N/A");
+            
+            Long userId = empId;
+            Long statusId = 1L;
+            if (personOpt.isPresent() && personOpt.get().getNumberid() != null) {
+                Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findByPersonNumberid(personOpt.get().getNumberid());
+                if (userOpt.isPresent()) {
+                    userId = userOpt.get().getId();
+                    statusId = userOpt.get().getStatusId();
+                }
+            }
+            result.add(new CashierHistorySummaryResponse(
+                    userId,
+                    empId,
+                    fullName,
+                    numberId,
+                    statusId,
+                    0L
+            ));
+        }
+        return result;
+    }
+
+    @Override
+    public PageResponseDto<ConsolidatedHistoryResponse> getConsolidatedHistory(Long outletId, Long employeeId, Integer year, Integer month, Integer day, int page, int size) {
+        List<CashSessionDomain> allSessions = cashSessionRepositoryPort.findAllSessionsByOutlet(outletId);
+        
+        Map<String, List<CashSessionDomain>> groupedByDate = new TreeMap<>(Collections.reverseOrder());
+        for (CashSessionDomain session : allSessions) {
+            if (employeeId != null && !employeeId.equals(session.getEmployeeId())) {
+                continue;
+            }
+            LocalDateTime dateToUse = session.getClosedAt() != null ? session.getClosedAt() : session.getOpenedAt();
+            if (dateToUse == null) continue;
+
+            if (year != null && dateToUse.getYear() != year) continue;
+            if (month != null && dateToUse.getMonthValue() != month) continue;
+            if (day != null && dateToUse.getDayOfMonth() != day) continue;
+
+            String dateKey = dateToUse.toLocalDate().toString();
+            groupedByDate.computeIfAbsent(dateKey, k -> new ArrayList<>()).add(session);
+        }
+
+        List<String> dates = new ArrayList<>(groupedByDate.keySet());
+        int totalElements = dates.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int fromIndex = Math.min(page * size, totalElements);
+        int toIndex = Math.min(fromIndex + size, totalElements);
+
+        List<String> pagedDates = dates.subList(fromIndex, toIndex);
+        List<ConsolidatedHistoryResponse> content = new ArrayList<>();
+
+        for (String dateStr : pagedDates) {
+            LocalDate localDate = LocalDate.parse(dateStr);
+            LocalDateTime startOfDay = localDate.atStartOfDay();
+            LocalDateTime endOfDay = localDate.atTime(23, 59, 59);
+
+            List<SaleDomain> sales = employeeId != null
+                    ? saleRepositoryPort.findByOutletAndEmployeeAndDateBetween(outletId, employeeId, startOfDay, endOfDay)
+                    : saleRepositoryPort.findByOutletAndDateBetween(outletId, startOfDay, endOfDay);
+
+            BigDecimal totalCash = BigDecimal.ZERO;
+            BigDecimal totalDigital = BigDecimal.ZERO;
+            BigDecimal totalCard = BigDecimal.ZERO;
+            BigDecimal totalCredit = BigDecimal.ZERO;
+
+            for (SaleDomain sale : sales) {
+                Long method = sale.getPaymentMethodId();
+                BigDecimal amount = sale.getTotalAmount() != null ? sale.getTotalAmount() : BigDecimal.ZERO;
+                if (method != null) {
+                    if (method == 1L) totalCash = totalCash.add(amount);
+                    else if (method == 2L) totalCard = totalCard.add(amount);
+                    else if (method == 3L) totalDigital = totalDigital.add(amount);
+                    else if (method == 4L) totalCredit = totalCredit.add(amount);
+                    else totalCash = totalCash.add(amount);
+                } else {
+                    totalCash = totalCash.add(amount);
+                }
+            }
+
+            BigDecimal totalConsolidated = totalCash.add(totalDigital).add(totalCard).add(totalCredit);
+
+            List<CashSessionDomain> daySessions = groupedByDate.get(dateStr);
+            int activeCount = (int) daySessions.stream().filter(s -> "OPEN".equals(s.getStatus())).count();
+            int closedCount = (int) daySessions.stream().filter(s -> !"OPEN".equals(s.getStatus())).count();
+
+            content.add(new ConsolidatedHistoryResponse(
+                    dateStr,
+                    outletId,
+                    totalConsolidated,
+                    totalCash,
+                    totalDigital,
+                    totalCard,
+                    totalCredit,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    activeCount,
+                    closedCount
+            ));
+        }
+
+        boolean isLast = (page + 1) >= totalPages || totalPages == 0;
+        return new PageResponseDto<>(content, page, size, totalElements, totalPages, isLast);
+    }
+
+    @Override
+    public PageResponseDto<DiscrepancyHistoryResponse> getDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CashSessionDomain> domainPage = cashSessionRepositoryPort.findDiscrepanciesHistory(outletId, employeeId, discrepancyType, year, month, day, pageable);
+
+        List<DiscrepancyHistoryResponse> content = domainPage.getContent().stream().map(session -> {
+            Optional<PersonDomain> personOpt = personRepositoryPort.findById(session.getEmployeeId());
+            String name = personOpt.map(p -> (p.getName() + " " + (p.getLastName() != null ? p.getLastName() : "")).trim()).orElse("Empleado #" + session.getEmployeeId());
+            String numberId = personOpt.map(PersonDomain::getNumberid).orElse("N/A");
+
+            String typeStr = session.getDifference() != null && session.getDifference().compareTo(BigDecimal.ZERO) < 0 ? "SHORTAGE" : "SURPLUS";
+
+            return new DiscrepancyHistoryResponse(
+                    session.getId(),
+                    session.getOutletId(),
+                    session.getEmployeeId(),
+                    name,
+                    numberId,
+                    1L,
+                    session.getInitialBase(),
+                    session.getExpectedCash(),
+                    session.getActualCash(),
+                    session.getDifference(),
+                    typeStr,
+                    session.getNotes(),
+                    session.getStatus(),
+                    session.getOpenedAt(),
+                    session.getClosedAt()
+            );
+        }).toList();
+
+        return new PageResponseDto<>(
+                content,
+                domainPage.getNumber(),
+                domainPage.getSize(),
+                domainPage.getTotalElements(),
+                domainPage.getTotalPages(),
+                domainPage.isLast()
+        );
     }
 }
