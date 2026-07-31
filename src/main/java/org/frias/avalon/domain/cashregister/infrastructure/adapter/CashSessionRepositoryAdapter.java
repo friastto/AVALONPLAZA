@@ -41,14 +41,7 @@ public class CashSessionRepositoryAdapter implements CashSessionRepositoryPort {
 
     @Override
     public Optional<CashSessionDomain> findActiveSession(Long outletId, Long employeeId) {
-        Optional<CashSessionDomain> session = jpaCashSessionRepository.findByOutletIdAndEmployeeIdAndStatus(outletId, employeeId, "OPEN")
-                .map(cashSessionMapper::toDomain);
-        if (session.isPresent()) {
-            return session;
-        }
-        // Fallback: Si existe una sesión activa abierta en esta tienda, resolverla para el empleado
-        return jpaCashSessionRepository.findByOutletIdAndStatus(outletId, "OPEN").stream()
-                .findFirst()
+        return jpaCashSessionRepository.findByOutletIdAndEmployeeIdAndStatus(outletId, employeeId, "OPEN")
                 .map(cashSessionMapper::toDomain);
     }
 
