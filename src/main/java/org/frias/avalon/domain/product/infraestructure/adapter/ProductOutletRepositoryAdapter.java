@@ -39,11 +39,13 @@ public class ProductOutletRepositoryAdapter implements ProductOutletRepositoryPo
 
     @Override
     public Page<ProductDomain> findAll(String name, Long outletId, Pageable pageable) {
-        // Construcción de la especificación sin usar el método obsoleto 'where'
         Specification<ProductOutlet> spec = ProductSpecification.hasName(name)
                 .and(ProductSpecification.hasOutletId(outletId));
 
         Page<ProductOutlet> entityPage = jpaProductOutletRepository.findAll(spec, pageable);
+        if (entityPage.isEmpty() && outletId != null) {
+            entityPage = jpaProductOutletRepository.findFromPublicSchema(outletId, name, pageable);
+        }
         return entityPage.map(productOutletMapper::toDomain);
     }
 }

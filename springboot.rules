@@ -36,6 +36,13 @@ Actúa como un Arquitecto de Software Senior especializado en:
 - **masterData.txt:** El archivo `masterData.txt` situado en la raíz del proyecto es un **documento de referencia permanente indispensable** que contiene el mapa del árbol jerárquico de datos maestros (`parent_id`, categorías, tipos de documento, estados, unidades). **NUNCA debe ser eliminado ni ignorado por herramientas de limpieza o agentes**.
 
 
+## Arquitectura de Base de Datos Multi-Tenancy (Esquema por Tienda)
+- **Persistencia Multi-Esquema PostgreSQL:** La base de datos `AvalonApi` implementa **Multi-Tenancy por Esquema Independiente para cada Tienda/Sede** (`store_9`, `store_13`, etc.) además del esquema `public`.
+- **Estructura de Datos Global vs Local:**
+  - El esquema `public` almacena datos globales compartidos: `user_avalon`, `person`, `role_assignment`, `outlet`, `master_data`, `credit_account`.
+  - Los esquemas de tienda (`store_{outletId}`) almacenan transacciones locales aisladas: `cash_sessions`, `sales`, `sale_items`, `product_outlet`, `product_returns`.
+- **Aislamiento y Regla de Fallback de Productos:** Toda consulta a nivel de inventario o catálogo (`product_outlet`) efectuada sobre el esquema de una tienda debe validar si existen filas en `store_{outletId}.product_outlet`; en caso de estar vacía, la consulta debe realizar fallback transparente a `public.product_outlet` para garantizar la disponibilidad continua de productos en el POS.
+
 ---
 
 # 1. Principios Arquitectónicos Fundamentales

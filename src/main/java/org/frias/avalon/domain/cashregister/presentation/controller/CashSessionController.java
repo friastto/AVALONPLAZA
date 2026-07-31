@@ -189,7 +189,7 @@ public class CashSessionController {
     }
 
     @GetMapping("/outlets/{outletId}/cashiers-history")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'CJPRINCIPAL')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
     public ResponseEntity<List<org.frias.avalon.domain.cashregister.presentation.dto.CashierHistorySummaryResponse>> getOutletCashiersHistory(
             @PathVariable Long outletId
     ) {
@@ -197,7 +197,7 @@ public class CashSessionController {
     }
 
     @GetMapping("/consolidated-history/{outletId}")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'CJPRINCIPAL')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
     public ResponseEntity<org.frias.avalon.domain.cashregister.presentation.dto.PageResponseDto<org.frias.avalon.domain.cashregister.presentation.dto.ConsolidatedHistoryResponse>> getConsolidatedHistory(
             @PathVariable Long outletId,
             @RequestParam(required = false) Long employeeId,
