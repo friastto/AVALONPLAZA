@@ -41,7 +41,10 @@ public class Outlet {
     @Column(columnDefinition = "Geometry(Point, 4326)")
     private Point location;
 
-    // private Long company;
+    // Scalar coupling to Company domain — no @ManyToOne cross-domain JPA reference (Clean Architecture)
+    @Column(name = "company_id")
+    private Long companyId;
+
 
     private BigDecimal cashThresholdAmount;
 

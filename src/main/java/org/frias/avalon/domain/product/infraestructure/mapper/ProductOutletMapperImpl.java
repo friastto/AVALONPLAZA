@@ -78,12 +78,18 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
         // Ahora que tenemos el unitMeasureId en el dominio, usamos el servicio de conversión inversa
         String displayStock = unitConversionService.convertFromSmallestUnit(domain.getStock(), domain.getUnitMeasureId());
 
+        // Resolucion de imagen en 3 niveles: L3 (local tienda) > L2 (empresa) > L1 (Avalon global)
+        // L2 se resolvera cuando ProductCompanyEntity este disponible en el query
+        String localImg = domain.getImageUrl(); // imageUrl contiene la url local de la tienda
+        String effectiveImageUrl = (localImg != null && !localImg.isBlank()) ? localImg.split(",")[0].trim() : null;
+
         return new ProductResponse(
                 domain.getId(),
                 domain.getName(),
                 domain.getDescription(),
                 displayStock, // Usamos el stock formateado por el servicio
                 domain.getImageUrl(),
+                effectiveImageUrl,
                 domain.getPrice(),
                 domain.getOutletId(),
                 statusDto,

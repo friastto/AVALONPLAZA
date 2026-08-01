@@ -26,7 +26,12 @@ public class JwtUtils {
     private long jwtExpirationMs;
 
     // 1. Generar el Token (Nuevo Builder)
+    // Incluye claims Zero Trust: company_id y outlet_id para validacion de tenant en memoria
     public String generateToken(UserDetails userDetails, Long outletId) {
+        return generateToken(userDetails, outletId, null);
+    }
+
+    public String generateToken(UserDetails userDetails, Long outletId, Long companyId) {
 
         io.jsonwebtoken.JwtBuilder tknBuilder = Jwts.builder()
                 .subject(userDetails.getUsername())
@@ -34,15 +39,15 @@ public class JwtUtils {
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs));
 
-
-        /*if (empresaId != null) {
-            tknBuilder.claim("empresa_Id", empresaId);
-        }  */
+        // Zero Trust claim: outlet_id (nombre en minusculas consistente)
         if (outletId != null) {
-
-            tknBuilder.claim("outlet_Id", outletId);
+            tknBuilder.claim("outlet_id", outletId);
         }
 
+        // Zero Trust claim: company_id (frontera de tenant principal)
+        if (companyId != null) {
+            tknBuilder.claim("company_id", companyId);
+        }
 
         return tknBuilder.signWith(getSigningKey()).compact();
     }
@@ -79,23 +84,32 @@ public class JwtUtils {
     }
 
 
-    //5. extrae la empresa asociada al usuario
-    public Long extractCompany(String token) {
+    // 5. Extrae el company_id del token (Zero Trust: frontera de tenant principal)
+    public Long extractCompanyId(String token) {
         Claims claims = extractAllClaims(token);
-
-        // get() devolverá null si la llave "empresa_Id" no fue incluida en el builder
-        Object empresaId = claims.get("empresa_Id");
-
-        if (empresaId == null) {
+        Object companyId = claims.get("company_id");
+        if (companyId == null) return null;
+        if (companyId instanceof Number number) return number.longValue();
+        try {
+            return Long.parseLong(companyId.toString());
+        } catch (NumberFormatException e) {
             return null;
         }
+    }
 
-        if (empresaId instanceof Number number) {
-            return number.longValue();
-        }
+    // Alias de compatibilidad con codigo anterior que usaba extractCompany
+    public Long extractCompany(String token) {
+        return extractCompanyId(token);
+    }
 
+    // 6. Extrae el outlet_id del token (Zero Trust: validacion de sede operada)
+    public Long extractOutletId(String token) {
+        Claims claims = extractAllClaims(token);
+        Object outletId = claims.get("outlet_id");
+        if (outletId == null) return null;
+        if (outletId instanceof Number number) return number.longValue();
         try {
-            return Long.parseLong(empresaId.toString());
+            return Long.parseLong(outletId.toString());
         } catch (NumberFormatException e) {
             return null;
         }

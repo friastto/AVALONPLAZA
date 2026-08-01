@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 /**
  * DTO for product responses.
  * Stock is presented as a human-readable string.
+ * effectiveImageUrl resolves the best available image across 3 tiers:
+ *   localImageUrl (store L3) > customImageUrl (company L2) > imageUrl (Avalon L1)
  */
 public record ProductResponse(
     Long id,
@@ -15,6 +17,7 @@ public record ProductResponse(
     String description,
     String displayStock, // Campo para mostrar el stock formateado (ej. "1.5 KG")
     String imageUrl,
+    String effectiveImageUrl, // Imagen resuelta con prioridad L3 > L2 > L1
     BigDecimal price,
     Long outletId,
     MasterDataResponseDto status,
@@ -24,3 +27,4 @@ public record ProductResponse(
     LocalDateTime updatedAt
 ) {
 }
+

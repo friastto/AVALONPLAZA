@@ -86,7 +86,8 @@ class CreateProductOutletUseCaseImplTest {
         Long activeStatusId = 1L;
         Integer convertedStock = 1500;
         BigDecimal parsedQuantity = new BigDecimal("1.5");
-        ProductResponse expectedResponse = new ProductResponse(1L, "Test Product", "Description", "1.5 KG", "url", new BigDecimal("10.0"), 100L, null, "12345",null, null,null);
+        ProductResponse expectedResponse = new ProductResponse(1L, "Test Product", "Description", "1.5 KG", "url", null, new BigDecimal("10.0"), 100L, null, "12345",null, null,null);
+
 
         given(masterDataRepositoryPort.getIdByCode("ACT")).willReturn(activeStatusId);
         
