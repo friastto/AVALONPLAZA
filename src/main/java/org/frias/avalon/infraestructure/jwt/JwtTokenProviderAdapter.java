@@ -40,6 +40,11 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
 
     @Override
     public String generateAccessToken(UserDetails userDetails, Long outletId) {
+        return generateAccessToken(userDetails, outletId, null);
+    }
+
+    @Override
+    public String generateAccessToken(UserDetails userDetails, Long outletId, Long companyId) {
         Instant now = Instant.now();
         Instant expiryDate = now.plusMillis(jwtExpirationMs);
 
@@ -50,7 +55,10 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
                 .expiration(Date.from(expiryDate));
 
         if (outletId != null) {
-            tknBuilder.claim("outlet_Id", outletId);
+            tknBuilder.claim("outlet_id", outletId);
+        }
+        if (companyId != null) {
+            tknBuilder.claim("company_id", companyId);
         }
 
         return tknBuilder.signWith(jwtSecretKey).compact();
@@ -68,7 +76,7 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
                 .expiration(Date.from(expiryDate));
 
         if (outletId != null) {
-            tknBuilder.claim("outlet_Id", outletId);
+            tknBuilder.claim("outlet_id", outletId);
         }
 
         return tknBuilder.signWith(jwtSecretKey).compact();
@@ -83,13 +91,11 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
         Instant now = Instant.now();
         Instant expiryDate = now.plusMillis(jwtExpirationMs);
 
-        // Para las pruebas, añadimos un rol por defecto para que el filtro no falle.
-        // En un escenario real, este método debería buscar los roles del usuario y añadirlos.
-        List<String> roles = List.of("ADMIN"); // Rol de ejemplo
+        List<String> roles = List.of("ADMIN");
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
-                .claim("rol", roles) // Añadido para que el token sea válido en el filtro
+                .claim("rol", roles)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiryDate))
                 .signWith(jwtSecretKey)
@@ -112,7 +118,7 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
             extractAllClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            System.out.println("Token inválido o expirado: " + e.getMessage());
+            System.out.println("Token invalido o expirado: " + e.getMessage());
             return false;
         }
     }
@@ -125,13 +131,19 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
     @Override
     public List<String> extractRoles(String token) {
         List<String> roles = extractAllClaims(token).get("rol", List.class);
-        // Aseguramos que nunca devuelva null
         return roles == null ? Collections.emptyList() : roles;
     }
 
     @Override
     public Long extractOutletId(String token) {
-        return extractClaimAsLong(token, "outlet_Id");
+        Long id = extractClaimAsLong(token, "outlet_id");
+        return id != null ? id : extractClaimAsLong(token, "outlet_Id");
+    }
+
+    @Override
+    public Long extractCompanyId(String token) {
+        Long id = extractClaimAsLong(token, "company_id");
+        return id != null ? id : extractClaimAsLong(token, "empresa_Id");
     }
 
     @Override

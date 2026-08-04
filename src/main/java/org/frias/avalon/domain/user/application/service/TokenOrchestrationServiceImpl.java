@@ -27,8 +27,10 @@ public class TokenOrchestrationServiceImpl implements TokenOrchestrationService 
 
         OutletDomain outlet = outletResolverService.resolveActiveOutlet(roleAssigned);
 
-        // 1. Generar Access Token
-        String accessToken = jwtTokenProvider.generateAccessToken(userDetails, outlet != null ? outlet.getId() : null);
+        // 1. Generar Access Token con Zero Trust claims (outlet_id y company_id)
+        Long outletId = outlet != null ? outlet.getId() : null;
+        Long companyId = outlet != null ? outlet.getCompanyId() : null;
+        String accessToken = jwtTokenProvider.generateAccessToken(userDetails, outletId, companyId);
 
         // 2. Generar y persistir Refresh Token
         UUID refreshTokenUuid = jwtTokenProvider.generateRefreshToken();

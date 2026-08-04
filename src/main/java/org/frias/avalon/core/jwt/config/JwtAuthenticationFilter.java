@@ -95,14 +95,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         throw new SecurityException("No autorizado para cambiar tenant");
                     }
 
-                    // si viene header, lo se parsea seguro
-                    Long companyId = jwtTokenProvider.extractClaimAsLong(jwt, "empresa_Id");
+                    // Zero Trust: Extraer company_id directamente del token JWT
+                    Long companyId = jwtTokenProvider.extractCompanyId(jwt);
 
                     if (tenantHeader != null) {
                         try {
                             companyId = Long.parseLong(tenantHeader);
                         } catch (NumberFormatException e) {
-                            throw new SecurityException("X-Tenant-Id inválido");
+                            throw new SecurityException("X-Tenant-Id invalido");
                         }
                     }
 

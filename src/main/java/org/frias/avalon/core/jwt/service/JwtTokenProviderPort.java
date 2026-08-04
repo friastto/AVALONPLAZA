@@ -10,6 +10,8 @@ public interface JwtTokenProviderPort {
 
     String generateAccessToken(UserDetails userDetails, Long outletId);
 
+    String generateAccessToken(UserDetails userDetails, Long outletId, Long companyId);
+
     String generateImpersonationToken(UserDetails userDetails, Long outletId, List<String> roles);
 
     String generateAccessTokenFromId(Long userId);
@@ -25,6 +27,8 @@ public interface JwtTokenProviderPort {
     List<String> extractRoles(String token);
 
     Long extractOutletId(String token);
+
+    Long extractCompanyId(String token);
 
     Long extractClaimAsLong(String token, String claimName);
 }
