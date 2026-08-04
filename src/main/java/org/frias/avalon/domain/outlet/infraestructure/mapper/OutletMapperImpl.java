@@ -25,6 +25,7 @@ public class OutletMapperImpl implements OutletMapper {
 
     @Override
     public OutletDomain toDomain(Outlet o) {
+        if (o == null) return null;
 
         LocationDomain location = locationMapper.toLocation(o.getLocation());
 
@@ -37,17 +38,22 @@ public class OutletMapperImpl implements OutletMapper {
                 o.getNit(),
                 o.getStatusId(),
                 location,
-                o.getCashThresholdAmount()
+                o.getCashThresholdAmount(),
+                o.getCompanyId(),
+                o.getCreatedAt(),
+                o.getUpdatedAt()
         );
     }
 
     @Override
     public Outlet toEntity(OutletDomain od) {
+        if (od == null) return null;
 
         Point point = locationMapper.toPoint(od.getLocation());
 
-
         return Outlet.builder()
+                .id(od.getId())
+                .code(od.getCode())
                 .name(od.getName())
                 .address(od.getAddress())
                 .phone(od.getPhone())
@@ -55,14 +61,21 @@ public class OutletMapperImpl implements OutletMapper {
                 .statusId(od.getStatusId())
                 .location(point)
                 .cashThresholdAmount(od.getCashThresholdAmount())
+                .companyId(od.getCompanyId())
+                .createdAt(od.getCreatedAt())
+                .updatedAt(od.getUpdatedAt())
                 .build();
     }
 
     @Override
     public OutletResponseDto toResponse(OutletDomain od) {
+        if (od == null) return null;
+
         MasterRoot status = masterTreeProvider.getTree().getById(od.getStatusId());
         LocationDto locationDto = locationMapper.domainToDto(od.getLocation());
-        StatusResponseDto statusResponseDto = new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName());
+        StatusResponseDto statusResponseDto = status != null 
+                ? new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName())
+                : null;
 
         return new OutletResponseDto(
                 od.getId(),
@@ -72,7 +85,8 @@ public class OutletMapperImpl implements OutletMapper {
                 od.getPhone(),
                 od.getNit(),
                 locationDto,
-                statusResponseDto
+                statusResponseDto,
+                od.getCompanyId()
         );
     }
 }

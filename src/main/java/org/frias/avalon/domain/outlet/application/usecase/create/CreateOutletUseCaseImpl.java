@@ -60,7 +60,8 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
                 dto.nit(),
                 status.getId(),
                 location,
-                java.math.BigDecimal.ZERO
+                java.math.BigDecimal.ZERO,
+                dto.companyId()
         );
 
         OutletDomain outletSaved = outletPort.save(outletDomain);
@@ -80,7 +81,8 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
                 outletSaved.getPhone(),
                 outletSaved.getNit(),
                 locationDto,
-                statusResponse
+                statusResponse,
+                outletSaved.getCompanyId()
         );
     }
 }

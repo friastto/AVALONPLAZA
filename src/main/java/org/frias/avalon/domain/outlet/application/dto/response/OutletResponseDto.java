@@ -11,8 +11,7 @@ public record OutletResponseDto(
         String phone,
         String nit,
         LocationDto location,
-        StatusResponseDto statusResponseDto
-
-
+        StatusResponseDto statusResponseDto,
+        Long companyId
 ) {
 }

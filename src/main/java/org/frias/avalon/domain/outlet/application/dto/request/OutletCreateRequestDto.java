@@ -7,7 +7,7 @@ public record OutletCreateRequestDto(
         String address,
         String phone,
         String nit,
-        LocationDto location
-
+        LocationDto location,
+        Long companyId
 ) {
 }

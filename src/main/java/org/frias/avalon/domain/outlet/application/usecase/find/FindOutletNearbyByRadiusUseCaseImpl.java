@@ -56,7 +56,8 @@ public class FindOutletNearbyByRadiusUseCaseImpl implements FindOutletNearbyByRa
                             outletDomain.getPhone(),
                             outletDomain.getNit(),
                             currentLocation,
-                            new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName())
+                            new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName()),
+                            outletDomain.getCompanyId()
                     );
                 }
         ).toList();
