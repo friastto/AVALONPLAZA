@@ -103,7 +103,7 @@ class CreateProductOutletUseCaseImplTest {
         
         given(productOutletRepositoryPort.save(any(ProductDomain.class))).willAnswer(invocation -> {
             ProductDomain arg = invocation.getArgument(0);
-            return ProductDomain.fromPersistence(1L, arg.getName(), arg.getDescription(), arg.getStock(), arg.getUnitMeasureId(), arg.getImageUrl(), arg.getPrice(), arg.getOutletId(), arg.getStatusId(), arg.getCreatedAt(), arg.getUpdatedAt());
+            return ProductDomain.fromPersistence(1L, arg.getName(), arg.getDescription(), arg.getStock(), arg.getUnitMeasureId(), arg.getImageUrl(), arg.getPrice(), arg.getOutletId(), arg.getStatusId(), arg.getCreatedAt(), arg.getUpdatedAt(), arg.getVersion());
         });
         given(productOutletMapper.toResponse(any(ProductDomain.class), any())).willReturn(expectedResponse);
 

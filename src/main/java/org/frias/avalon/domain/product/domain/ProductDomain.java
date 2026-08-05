@@ -25,9 +25,10 @@ public class ProductDomain {
     private Long statusId;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Long version;
 
     // Constructor privado para forzar el uso de Factory Methods
-    private ProductDomain(Long id, String name, String description, Integer stock, Long unitMeasureId, String imageUrl, BigDecimal price, Long outletId, Long statusId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    private ProductDomain(Long id, String name, String description, Integer stock, Long unitMeasureId, String imageUrl, BigDecimal price, Long outletId, Long statusId, LocalDateTime createdAt, LocalDateTime updatedAt, Long version) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -39,6 +40,7 @@ public class ProductDomain {
         this.statusId = statusId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.version = version;
     }
 
     /**
@@ -82,17 +84,24 @@ public class ProductDomain {
                 outletId, 
                 activeStatusId,
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                null
         );
     }
 
     /**
-     * Restaura la entidad desde la base de datos sin disparar validaciones de creación.
+     * Restaura la entidad desde la base de datos sin disparar validaciones de creacion.
      */
     public static ProductDomain fromPersistence(
             Long id, String name, String description, Integer stock, Long unitMeasureId, String imageUrl, BigDecimal price, Long outletId, Long statusId, LocalDateTime createdAt, LocalDateTime updatedAt
     ) {
-        return new ProductDomain(id, name, description, stock, unitMeasureId, imageUrl, price, outletId, statusId, createdAt, updatedAt);
+        return fromPersistence(id, name, description, stock, unitMeasureId, imageUrl, price, outletId, statusId, createdAt, updatedAt, null);
+    }
+
+    public static ProductDomain fromPersistence(
+            Long id, String name, String description, Integer stock, Long unitMeasureId, String imageUrl, BigDecimal price, Long outletId, Long statusId, LocalDateTime createdAt, LocalDateTime updatedAt, Long version
+    ) {
+        return new ProductDomain(id, name, description, stock, unitMeasureId, imageUrl, price, outletId, statusId, createdAt, updatedAt, version);
     }
 
     // =========================================================================

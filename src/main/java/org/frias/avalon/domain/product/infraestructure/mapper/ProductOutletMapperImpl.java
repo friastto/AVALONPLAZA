@@ -35,7 +35,8 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
                 entity.getOutletId(),
                 entity.getStatusId(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                entity.getVersion()
         );
     }
 
@@ -56,6 +57,7 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
                 .statusId(domain.getStatusId())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
+                .version(domain.getVersion())
                 .build();
     }
 
