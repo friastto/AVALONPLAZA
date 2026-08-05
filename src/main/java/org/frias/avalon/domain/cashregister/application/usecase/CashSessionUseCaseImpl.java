@@ -138,9 +138,30 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
 
         BigDecimal expectedCash = session.getInitialBase().add(cashSales).subtract(sessionExpenses).subtract(sessionPickups);
 
-        Optional<PersonDomain> personOpt = personRepositoryPort.findById(session.getEmployeeId());
-        String name = personOpt.map(p -> (p.getName() + " " + (p.getLastName() != null ? p.getLastName() : "")).trim()).orElse("Empleado #" + session.getEmployeeId());
-        String numberId = personOpt.map(PersonDomain::getNumberid).orElse(null);
+        String name = "Empleado #" + session.getEmployeeId();
+        String numberId = null;
+
+        if (session.getEmployeeId() != null) {
+            Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findById(session.getEmployeeId());
+            if (userOpt.isPresent()) {
+                UserAvalonDomain user = userOpt.get();
+                if (user.getPersonId() != null) {
+                    Optional<PersonDomain> personOpt = personRepositoryPort.findById(user.getPersonId());
+                    if (personOpt.isPresent()) {
+                        PersonDomain person = personOpt.get();
+                        name = (person.getName() + " " + (person.getLastName() != null ? person.getLastName() : "")).trim();
+                        numberId = person.getNumberid();
+                    }
+                }
+            } else {
+                Optional<PersonDomain> personOpt = personRepositoryPort.findById(session.getEmployeeId());
+                if (personOpt.isPresent()) {
+                    PersonDomain person = personOpt.get();
+                    name = (person.getName() + " " + (person.getLastName() != null ? person.getLastName() : "")).trim();
+                    numberId = person.getNumberid();
+                }
+            }
+        }
         String regName = "Caja N° " + ((session.getId() == null || session.getId() % 2 != 0) ? "1" : "2");
 
         CashSessionResponse response = CashSessionResponse.fromDomain(session);
