@@ -33,8 +33,11 @@ public class ProductOutletRepositoryAdapter implements ProductOutletRepositoryPo
 
     @Override
     public Optional<ProductDomain> findById(Long id) {
-        return jpaProductOutletRepository.findById(id)
-                .map(productOutletMapper::toDomain);
+        Optional<ProductOutlet> entity = jpaProductOutletRepository.findById(id);
+        if (entity.isEmpty()) {
+            entity = jpaProductOutletRepository.findByIdFromPublicSchema(id);
+        }
+        return entity.map(productOutletMapper::toDomain);
     }
 
     @Override
