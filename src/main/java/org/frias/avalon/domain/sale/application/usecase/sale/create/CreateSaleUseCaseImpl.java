@@ -168,11 +168,9 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
 
             // Calcular subtotal
             BigDecimal subtotal;
-            if (isWeighable) {
-                // Subtotal = (Precio Unitario / Factor en unidades base) * Cantidad en unidades base
-                // Si la unidad es KG, la unidad base es gramos (factor = 1000)
-                // Si la unidad es LT, la unidad base es ml (factor = 1000)
-                // Si la unidad es LB, la unidad base es gramos (factor = 453.59237)
+            if (itemReq.customLineTotal() != null && itemReq.customLineTotal().compareTo(BigDecimal.ZERO) > 0) {
+                subtotal = itemReq.customLineTotal().setScale(2, RoundingMode.HALF_UP);
+            } else if (isWeighable) {
                 BigDecimal factor;
                 switch (unitCode.toUpperCase()) {
                     case "KG":
