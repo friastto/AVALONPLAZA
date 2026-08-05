@@ -26,15 +26,14 @@ public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalog
     @Override
     @Transactional(readOnly = true)
     public Page<ProductResponse> execute(Long outletId, String name, Pageable pageable) {
-        // --- Validar Encapsulación de Tienda (Tenant Isolation) ---
+        // --- Validar Encapsulacion de Tienda (Tenant Isolation) ---
+        boolean isConsumer = currentUserProvider.hasRole("ROLE_CLIENT") || currentUserProvider.hasRole("ROLE_CONSUMER");
         boolean isSystemAdmin = currentUserProvider.hasRole("ROLE_ADMIN") || currentUserProvider.hasRole("ROLE_ADMINTI");
-        if (!isSystemAdmin) {
+
+        if (!isSystemAdmin && !isConsumer) {
             Long tenantOutletId = currentUserProvider.getCurrentOutletId();
-            if (tenantOutletId == null) {
-                throw new BusinessException("No se detectó una tienda asociada en el contexto del empleado actual.");
-            }
-            if (!tenantOutletId.equals(outletId)) {
-                throw new BusinessException("Acceso denegado: No tienes permisos para ver el catálogo de otra tienda.");
+            if (tenantOutletId != null && !tenantOutletId.equals(outletId)) {
+                throw new BusinessException("Acceso denegado: No tienes permisos para ver el catalogo de otra tienda.");
             }
         }
 
