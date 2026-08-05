@@ -33,4 +33,14 @@ public interface ProductOutletRepositoryPort {
      * @return A Page of product domain models.
      */
     Page<ProductDomain> findAll(String name, Long outletId, Pageable pageable);
+
+    /**
+     * Retrieves a paginated and filtered list of products.
+     * @param name A string to filter products by name (can be null).
+     * @param outletId A Long to filter products by outlet ID (can be null).
+     * @param categoryId A Long to filter products by category ID (can be null).
+     * @param pageable Pagination and sorting information.
+     * @return A Page of product domain models.
+     */
+    Page<ProductDomain> findAll(String name, Long outletId, Long categoryId, Pageable pageable);
 }

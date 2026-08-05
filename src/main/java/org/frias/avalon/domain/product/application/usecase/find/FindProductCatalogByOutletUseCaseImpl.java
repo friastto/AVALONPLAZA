@@ -25,7 +25,7 @@ public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalog
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductResponse> execute(Long outletId, String name, Pageable pageable) {
+    public Page<ProductResponse> execute(Long outletId, String name, Long categoryId, Pageable pageable) {
         // --- Validar Encapsulacion de Tienda (Tenant Isolation) ---
         boolean isConsumer = currentUserProvider.hasRole("ROLE_CLIENT") || currentUserProvider.hasRole("ROLE_CONSUMER");
         boolean isSystemAdmin = currentUserProvider.hasRole("ROLE_ADMIN") || currentUserProvider.hasRole("ROLE_ADMINTI");
@@ -37,7 +37,7 @@ public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalog
             }
         }
 
-        return productOutletRepositoryPort.findAll(name, outletId, pageable)
+        return productOutletRepositoryPort.findAll(name, outletId, categoryId, pageable)
                 .map(productOutletMapper::toResponse);
     }
 }

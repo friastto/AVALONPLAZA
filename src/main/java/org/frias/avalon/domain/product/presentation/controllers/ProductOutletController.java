@@ -70,9 +70,13 @@ public class ProductOutletController {
     }
 
     @GetMapping("/catalog/outlet/{outletId}")
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProductCatalogByOutlet(@PathVariable Long outletId, @RequestParam(required = false) String name, @PageableDefault(size = 10) Pageable pageable) {
-        Page<ProductResponse> catalogPage = findProductCatalogByOutletUseCase.execute(outletId, name, pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(HttpStatus.OK.value(), "Catálogo de productos de la tienda obtenido exitosamente", catalogPage));
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProductCatalogByOutlet(
+            @PathVariable Long outletId,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long categoryId,
+            @PageableDefault(size = 10) Pageable pageable) {
+        Page<ProductResponse> catalogPage = findProductCatalogByOutletUseCase.execute(outletId, name, categoryId, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(HttpStatus.OK.value(), "Catalogo de productos de la tienda obtenido exitosamente", catalogPage));
     }
 
     @GetMapping("/barcode/{barcode}")

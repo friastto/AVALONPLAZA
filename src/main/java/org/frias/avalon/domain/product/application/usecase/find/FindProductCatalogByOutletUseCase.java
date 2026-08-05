@@ -10,8 +10,9 @@ public interface FindProductCatalogByOutletUseCase {
      *
      * @param outletId The ID of the outlet to filter by.
      * @param name Optional name filter.
+     * @param categoryId Optional category ID filter.
      * @param pageable Pagination and sorting information.
      * @return A Page containing ProductResponse DTOs.
      */
-    Page<ProductResponse> execute(Long outletId, String name, Pageable pageable);
+    Page<ProductResponse> execute(Long outletId, String name, Long categoryId, Pageable pageable);
 }

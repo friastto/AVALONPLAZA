@@ -42,8 +42,14 @@ public class ProductOutletRepositoryAdapter implements ProductOutletRepositoryPo
 
     @Override
     public Page<ProductDomain> findAll(String name, Long outletId, Pageable pageable) {
+        return findAll(name, outletId, null, pageable);
+    }
+
+    @Override
+    public Page<ProductDomain> findAll(String name, Long outletId, Long categoryId, Pageable pageable) {
         Specification<ProductOutlet> spec = ProductSpecification.hasName(name)
-                .and(ProductSpecification.hasOutletId(outletId));
+                .and(ProductSpecification.hasOutletId(outletId))
+                .and(ProductSpecification.hasCategoryId(categoryId));
 
         Page<ProductOutlet> entityPage = jpaProductOutletRepository.findAll(spec, pageable);
         if (entityPage.isEmpty() && outletId != null) {

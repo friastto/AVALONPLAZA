@@ -35,4 +35,19 @@ public class ProductSpecification {
             return criteriaBuilder.equal(root.get("outletId"), outletId);
         };
     }
+
+    /**
+     * Devuelve una Specification para filtrar productos por el ID de categoria.
+     *
+     * @param categoryId El ID de la categoria por la que filtrar.
+     * @return Una {@link Specification} para usar con JPA.
+     */
+    public static Specification<ProductOutlet> hasCategoryId(Long categoryId) {
+        return (root, query, criteriaBuilder) -> {
+            if (categoryId == null) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.equal(root.get("statusId"), categoryId);
+        };
+    }
 }
