@@ -26,9 +26,58 @@ El español es el único idioma permitido para todas las explicaciones y descrip
 
 
 
+## Diagrama de Arquitectura de la API (ApiAvalon)
+
+```mermaid
+graph TD
+    subgraph Presentation ["Capa de Presentacion (REST Controllers)"]
+        ProdCtrl["ProductOutletController (/avalon/products)"]
+        MasterCtrl["MasterRootController (/avalon/masterdata)"]
+        OutletCtrl["OutletController (/avalon/outlets)"]
+        AuthCtrl["AuthController (/avalon/auth)"]
+    end
+
+    subgraph Application ["Capa de Aplicacion (Use Cases & Ports)"]
+        FindCatalogUC["FindProductCatalogByOutletUseCase (outletId, categoryId, pageable)"]
+        FindMasterUC["FindMasterDataChildrenByParentCodeUseCase"]
+        OutPorts["Repository Ports (Interfaces)"]
+    end
+
+    subgraph Domain ["Capa de Dominio (Domain Layer)"]
+        ProdDomain["ProductDomain"]
+        MasterRootNode["MasterRoot"]
+        MasterTreeModel["MasterTree (Memoria / Mirror Cache)"]
+        TreeProvider["MasterTreeProvider (Validacion de Jerarquias)"]
+    end
+
+    subgraph Infrastructure ["Capa de Infraestructura (Adapters & Multi-Tenancy)"]
+        ProdAdapter["ProductOutletRepositoryAdapter"]
+        MasterAdapter["MasterDataRepositoryAdapter"]
+        ProdSpec["ProductSpecification (hasCategoryId, hasOutletId)"]
+        TenantRouter["Multi-Tenant Router (public / store_outletId)"]
+    end
+
+    subgraph Database ["Base de Datos PostgreSQL (Fuente de la Verdad)"]
+        PublicSchema["Esquema public (master_data, user_avalon, outlet)"]
+        StoreSchema["Esquema store_outletId (product_outlet, sales, cash_sessions)"]
+    end
+
+    ProdCtrl --> FindCatalogUC
+    MasterCtrl --> FindMasterUC
+    FindCatalogUC --> OutPorts
+    FindMasterUC --> OutPorts
+    FindCatalogUC --> TreeProvider
+    TreeProvider --> MasterTreeModel
+    ProdAdapter --> OutPorts
+    ProdAdapter --> ProdSpec
+    ProdAdapter --> TenantRouter
+    TenantRouter --> StoreSchema
+    TenantRouter --> PublicSchema
+```
+
 ## Estructura del Proyecto
 
-### Paquete Raíz
+### Paquete Raiz
 org.frias.avalon
 
 ├───core

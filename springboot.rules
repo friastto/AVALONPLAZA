@@ -36,6 +36,59 @@ Actúa como un Arquitecto de Software Senior especializado en:
 - **masterData.txt:** El archivo `masterData.txt` situado en la raíz del proyecto es un **documento de referencia permanente indispensable** que contiene el mapa del árbol jerárquico de datos maestros (`parent_id`, categorías, tipos de documento, estados, unidades). **NUNCA debe ser eliminado ni ignorado por herramientas de limpieza o agentes**.
 
 
+## Regla de MasterTree vs Base de Datos (Fuente de la Verdad)
+- **Base de Datos PostgreSQL como Fuente de la Verdad:** Todas las consultas (`SELECT`), persistencia y filtrado de datos (`master_data`, `product_outlet`) se ejecutan directamente sobre PostgreSQL mediante repositorios JPA.
+- **MasterTree para Validaciones en Memoria:** `MasterTree` (`MasterTreeProvider`) mantiene un espejo en memoria cargado al iniciar la aplicacion (`@PostConstruct`) para validar en la capa de negocio jerarquias (`isChildOf`), existencia de nodos e invariantes sin generar queries SQL recursivas.
+
+## Diagrama de Arquitectura de ApiAvalon
+
+```mermaid
+graph TD
+    subgraph Presentation ["Capa de Presentacion (REST Controllers)"]
+        ProdCtrl["ProductOutletController (/avalon/products)"]
+        MasterCtrl["MasterRootController (/avalon/masterdata)"]
+        OutletCtrl["OutletController (/avalon/outlets)"]
+        AuthCtrl["AuthController (/avalon/auth)"]
+    end
+
+    subgraph Application ["Capa de Aplicacion (Use Cases & Ports)"]
+        FindCatalogUC["FindProductCatalogByOutletUseCase (outletId, categoryId, pageable)"]
+        FindMasterUC["FindMasterDataChildrenByParentCodeUseCase"]
+        OutPorts["Repository Ports (Interfaces)"]
+    end
+
+    subgraph Domain ["Capa de Dominio (Domain Layer)"]
+        ProdDomain["ProductDomain"]
+        MasterRootNode["MasterRoot"]
+        MasterTreeModel["MasterTree (Memoria / Mirror Cache)"]
+        TreeProvider["MasterTreeProvider (Validacion de Jerarquias)"]
+    end
+
+    subgraph Infrastructure ["Capa de Infraestructura (Adapters & Multi-Tenancy)"]
+        ProdAdapter["ProductOutletRepositoryAdapter"]
+        MasterAdapter["MasterDataRepositoryAdapter"]
+        ProdSpec["ProductSpecification (hasCategoryId, hasOutletId)"]
+        TenantRouter["Multi-Tenant Router (public / store_outletId)"]
+    end
+
+    subgraph Database ["Base de Datos PostgreSQL (Fuente de la Verdad)"]
+        PublicSchema["Esquema public (master_data, user_avalon, outlet)"]
+        StoreSchema["Esquema store_outletId (product_outlet, sales, cash_sessions)"]
+    end
+
+    ProdCtrl --> FindCatalogUC
+    MasterCtrl --> FindMasterUC
+    FindCatalogUC --> OutPorts
+    FindMasterUC --> OutPorts
+    FindCatalogUC --> TreeProvider
+    TreeProvider --> MasterTreeModel
+    ProdAdapter --> OutPorts
+    ProdAdapter --> ProdSpec
+    ProdAdapter --> TenantRouter
+    TenantRouter --> StoreSchema
+    TenantRouter --> PublicSchema
+```
+
 ## Arquitectura de Base de Datos Multi-Tenancy (Esquema por Tienda)
 - **Persistencia Multi-Esquema PostgreSQL:** La base de datos `AvalonApi` implementa **Multi-Tenancy por Esquema Independiente para cada Tienda/Sede** (`store_9`, `store_13`, etc.) además del esquema `public`.
 - **Estructura de Datos Global vs Local:**
