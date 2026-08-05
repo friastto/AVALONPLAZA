@@ -98,9 +98,17 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
     public CashSessionResponse mapAndEnrichSessionResponse(CashSessionDomain session) {
         if (session == null) return null;
         LocalDateTime now = LocalDateTime.now();
+        Long personIdToQuery = session.getEmployeeId();
+        if (session.getEmployeeId() != null) {
+            Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findById(session.getEmployeeId());
+            if (userOpt.isPresent() && userOpt.get().getPersonId() != null) {
+                personIdToQuery = userOpt.get().getPersonId();
+            }
+        }
+
         List<SaleDomain> sessionSales = saleRepositoryPort.findByOutletAndEmployeeAndDateBetween(
                 session.getOutletId(),
-                session.getEmployeeId(),
+                personIdToQuery,
                 session.getOpenedAt(),
                 now
         );
@@ -317,9 +325,17 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
                 .orElseThrow(() -> new BusinessException("No se encontró la sesión de caja especificada"));
                 
         LocalDateTime endDate = LocalDateTime.now();
+        Long personIdToQuery = session.getEmployeeId();
+        if (session.getEmployeeId() != null) {
+            Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findById(session.getEmployeeId());
+            if (userOpt.isPresent() && userOpt.get().getPersonId() != null) {
+                personIdToQuery = userOpt.get().getPersonId();
+            }
+        }
+
         List<SaleDomain> sales = saleRepositoryPort.findByOutletAndEmployeeAndDateBetween(
                 session.getOutletId(),
-                session.getEmployeeId(),
+                personIdToQuery,
                 session.getOpenedAt(),
                 endDate
         );
@@ -369,9 +385,17 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
         BigDecimal totalActual = base.add(remaining);
 
         LocalDateTime endDate = LocalDateTime.now();
+        Long personIdToQuery = session.getEmployeeId();
+        if (session.getEmployeeId() != null) {
+            Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findById(session.getEmployeeId());
+            if (userOpt.isPresent() && userOpt.get().getPersonId() != null) {
+                personIdToQuery = userOpt.get().getPersonId();
+            }
+        }
+
         List<SaleDomain> sales = saleRepositoryPort.findByOutletAndEmployeeAndDateBetween(
                 session.getOutletId(),
-                session.getEmployeeId(),
+                personIdToQuery,
                 session.getOpenedAt(),
                 endDate
         );
