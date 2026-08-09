@@ -19,6 +19,15 @@ public interface MasterDataRepositoryPort {
 
     MasterRoot deleteById(Long id);
 
+    /**
+     * Updates the parent ID for a specified MasterData node.
+     *
+     * @param nodeId the ID of the node to update
+     * @param newParentId the new parent ID
+     * @return the updated MasterRoot domain model
+     */
+    MasterRoot updateParentId(Long nodeId, Long newParentId);
+
     Optional<MasterRoot> findParentByChildrenId(Long chilldrenId);
 
     Optional<MasterRoot> getActiveStatus();

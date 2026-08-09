@@ -111,4 +111,36 @@ class MasterDataRepositoryAdapterTest {
         assertTrue(activeStatus.isPresent());
         assertEquals("ACT", activeStatus.get().getShortName());
     }
+
+    @Test
+    @DisplayName("Debería lanzar DomainValidationException al intentar eliminar un nodo con hijos")
+    void shouldThrowDomainValidationExceptionWhenDeletingNodeWithChildren() {
+        // Arrange
+        Long parentId = masterDataRepositoryAdapter.getIdByCode("GEN");
+        assertNotNull(parentId);
+
+        // Act & Assert
+        org.frias.avalon.core.exeptions.DomainValidationException exception = assertThrows(
+                org.frias.avalon.core.exeptions.DomainValidationException.class,
+                () -> masterDataRepositoryAdapter.deleteById(parentId)
+        );
+        assertEquals("No se puede eliminar el nodo porque contiene subcategorias o ramas fijadas.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Debería actualizar el parentId correctamente")
+    void shouldUpdateParentIdSuccessfully() {
+        // Arrange
+        Long childId = masterDataRepositoryAdapter.getIdByCode("M");
+        Long newParentId = masterDataRepositoryAdapter.getIdByCode("IDENT");
+        assertNotNull(childId);
+        assertNotNull(newParentId);
+
+        // Act
+        MasterRoot updated = masterDataRepositoryAdapter.updateParentId(childId, newParentId);
+
+        // Assert
+        assertNotNull(updated);
+        assertEquals(newParentId, updated.getParentId());
+    }
 }

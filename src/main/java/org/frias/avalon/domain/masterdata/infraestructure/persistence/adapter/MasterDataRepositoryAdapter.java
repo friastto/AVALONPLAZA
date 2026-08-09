@@ -1,6 +1,7 @@
 package org.frias.avalon.domain.masterdata.infraestructure.persistence.adapter;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.frias.avalon.core.exeptions.DomainValidationException;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
@@ -58,12 +59,29 @@ public class MasterDataRepositoryAdapter implements MasterDataRepositoryPort {
 
     @Override
     public MasterRoot deleteById(Long id) {
+        if (jpa.existsByParentId(id)) {
+            throw new DomainValidationException("No se puede eliminar el nodo porque contiene subcategorias o ramas fijadas.");
+        }
         MasterData entityToDelete = jpa.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("No se puede eliminar. No se encontró MasterData con id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("No se puede eliminar. No se encontro MasterData con id: " + id));
 
         jpa.delete(entityToDelete);
 
         return mapper.toDomain(entityToDelete);
+    }
+
+    @Override
+    public MasterRoot updateParentId(Long nodeId, Long newParentId) {
+        MasterData entity = jpa.findById(nodeId)
+                .orElseThrow(() -> new EntityNotFoundException("MasterData no encontrado con id: " + nodeId));
+
+        if (newParentId != null && !jpa.existsById(newParentId)) {
+            throw new DomainValidationException("El nuevo parentId especificado no existe: " + newParentId);
+        }
+
+        entity.setParentId(newParentId);
+        MasterData updatedEntity = jpa.save(entity);
+        return mapper.toDomain(updatedEntity);
     }
 
     @Override

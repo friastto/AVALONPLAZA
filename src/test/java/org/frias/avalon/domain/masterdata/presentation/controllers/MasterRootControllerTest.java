@@ -50,6 +50,12 @@ class MasterRootControllerTest {
     private CreateAllMasterDataUseCase createAllMasterDataUseCase;
     @MockitoBean
     private FindAllMasterDataUseCase findAllUseCase;
+    @MockitoBean
+    private org.frias.avalon.domain.masterdata.application.usecase.delete.DeleteMasterDataUseCase deleteUseCase;
+    @MockitoBean
+    private org.frias.avalon.domain.masterdata.application.usecase.find.FindMasterDataChildrenByParentCodeUseCase findChildrenUseCase;
+    @MockitoBean
+    private org.frias.avalon.domain.masterdata.application.usecase.reparent.ReparentMasterDataUseCase reparentUseCase;
 
     // Mocks de dependencias de seguridad
     @MockitoBean
@@ -61,8 +67,8 @@ class MasterRootControllerTest {
 
 
     @Test
-    @DisplayName("POST /masterRoot/create - Debería crear un MasterData y retornar 200 OK con los datos")
-    @WithMockUser // Simula un usuario autenticado para que la seguridad no falle por token JWT
+    @DisplayName("POST /avalon/masterdata/create - Debería crear un MasterData y retornar 200 OK con los datos")
+    @WithMockUser(roles = "ADMIN")
     void shouldCreateMasterDataAndReturnOk() throws Exception {
         // Arrange (Given)
         MasterDataNewDto requestDto = new MasterDataNewDto("FULL NAME", "SHORT", "PARENT", "ACT");
@@ -72,7 +78,7 @@ class MasterRootControllerTest {
         given(findByIdUseCase.execute(1L)).willReturn(responseDto);
 
         // Act (When)
-        ResultActions response = mockMvc.perform(post("/masterRoot/create")
+        ResultActions response = mockMvc.perform(post("/avalon/masterdata/create")
                 .with(csrf()) // Añade un token CSRF válido simulado a la petición para evitar error 403
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)));
@@ -86,15 +92,15 @@ class MasterRootControllerTest {
     }
 
     @Test
-    @DisplayName("POST /masterRoot/create - Debería retornar 400 Bad Request si el DTO es inválido")
-    @WithMockUser
+    @DisplayName("POST /avalon/masterdata/create - Debería retornar 400 Bad Request si el DTO es inválido")
+    @WithMockUser(roles = "ADMIN")
     void shouldReturnBadRequestWhenCreateWithInvalidDto() throws Exception {
         // Arrange (Given)
         // shortName está en blanco, lo que debería fallar la validación @NotBlank
         MasterDataNewDto invalidRequestDto = new MasterDataNewDto("FULL NAME", "", "PARENT", "ACT");
 
         // Act (When)
-        ResultActions response = mockMvc.perform(post("/masterRoot/create")
+        ResultActions response = mockMvc.perform(post("/avalon/masterdata/create")
                 .with(csrf()) // Añade un token CSRF válido
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidRequestDto)));
@@ -104,7 +110,7 @@ class MasterRootControllerTest {
     }
 
     @Test
-    @DisplayName("GET /masterRoot/search/v2/{id} - Debería retornar un MasterData si el ID existe")
+    @DisplayName("GET /avalon/masterdata/search/v2/{id} - Debería retornar un MasterData si el ID existe")
     @WithMockUser // Para las peticiones GET, CSRF no se exige por defecto en Spring Security
     void shouldReturnMasterDataWhenIdExists() throws Exception {
         // Arrange (Given)
@@ -113,7 +119,7 @@ class MasterRootControllerTest {
         given(findByIdUseCase.execute(existingId)).willReturn(responseDto);
 
         // Act (When)
-        ResultActions response = mockMvc.perform(get("/masterRoot/search/v2/{id}", existingId));
+        ResultActions response = mockMvc.perform(get("/avalon/masterdata/search/v2/{id}", existingId));
 
         // Assert (Then)
         response.andExpect(status().isOk())
@@ -123,7 +129,7 @@ class MasterRootControllerTest {
     }
 
     @Test
-    @DisplayName("GET /masterRoot/search/v2/{id} - Debería lanzar excepción si el ID no existe (manejado por ExceptionHandler)")
+    @DisplayName("GET /avalon/masterdata/search/v2/{id} - Debería lanzar excepción si el ID no existe (manejado por ExceptionHandler)")
     @WithMockUser
     void shouldThrowExceptionWhenIdDoesNotExist() throws Exception {
         // Arrange (Given)
@@ -132,10 +138,32 @@ class MasterRootControllerTest {
         given(findByIdUseCase.execute(nonExistingId)).willThrow(new jakarta.persistence.EntityNotFoundException("MasterData no encontrado: " + nonExistingId));
 
         // Act (When)
-        ResultActions response = mockMvc.perform(get("/masterRoot/search/v2/{id}", nonExistingId));
+        ResultActions response = mockMvc.perform(get("/avalon/masterdata/search/v2/{id}", nonExistingId));
 
         // Assert (Then)
         // Asumimos que tienes un @ControllerAdvice que maneja EntityNotFoundException y devuelve un 404.
         response.andExpect(status().isNotFound()); 
+    }
+
+    @Test
+    @DisplayName("PUT /avalon/masterdata/{id}/reparent - Deberia actualizar el parentId y retornar 200 OK")
+    @WithMockUser(roles = "ADMIN")
+    void shouldReparentMasterDataAndReturnOk() throws Exception {
+        // Arrange
+        Long id = 10L;
+        Long newParentId = 2L;
+        MasterDataResponseDto responseDto = new MasterDataResponseDto(id, "SHORT", "FULL NAME");
+        given(reparentUseCase.execute(id, newParentId)).willReturn(responseDto);
+
+        // Act
+        ResultActions response = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/avalon/masterdata/{id}/reparent", id)
+                .param("newParentId", newParentId.toString())
+                .with(csrf()));
+
+        // Assert
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is(200)))
+                .andExpect(jsonPath("$.message", is("Nodo reubicado exitosamente")))
+                .andExpect(jsonPath("$.data.id", is(10)));
     }
 }

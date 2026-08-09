@@ -12,6 +12,8 @@ import java.util.Optional;
 @Repository
 public interface JpaMasterDataRepository extends JpaRepository<MasterData, Long> {
 
+    boolean existsByParentId(Long parentId);
+
     Optional<MasterData> findByShortName(String shortName);
 
     @Query("""

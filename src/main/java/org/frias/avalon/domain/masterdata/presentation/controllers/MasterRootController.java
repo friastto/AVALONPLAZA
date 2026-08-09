@@ -12,8 +12,10 @@ import org.frias.avalon.domain.masterdata.application.usecase.delete.DeleteMaste
 import org.frias.avalon.domain.masterdata.application.usecase.find.FindAllMasterDataUseCase;
 import org.frias.avalon.domain.masterdata.application.usecase.find.FindMasterDataByIdUseCase;
 import org.frias.avalon.domain.masterdata.application.usecase.find.FindMasterDataChildrenByParentCodeUseCase;
+import org.frias.avalon.domain.masterdata.application.usecase.reparent.ReparentMasterDataUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,9 +30,10 @@ public class MasterRootController {
     private final FindAllMasterDataUseCase findAllUseCase;
     private final DeleteMasterDataUseCase deleteUseCase;
     private final FindMasterDataChildrenByParentCodeUseCase findChildrenUseCase;
+    private final ReparentMasterDataUseCase reparentUseCase;
 
 
-    public MasterRootController(CreateMasterDataUseCase createUseCase, FindMasterDataByIdUseCase findByIdUseCase, ChangeStatusUseCase changeStatusUseCase, CreateAllMasterDataUseCase createAllMasterDataUseCase, FindAllMasterDataUseCase findAllUseCase, DeleteMasterDataUseCase deleteUseCase, FindMasterDataChildrenByParentCodeUseCase findChildrenUseCase) {
+    public MasterRootController(CreateMasterDataUseCase createUseCase, FindMasterDataByIdUseCase findByIdUseCase, ChangeStatusUseCase changeStatusUseCase, CreateAllMasterDataUseCase createAllMasterDataUseCase, FindAllMasterDataUseCase findAllUseCase, DeleteMasterDataUseCase deleteUseCase, FindMasterDataChildrenByParentCodeUseCase findChildrenUseCase, ReparentMasterDataUseCase reparentUseCase) {
         this.createUseCase = createUseCase;
         this.findByIdUseCase = findByIdUseCase;
         this.changeStatusUseCase = changeStatusUseCase;
@@ -38,9 +41,11 @@ public class MasterRootController {
         this.findAllUseCase = findAllUseCase;
         this.deleteUseCase = deleteUseCase;
         this.findChildrenUseCase = findChildrenUseCase;
+        this.reparentUseCase = reparentUseCase;
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasAuthority('ADMINTI') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MasterDataResponseDto>> create(@Valid @RequestBody MasterDataNewDto request) {
         Long id = createUseCase.execute(request);
         MasterDataResponseDto response = findByIdUseCase.execute(id);
@@ -60,22 +65,36 @@ public class MasterRootController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('ADMINTI') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MasterDataResponseDto>> delete(@PathVariable Long id) {
         MasterDataResponseDto deletedData = deleteUseCase.execute(id);
         return ResponseEntity.ok(new ApiResponse<>(200, "Registro eliminado exitosamente", deletedData));
     }
 
     @PatchMapping("/change/status")
+    @PreAuthorize("hasAuthority('ADMINTI') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MasterDataResponseDto>> updateById(@RequestBody MasterDataUpdateStatusDto dataDto) {
         MasterDataResponseDto response = changeStatusUseCase.execute(dataDto);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(200, "Se actualiso el estado", response));
     }
 
     @PostMapping("/save/all")
+    @PreAuthorize("hasAuthority('ADMINTI') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<MasterDataResponseDto>>> saveAll(@RequestBody List<MasterDataNewDto> dataDto) {
         List<MasterDataResponseDto> response = createAllMasterDataUseCase.execute(dataDto);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(200, "Se actualizo el estado", response));
     }
+
+    @PutMapping("/{id}/reparent")
+    @PreAuthorize("hasAuthority('ADMINTI') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<MasterDataResponseDto>> reparent(
+            @PathVariable Long id,
+            @RequestParam Long newParentId
+    ) {
+        MasterDataResponseDto response = reparentUseCase.execute(id, newParentId);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(200, "Nodo reubicado exitosamente", response));
+    }
+
     @GetMapping("/{parentCode}/children")
     public ResponseEntity<ApiResponse<List<MasterDataResponseDto>>> getChildrenByParentCode(
             @PathVariable String parentCode
