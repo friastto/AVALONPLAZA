@@ -99,7 +99,7 @@ public class ModesMachineImpl implements ModesMachine {
                             role,
                             permissionEmployee
                     );
-                }else if (tree.isChildOf(role, "SYSTEM")) {
+                }else if (tree.isChildOf(role, "SISTEM") || tree.isChildOf(role, "SYSTEM")) {
                     // Si se encuentran múltiples roles de empleado, se tomará el último.
                     // Si solo se espera un rol de empleado, esto es suficiente.
                     List<String> permissionEmployee = permissionService.resolvePermissions(role);
