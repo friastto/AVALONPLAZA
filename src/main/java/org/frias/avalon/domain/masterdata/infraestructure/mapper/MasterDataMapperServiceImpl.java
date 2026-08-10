@@ -12,9 +12,11 @@ public class MasterDataMapperServiceImpl implements MasterDataMapperService {
     public MasterDataResponseDto toDto(MasterData masterData) {
 
         return new MasterDataResponseDto(
-                masterData.getId()
-                , masterData.getShortName()
-                , masterData.getFullName()
+                masterData.getId(),
+                masterData.getShortName(),
+                masterData.getFullName(),
+                masterData.getParentId(),
+                "ACTIVO"
         );
     }
 
@@ -47,7 +49,9 @@ public class MasterDataMapperServiceImpl implements MasterDataMapperService {
         return new MasterDataResponseDto(
                 masterRoot.getId(),
                 masterRoot.getShortName(),
-                masterRoot.getFullName()
+                masterRoot.getFullName(),
+                masterRoot.getParentId(),
+                "ACTIVO"
         );
     }
 

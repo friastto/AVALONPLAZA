@@ -3,6 +3,7 @@ package org.frias.avalon.domain.masterdata.application.usecase.reparent;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReparentMasterDataUseCaseImpl implements ReparentMasterDataUseCase {
 
     private final MasterDataRepositoryPort masterDataRepositoryPort;
+    private final MasterTreeProvider masterTreeProvider;
 
-    public ReparentMasterDataUseCaseImpl(MasterDataRepositoryPort masterDataRepositoryPort) {
+    public ReparentMasterDataUseCaseImpl(MasterDataRepositoryPort masterDataRepositoryPort, MasterTreeProvider masterTreeProvider) {
         this.masterDataRepositoryPort = masterDataRepositoryPort;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     /**
@@ -29,10 +32,13 @@ public class ReparentMasterDataUseCaseImpl implements ReparentMasterDataUseCase 
     @Transactional
     public MasterDataResponseDto execute(Long id, Long newParentId) {
         MasterRoot updatedDomainObject = masterDataRepositoryPort.updateParentId(id, newParentId);
+        masterTreeProvider.refresh();
         return new MasterDataResponseDto(
                 updatedDomainObject.getId(),
                 updatedDomainObject.getShortName(),
-                updatedDomainObject.getFullName()
+                updatedDomainObject.getFullName(),
+                updatedDomainObject.getParentId(),
+                "ACTIVO"
         );
     }
 }

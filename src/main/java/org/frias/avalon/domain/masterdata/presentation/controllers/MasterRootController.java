@@ -45,7 +45,7 @@ public class MasterRootController {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority('ADMINTI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMINTI') or hasRole('ADMIN') or hasAuthority('ADMINTI')")
     public ResponseEntity<ApiResponse<MasterDataResponseDto>> create(@Valid @RequestBody MasterDataNewDto request) {
         Long id = createUseCase.execute(request);
         MasterDataResponseDto response = findByIdUseCase.execute(id);
@@ -65,31 +65,31 @@ public class MasterRootController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('ADMINTI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMINTI') or hasRole('ADMIN') or hasAuthority('ADMINTI')")
     public ResponseEntity<ApiResponse<MasterDataResponseDto>> delete(@PathVariable Long id) {
         MasterDataResponseDto deletedData = deleteUseCase.execute(id);
         return ResponseEntity.ok(new ApiResponse<>(200, "Registro eliminado exitosamente", deletedData));
     }
 
     @PatchMapping("/change/status")
-    @PreAuthorize("hasAuthority('ADMINTI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMINTI') or hasRole('ADMIN') or hasAuthority('ADMINTI')")
     public ResponseEntity<ApiResponse<MasterDataResponseDto>> updateById(@RequestBody MasterDataUpdateStatusDto dataDto) {
         MasterDataResponseDto response = changeStatusUseCase.execute(dataDto);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(200, "Se actualiso el estado", response));
     }
 
     @PostMapping("/save/all")
-    @PreAuthorize("hasAuthority('ADMINTI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMINTI') or hasRole('ADMIN') or hasAuthority('ADMINTI')")
     public ResponseEntity<ApiResponse<List<MasterDataResponseDto>>> saveAll(@RequestBody List<MasterDataNewDto> dataDto) {
         List<MasterDataResponseDto> response = createAllMasterDataUseCase.execute(dataDto);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(200, "Se actualizo el estado", response));
     }
 
     @PutMapping("/{id}/reparent")
-    @PreAuthorize("hasAuthority('ADMINTI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMINTI') or hasRole('ADMIN') or hasAuthority('ADMINTI')")
     public ResponseEntity<ApiResponse<MasterDataResponseDto>> reparent(
             @PathVariable Long id,
-            @RequestParam Long newParentId
+            @RequestParam(required = false) Long newParentId
     ) {
         MasterDataResponseDto response = reparentUseCase.execute(id, newParentId);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(200, "Nodo reubicado exitosamente", response));
