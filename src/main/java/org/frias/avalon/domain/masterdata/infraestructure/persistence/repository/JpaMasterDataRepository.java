@@ -35,10 +35,16 @@ public interface JpaMasterDataRepository extends JpaRepository<MasterData, Long>
             """)
     Optional<MasterData> findParentByChildId(@Param("id") Long childId);
 
-    @Query("""
-        SELECT m FROM MasterData m WHERE m.parentId = (
-            SELECT p.id FROM MasterData p WHERE p.shortName = :parentCode
+    @Query(value = """
+        WITH RECURSIVE tree AS (
+            SELECT m.* FROM master_data m WHERE m.parent_id = (
+                SELECT p.id FROM master_data p WHERE p.short_name = :parentCode
+            )
+            UNION ALL
+            SELECT c.* FROM master_data c
+            INNER JOIN tree t ON c.parent_id = t.id
         )
-    """)
+        SELECT * FROM tree
+    """, nativeQuery = true)
     List<MasterData> findChildrenByParentCode(@Param("parentCode") String parentCode);
 }
