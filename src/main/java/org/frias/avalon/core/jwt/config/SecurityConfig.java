@@ -69,7 +69,8 @@ public class SecurityConfig {
                         .requestMatchers("/avalon/person/verify-identification").permitAll()
 
 
-                        // MasterData is strictly private business taxonomy and requires valid JWT authentication
+                        // Lectura pública de catálogos específicos para formularios de registro (ej. tipos de documento IDENT, géneros GEN)
+                        .requestMatchers("/avalon/masterdata/{parentCode}/children").permitAll()
 
 
 
