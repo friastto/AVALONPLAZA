@@ -218,6 +218,7 @@ en la api
 			{"fullName": "TYPE_GERENTES", "shortName": "GERENTE", "parentShortName": "EMP", "statusId": "ACT"},
 
 				{"fullName": "GERENTE_GENERAL", "shortName": "GERGEN", "parentShortName": "GERENTE", "statusId": "ACT"},
+				{"fullName": "ADMINISTRADOR_OUTLET", "shortName": "ADMOULT", "parentShortName": "GERENTE", "statusId": "ACT"},
 				{"fullName": "GERENTE_TURNO", "shortName": "GERTUR", "parentShortName": "GERENTE", "statusId": "ACT"},
 				{"fullName": "GERENTE_PISO", "shortName": "GERPI", "parentShortName": "GERENTE", "statusId": "ACT"},
 				{"fullName": "GERENTE_INVERCION_Y_ALMACEN", "shortName": "GERINVAL", "parentShortName": "GERENTE", "statusId": "ACT"},
@@ -315,6 +316,7 @@ USING GIST ((location::geography));
 
 {"fullName":"GESTION_OUTLET","shortName":"GESTION","parentShortName":"DUENO","statusId":"ACT"}
 {"fullName":"GERENTE_GENERAL","shortName":"GERGEN","parentShortName":"GESTION","statusId":"ACT"}
+{"fullName":"ADMINISTRADOR_OUTLET","shortName":"ADMOULT","parentShortName":"GESTION","statusId":"ACT"}
 {"fullName":"GERENTE_TURNO","shortName":"GERTUR","parentShortName":"GESTION","statusId":"ACT"}
 {"fullName":"GERENTE_PISO","shortName":"GERPISO","parentShortName":"GESTION","statusId":"ACT"}
 {"fullName":"GERENTE_LOGISTICA","shortName":"GERLOG","parentShortName":"GESTION","statusId":"ACT"}

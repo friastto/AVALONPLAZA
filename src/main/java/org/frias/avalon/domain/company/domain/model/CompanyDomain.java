@@ -1,5 +1,6 @@
 package org.frias.avalon.domain.company.domain.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -11,6 +12,7 @@ public record CompanyDomain(
         String name,
         String email,
         Long statusId,
+        BigDecimal defaultCashThresholdAmount,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

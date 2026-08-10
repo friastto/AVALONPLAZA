@@ -112,7 +112,7 @@ public class CashSessionController {
     }
 
     @PutMapping("/outlets/{outletId}/threshold")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
     public ResponseEntity<Void> configureThreshold(
             @PathVariable Long outletId,
             @Valid @RequestBody ConfigureThresholdRequest request
@@ -123,7 +123,7 @@ public class CashSessionController {
 
     @Idempotent
     @PostMapping("/{sessionId}/pickups")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
     public ResponseEntity<CashPickupResponse> registerPickup(
             @PathVariable Long sessionId,
             @Valid @RequestBody RegisterCashPickupRequest request
@@ -139,7 +139,7 @@ public class CashSessionController {
 
     @Idempotent
     @PostMapping("/{sessionId}/drops")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
     public ResponseEntity<CashPickupResponse> registerDrop(
             @PathVariable Long sessionId,
             @Valid @RequestBody RegisterCashPickupRequest request
@@ -158,7 +158,7 @@ public class CashSessionController {
     }
 
     @PostMapping("/{sessionId}/blind-count/step-2")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
     public ResponseEntity<Void> submitBlindCountStep2(
             @PathVariable Long sessionId,
             @Valid @RequestBody BlindCountStep2Request request
@@ -168,19 +168,19 @@ public class CashSessionController {
     }
 
     @GetMapping("/discrepancies")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
     public ResponseEntity<List<DiscrepancyAuditResponse>> getDiscrepancies(@RequestParam(required = false) Long outletId) {
         return ResponseEntity.ok(List.of());
     }
 
     @GetMapping("/audit/discrepancies")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
     public ResponseEntity<List<DiscrepancyAuditResponse>> getAuditDiscrepancies(@RequestParam(required = false) Long outletId) {
         return ResponseEntity.ok(List.of());
     }
 
     @GetMapping("/{sessionId}/discrepancies")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
     public ResponseEntity<List<DiscrepancyAuditResponse>> getSessionDiscrepancies(
             @PathVariable Long sessionId,
             @RequestParam(required = false) Long outletId
@@ -189,7 +189,7 @@ public class CashSessionController {
     }
 
     @GetMapping("/outlets/{outletId}/cashiers-history")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
     public ResponseEntity<List<org.frias.avalon.domain.cashregister.presentation.dto.CashierHistorySummaryResponse>> getOutletCashiersHistory(
             @PathVariable Long outletId
     ) {
@@ -197,7 +197,7 @@ public class CashSessionController {
     }
 
     @GetMapping("/consolidated-history/{outletId}")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
     public ResponseEntity<org.frias.avalon.domain.cashregister.presentation.dto.PageResponseDto<org.frias.avalon.domain.cashregister.presentation.dto.ConsolidatedHistoryResponse>> getConsolidatedHistory(
             @PathVariable Long outletId,
             @RequestParam(required = false) Long employeeId,
@@ -211,7 +211,7 @@ public class CashSessionController {
     }
 
     @GetMapping("/discrepancies-history/{outletId}")
-    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN')")
+    @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
     public ResponseEntity<org.frias.avalon.domain.cashregister.presentation.dto.PageResponseDto<org.frias.avalon.domain.cashregister.presentation.dto.DiscrepancyHistoryResponse>> getDiscrepanciesHistory(
             @PathVariable Long outletId,
             @RequestParam(required = false) Long employeeId,

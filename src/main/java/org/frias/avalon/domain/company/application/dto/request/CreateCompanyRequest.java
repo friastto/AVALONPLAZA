@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
+
 /**
  * DTO for creating a new Company.
  */
@@ -18,7 +20,9 @@ public record CreateCompanyRequest(
         String name,
 
         @Email(message = "Email must be valid")
-        String email
+        String email,
+
+        BigDecimal defaultCashThresholdAmount
 
 ) {
 }

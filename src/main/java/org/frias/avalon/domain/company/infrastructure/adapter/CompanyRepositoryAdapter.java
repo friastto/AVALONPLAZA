@@ -46,6 +46,14 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
                 .toList();
     }
 
+    @Override
+    public void updateDefaultThreshold(Long companyId, java.math.BigDecimal thresholdAmount) {
+        jpa.findById(companyId).ifPresent(entity -> {
+            entity.setDefaultCashThresholdAmount(thresholdAmount);
+            jpa.save(entity);
+        });
+    }
+
     // --- Internal mappers (no separate MapStruct needed for simple flat entity) ---
 
     private CompanyEntity toEntity(CompanyDomain domain) {
@@ -55,6 +63,7 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
                 .name(domain.name())
                 .email(domain.email())
                 .statusId(domain.statusId())
+                .defaultCashThresholdAmount(domain.defaultCashThresholdAmount())
                 .build();
     }
 
@@ -65,6 +74,7 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
                 entity.getName(),
                 entity.getEmail(),
                 entity.getStatusId(),
+                entity.getDefaultCashThresholdAmount(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

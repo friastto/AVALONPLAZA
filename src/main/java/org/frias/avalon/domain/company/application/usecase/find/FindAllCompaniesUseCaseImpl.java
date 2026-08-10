@@ -30,6 +30,7 @@ public class FindAllCompaniesUseCaseImpl implements FindAllCompaniesUseCase {
                         domain.name(),
                         domain.email(),
                         domain.statusId(),
+                        domain.defaultCashThresholdAmount(),
                         domain.createdAt(),
                         domain.updatedAt()
                 ))

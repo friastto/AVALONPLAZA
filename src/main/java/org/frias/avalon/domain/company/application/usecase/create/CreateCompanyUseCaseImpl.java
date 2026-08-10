@@ -35,6 +35,7 @@ public class CreateCompanyUseCaseImpl implements CreateCompanyUseCase {
                 request.name(),
                 request.email(),
                 null,   // statusId assigned after creation if needed
+                request.defaultCashThresholdAmount(),
                 null,
                 null
         );
@@ -47,6 +48,7 @@ public class CreateCompanyUseCaseImpl implements CreateCompanyUseCase {
                 saved.name(),
                 saved.email(),
                 saved.statusId(),
+                saved.defaultCashThresholdAmount(),
                 saved.createdAt(),
                 saved.updatedAt()
         );

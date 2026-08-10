@@ -3,6 +3,7 @@ package org.frias.avalon.domain.company.infrastructure.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -32,6 +33,9 @@ public class CompanyEntity {
 
     @Column(name = "status_id")
     private Long statusId;
+
+    @Column(name = "default_cash_threshold_amount", precision = 19, scale = 2)
+    private BigDecimal defaultCashThresholdAmount;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

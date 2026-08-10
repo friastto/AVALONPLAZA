@@ -6,6 +6,7 @@ import org.frias.avalon.domain.company.application.dto.request.CreateCompanyRequ
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
 import org.frias.avalon.domain.company.application.usecase.create.CreateCompanyUseCase;
 import org.frias.avalon.domain.company.application.usecase.find.FindAllCompaniesUseCase;
+import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +15,7 @@ import java.util.List;
 
 /**
  * REST controller for managing companies.
- * Exposes endpoints /api/v1/companies for GET and POST operations.
+ * Exposes endpoints /api/v1/companies for GET, POST, and PUT operations.
  */
 @RestController
 @RequestMapping("/api/v1/companies")
@@ -22,10 +23,16 @@ public class CompanyController {
 
     private final CreateCompanyUseCase createCompanyUseCase;
     private final FindAllCompaniesUseCase findAllCompaniesUseCase;
+    private final CompanyRepositoryPort companyRepositoryPort;
 
-    public CompanyController(CreateCompanyUseCase createCompanyUseCase, FindAllCompaniesUseCase findAllCompaniesUseCase) {
+    public CompanyController(
+            CreateCompanyUseCase createCompanyUseCase,
+            FindAllCompaniesUseCase findAllCompaniesUseCase,
+            CompanyRepositoryPort companyRepositoryPort
+    ) {
         this.createCompanyUseCase = createCompanyUseCase;
         this.findAllCompaniesUseCase = findAllCompaniesUseCase;
+        this.companyRepositoryPort = companyRepositoryPort;
     }
 
     /**
@@ -58,5 +65,22 @@ public class CompanyController {
                         "Company created successfully",
                         createdCompany
                 ));
+    }
+
+    /**
+     * PUT /api/v1/companies/{id}/threshold - Updates default cash drop threshold for company.
+     */
+    @PutMapping("/{id}/threshold")
+    public ResponseEntity<ApiResponse<Void>> updateThreshold(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, java.math.BigDecimal> payload
+    ) {
+        java.math.BigDecimal thresholdAmount = payload.get("thresholdAmount");
+        companyRepositoryPort.updateDefaultThreshold(id, thresholdAmount);
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Default company threshold updated successfully",
+                null
+        ));
     }
 }

@@ -22,4 +22,7 @@ public interface CompanyRepositoryPort {
 
     /** Returns all registered companies. */
     List<CompanyDomain> findAll();
+
+    /** Updates default cash threshold amount for a company. */
+    void updateDefaultThreshold(Long companyId, java.math.BigDecimal thresholdAmount);
 }

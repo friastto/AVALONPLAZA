@@ -38,6 +38,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
+import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
+import org.frias.avalon.domain.company.domain.model.CompanyDomain;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -48,6 +51,7 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
     private final OutletRepositoryPort outletRepositoryPort;
     private final PersonRepositoryPort personRepositoryPort;
     private final UserAvalonRepositoryPort userAvalonRepositoryPort;
+    private final CompanyRepositoryPort companyRepositoryPort;
 
     @Override
     @Transactional
@@ -248,6 +252,11 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
 
         OutletDomain outlet = outletRepositoryPort.findById(outletId).orElse(null);
         BigDecimal cashThresholdAmount = outlet != null ? outlet.getCashThresholdAmount() : null;
+        if (cashThresholdAmount == null && outlet != null && outlet.getCompanyId() != null) {
+            cashThresholdAmount = companyRepositoryPort.findById(outlet.getCompanyId())
+                    .map(CompanyDomain::defaultCashThresholdAmount)
+                    .orElse(null);
+        }
         
         Boolean thresholdExceeded = false;
         if (cashThresholdAmount != null && cashThresholdAmount.compareTo(BigDecimal.ZERO) > 0) {
