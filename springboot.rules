@@ -40,6 +40,10 @@ Actúa como un Arquitecto de Software Senior especializado en:
 - **Base de Datos PostgreSQL como Fuente de la Verdad:** Todas las consultas (`SELECT`), persistencia y filtrado de datos (`master_data`, `product_outlet`) se ejecutan directamente sobre PostgreSQL mediante repositorios JPA.
 - **MasterTree para Validaciones en Memoria:** `MasterTree` (`MasterTreeProvider`) mantiene un espejo en memoria cargado al iniciar la aplicacion (`@PostConstruct`) para validar en la capa de negocio jerarquias (`isChildOf`), existencia de nodos e invariantes sin generar queries SQL recursivas.
 
+## Regla de Integridad de Datos API (Prohibición de Datos Falsos o Hardcodeados)
+- **Precisión Absoluta de Respuestas:** Toda la información expuesta por la API (DTOs, jerarquías de `MasterData`, catálogos, usuarios y estados) debe provenir de manera precisa y exacta de la base de datos PostgreSQL.
+- **Prohibición de Mocks/Fallbacks Inventados:** Queda **estrictamente prohibido** utilizar datos temporales, inventados, o fallbacks hardcodeados en DTOs o UseCases. Si la información no existe o la consulta es inválida, se debe responder con el status HTTP y mensaje de excepción real de la API.
+
 ## Diagrama de Arquitectura de ApiAvalon
 
 ```mermaid
