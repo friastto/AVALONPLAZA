@@ -54,6 +54,13 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
     }
 
     @Override
+    public List<OutletDomain> findByCompanyId(Long companyId) {
+        return jpa.findByCompanyId(companyId).stream()
+                .map(outletMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Page<OutletDomain> findAll(OutletSearchCriteria criteria, Pageable pageable) {
         Specification<Outlet> spec = Specification.allOf(
                 OutletSpecification.hasName(criteria.name()),

@@ -19,6 +19,8 @@ public interface OutletRepositoryPort {
 
     Optional<OutletDomain> findByNit(String nit);
 
+    List<OutletDomain> findByCompanyId(Long companyId);
+
     Page<OutletDomain> findAll(OutletSearchCriteria criteria, Pageable pageable);
 
     List<OutletDomain> nearbyByName(String domain);

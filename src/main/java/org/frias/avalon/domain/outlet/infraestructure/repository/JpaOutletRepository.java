@@ -14,6 +14,8 @@ public interface JpaOutletRepository extends JpaRepository<Outlet, Long>, JpaSpe
     
     Optional<Outlet> findByNit(String nit);
     
+    List<Outlet> findByCompanyId(Long companyId);
+    
     @Query(value = """
                 SELECT *,
                        ST_Distance(

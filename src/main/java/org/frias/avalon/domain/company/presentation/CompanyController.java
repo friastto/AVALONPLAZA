@@ -24,21 +24,25 @@ public class CompanyController {
     private final CreateCompanyUseCase createCompanyUseCase;
     private final FindAllCompaniesUseCase findAllCompaniesUseCase;
     private final CompanyRepositoryPort companyRepositoryPort;
+    private final org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort;
+    private final org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper outletMapper;
 
     public CompanyController(
             CreateCompanyUseCase createCompanyUseCase,
             FindAllCompaniesUseCase findAllCompaniesUseCase,
-            CompanyRepositoryPort companyRepositoryPort
+            CompanyRepositoryPort companyRepositoryPort,
+            org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort,
+            org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper outletMapper
     ) {
         this.createCompanyUseCase = createCompanyUseCase;
         this.findAllCompaniesUseCase = findAllCompaniesUseCase;
         this.companyRepositoryPort = companyRepositoryPort;
+        this.outletRepositoryPort = outletRepositoryPort;
+        this.outletMapper = outletMapper;
     }
 
     /**
      * GET /api/v1/companies - Retrieves all companies.
-     *
-     * @return ResponseEntity with list of companies
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<CompanyResponse>>> findAll() {
@@ -51,10 +55,47 @@ public class CompanyController {
     }
 
     /**
+     * GET /api/v1/companies/{id} - Retrieves company details by ID.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CompanyResponse>> findById(@PathVariable Long id) {
+        return companyRepositoryPort.findById(id)
+                .map(company -> ResponseEntity.ok(new ApiResponse<>(
+                        HttpStatus.OK.value(),
+                        "Company retrieved successfully",
+                        new CompanyResponse(
+                                company.id(),
+                                company.nit(),
+                                company.name(),
+                                company.email(),
+                                company.statusId(),
+                                company.defaultCashThresholdAmount(),
+                                company.createdAt(),
+                                company.updatedAt()
+                        )
+                )))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "Company not found", null)));
+    }
+
+    /**
+     * GET /api/v1/companies/{id}/outlets - Retrieves all outlets linked to company.
+     */
+    @GetMapping("/{id}/outlets")
+    public ResponseEntity<ApiResponse<List<org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto>>> findOutletsByCompany(@PathVariable Long id) {
+        List<org.frias.avalon.domain.outlet.domain.model.OutletDomain> outlets = outletRepositoryPort.findByCompanyId(id);
+        List<org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto> responseDtos = outlets.stream()
+                .map(outletMapper::toResponse)
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                responseDtos.isEmpty() ? "No outlets found for company" : "Outlets retrieved successfully",
+                responseDtos
+        ));
+    }
+
+    /**
      * POST /api/v1/companies - Creates a new company.
-     *
-     * @param request CreateCompanyRequest DTO
-     * @return ResponseEntity with created company
      */
     @PostMapping
     public ResponseEntity<ApiResponse<CompanyResponse>> create(@Valid @RequestBody CreateCompanyRequest request) {
