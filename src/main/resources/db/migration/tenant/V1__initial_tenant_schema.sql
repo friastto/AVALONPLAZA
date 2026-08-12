@@ -192,3 +192,32 @@ CREATE TABLE IF NOT EXISTS return_items (
     return_id BIGINT NOT NULL,
     CONSTRAINT fk_return_items_return FOREIGN KEY (return_id) REFERENCES product_returns(id) ON DELETE CASCADE
 );
+
+-- =============================================================================
+-- ROW LEVEL SECURITY (RLS) POLICIES BY OUTLET
+-- =============================================================================
+
+ALTER TABLE cash_sessions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS outlet_isolation_policy ON cash_sessions;
+CREATE POLICY outlet_isolation_policy ON cash_sessions USING (outlet_id = current_setting('app.current_outlet_id', true)::bigint);
+
+ALTER TABLE credit_account ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS outlet_isolation_policy ON credit_account;
+CREATE POLICY outlet_isolation_policy ON credit_account USING (outlet_id = current_setting('app.current_outlet_id', true)::bigint);
+
+ALTER TABLE product_outlet ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS outlet_isolation_policy ON product_outlet;
+CREATE POLICY outlet_isolation_policy ON product_outlet USING (outlet_id = current_setting('app.current_outlet_id', true)::bigint);
+
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS outlet_isolation_policy ON orders;
+CREATE POLICY outlet_isolation_policy ON orders USING (outlet_id = current_setting('app.current_outlet_id', true)::bigint);
+
+ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS outlet_isolation_policy ON sales;
+CREATE POLICY outlet_isolation_policy ON sales USING (outlet_id = current_setting('app.current_outlet_id', true)::bigint);
+
+ALTER TABLE product_returns ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS outlet_isolation_policy ON product_returns;
+CREATE POLICY outlet_isolation_policy ON product_returns USING (outlet_id = current_setting('app.current_outlet_id', true)::bigint);
+

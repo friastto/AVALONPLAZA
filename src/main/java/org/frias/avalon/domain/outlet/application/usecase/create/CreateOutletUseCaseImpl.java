@@ -66,8 +66,12 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
 
         OutletDomain outletSaved = outletPort.save(outletDomain);
 
-        // Auto-provision tenant isolated schema in PostgreSQL (e.g. store_2)
-        flywayMultiTenantService.migrateTenantSchema("store_" + outletSaved.getId());
+        // Auto-provision tenant isolated schema in PostgreSQL (e.g. company_1 or store_2)
+        if (outletSaved.getCompanyId() != null) {
+            flywayMultiTenantService.migrateTenantSchema("company_" + outletSaved.getCompanyId());
+        } else {
+            flywayMultiTenantService.migrateTenantSchema("store_" + outletSaved.getId());
+        }
 
         StatusResponseDto statusResponse = new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName());
 

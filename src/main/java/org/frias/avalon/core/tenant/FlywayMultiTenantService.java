@@ -64,7 +64,7 @@ public class FlywayMultiTenantService {
         List<String> schemas = new ArrayList<>();
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'store_%'")) {
+             ResultSet resultSet = statement.executeQuery("SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'company_%' OR schema_name LIKE 'store_%'")) {
             while (resultSet.next()) {
                 schemas.add(resultSet.getString("schema_name"));
             }
