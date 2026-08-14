@@ -41,15 +41,14 @@ public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalog
             }
         }
 
-        // Estero-Aislamiento Multi-Tenant: cambiar contexto al esquema de la tienda solicitada
+        // Aislamiento Multi-Tenant: cambiar contexto al esquema de la tienda solicitada
         if (outletId != null) {
             OutletDomain outlet = outletPort.findById(outletId).orElse(null);
             if (outlet != null) {
                 if (outlet.getCompanyId() != null) {
-                    TenantContext.setCurrentTenant("company_" + outlet.getCompanyId());
-                } else {
-                    TenantContext.setCurrentTenant("store_" + outlet.getId());
+                    TenantContext.setTenantId(outlet.getCompanyId());
                 }
+                TenantContext.setTenantOutletId(outlet.getId());
             }
         }
 

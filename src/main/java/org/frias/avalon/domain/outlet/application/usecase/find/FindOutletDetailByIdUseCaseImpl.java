@@ -1,6 +1,7 @@
 package org.frias.avalon.domain.outlet.application.usecase.find;
 
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
+import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletDetailResponse;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
@@ -45,7 +46,17 @@ public class FindOutletDetailByIdUseCaseImpl implements FindOutletDetailByIdUseC
         OutletDomain outletDomain = outletRepository.findById(outletId)
                 .orElseThrow(() -> new ResourceNotFoundException("Outlet not found with id: " + outletId));
 
-        List<ProductDomain> productDomains = productRepository.findAll(null, outletId, Pageable.unpaged()).getContent();
+        if (outletDomain.getCompanyId() != null) {
+            TenantContext.setTenantId(outletDomain.getCompanyId());
+        }
+        TenantContext.setTenantOutletId(outletDomain.getId());
+
+        List<ProductDomain> productDomains;
+        try {
+            productDomains = productRepository.findAll(null, outletId, Pageable.unpaged()).getContent();
+        } finally {
+            TenantContext.clear();
+        }
 
         List<ProductResponse> productResponses = productDomains.stream()
                 .map(productMapper::toResponse)
