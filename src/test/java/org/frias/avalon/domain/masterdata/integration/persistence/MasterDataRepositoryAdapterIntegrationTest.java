@@ -15,7 +15,12 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.test.context.ActiveProfiles;
+
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("test")
 @Import({MasterDataMapperServiceImpl.class, MasterDataRepositoryAdapter.class})
 @Sql("/data-test.sql")
 

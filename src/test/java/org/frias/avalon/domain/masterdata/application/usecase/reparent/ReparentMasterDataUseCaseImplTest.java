@@ -3,6 +3,7 @@ package org.frias.avalon.domain.masterdata.application.usecase.reparent;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,9 @@ class ReparentMasterDataUseCaseImplTest {
 
     @Mock
     private MasterDataRepositoryPort masterDataRepositoryPort;
+
+    @Mock
+    private MasterTreeProvider masterTreeProvider;
 
     @InjectMocks
     private ReparentMasterDataUseCaseImpl reparentMasterDataUseCase;
@@ -42,5 +46,6 @@ class ReparentMasterDataUseCaseImplTest {
         assertEquals("CHILD", response.shortName());
         assertEquals("FULL CHILD", response.fullName());
         verify(masterDataRepositoryPort).updateParentId(nodeId, newParentId);
+        verify(masterTreeProvider).refresh();
     }
 }

@@ -13,8 +13,12 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-//@ActiveProfiles("test")
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.test.context.ActiveProfiles;
+
+@ActiveProfiles("test")
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Sql("/data-test.sql")
 class JpaMasterDataRepositoryTest {
 @Autowired

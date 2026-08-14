@@ -13,7 +13,12 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.test.context.ActiveProfiles;
+
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("test")
 @Sql("/data-test.sql")
 @AllArgsConstructor(onConstructor_ = {@Autowired})
 @DisplayName("Pruebas de Integración - Capa de Persistencia (JpaMasterDataRepository)")

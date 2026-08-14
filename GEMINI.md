@@ -278,10 +278,10 @@ Todas las soluciones generadas deben seguir estrictamente:
 
 ## Reglas de Pruebas (Testing)
 - **Práctica "Test-First":** Cada nueva funcionalidad o refactorización debe ir acompañada de sus correspondientes pruebas (unitarias y/o de integración). No se debe entregar código de producción sin su prueba.
-- Genera pruebas unitarias utilizando JUnit 5 y Mockito.
-- Prueba las reglas de negocio principalmente en la capa de dominio.
-- Utiliza nombres de pruebas significativos en inglés.
-- Sigue la estructura Arrange, Act, Assert (Organizar, Actuar, Verificar).
+- Genera pruebas unitarias utilizando JUnit 5 y Mockito para la capa de Dominio y Aplicación.
+- **Desacoplamiento Total de H2:** H2 permanece deshabilitado y comentado en `pom.xml` y en los archivos de propiedades. Las pruebas de integración se ejecutarán exclusivamente sobre **PostgreSQL real** (vía Testcontainers / BD Postgres de test) con migraciones Flyway activas.
+- **Garantía de Cero Residuos en BD (Zero Residual Data):** Toda prueba sobre la base de datos real debe ser transaccional con rollback automático (`@Transactional`) o ejecutar scripts de limpieza post-ejecución (`TRUNCATE`), asegurando que no queden datos de prueba residuales.
+- Utiliza nombres de pruebas significativos en inglés y sigue la estructura Arrange, Act, Assert (Organizar, Actuar, Verificar).
 
 ## Formato de Respuesta
 Para cada solución, proporciona siempre:

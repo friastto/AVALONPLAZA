@@ -100,7 +100,7 @@ public class CreateSaleWithEmailIntegrationTest {
                     newProd.setLocalDescription("Desc");
                     newProd.setLocalPrice(new BigDecimal("1000.00"));
                     newProd.setStock(50);
-                    newProd.setUnitMeasureId(11L); // KG u otro válido
+                    newProd.setUnitMeasureId(22L); // UNIDAD validadas en masterData
                     newProd.setOutletId(4L);
                     newProd.setStatusId(1L);
                     newProd.setCreatedAt(LocalDateTime.now());

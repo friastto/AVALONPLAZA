@@ -6,7 +6,7 @@ import org.frias.avalon.domain.person.infraestructure.mapper.PersonMapper;
 import org.frias.avalon.domain.person.infraestructure.persistence.adapter.PersonPersistenceAdapter;
 import org.frias.avalon.domain.person.infraestructure.persistence.entity.PersonEntity;
 import org.frias.avalon.domain.masterdata.infraestructure.persistence.adapter.MasterDataRepositoryAdapter;
-import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapperImpl;
+import org.frias.avalon.domain.user.infraestructure.persistence.mapper.UserAvalonMapperImpl;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.infraestructure.persistence.adapter.UserAvalonRepositoryAdapter;
 import org.frias.avalon.domain.user.infraestructure.persistence.entity.UserAvalon;
