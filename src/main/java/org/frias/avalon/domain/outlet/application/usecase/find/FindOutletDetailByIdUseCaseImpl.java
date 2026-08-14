@@ -13,8 +13,9 @@ import org.frias.avalon.domain.product.domain.ProductDomain;
 import org.frias.avalon.domain.product.infraestructure.mapper.ProductOutletMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,19 +29,21 @@ public class FindOutletDetailByIdUseCaseImpl implements FindOutletDetailByIdUseC
     private final ProductOutletRepositoryPort productRepository;
     private final OutletMapper outletMapper;
     private final ProductOutletMapper productMapper;
+    private final TransactionTemplate transactionTemplate;
 
     public FindOutletDetailByIdUseCaseImpl(
             OutletRepositoryPort outletRepository,
             ProductOutletRepositoryPort productRepository,
             OutletMapper outletMapper,
-            ProductOutletMapper productMapper) {
+            ProductOutletMapper productMapper,
+            TransactionTemplate transactionTemplate) {
         this.outletRepository = outletRepository;
         this.productRepository = productRepository;
         this.outletMapper = outletMapper;
         this.productMapper = productMapper;
+        this.transactionTemplate = transactionTemplate;
     }
 
-    @Transactional(readOnly = true)
     @Override
     public OutletDetailResponse execute(Long outletId) {
         OutletDomain outletDomain = outletRepository.findById(outletId)
@@ -53,9 +56,17 @@ public class FindOutletDetailByIdUseCaseImpl implements FindOutletDetailByIdUseC
 
         List<ProductDomain> productDomains;
         try {
-            productDomains = productRepository.findAll(null, outletId, Pageable.unpaged()).getContent();
+            productDomains = transactionTemplate.execute(status ->
+                    productRepository.findAll(null, outletId, Pageable.unpaged()).getContent()
+            );
+        } catch (Exception e) {
+            productDomains = Collections.emptyList();
         } finally {
             TenantContext.clear();
+        }
+
+        if (productDomains == null) {
+            productDomains = Collections.emptyList();
         }
 
         List<ProductResponse> productResponses = productDomains.stream()

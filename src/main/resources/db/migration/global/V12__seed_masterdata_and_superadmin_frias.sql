@@ -170,8 +170,8 @@ INSERT INTO user_avalon (person_id, user_name, hash_salt, hash_password, status_
 VALUES (
     (SELECT id FROM person WHERE number_id = '1122415280'),
     'frias',
-    'frias_salt',
-    '$2a$10$w0fS7yZpM6Q58hA5.g6K8uC2/JqZ1xZ0g6V8uC2/JqZ1xZ0g6V8uC',
+    'MTIzNDU2Nzg5MDEyMzQ1Ng==',
+    'E4cW3+YIAKfNHMYt++Qekjc0gIN1FgbfAxT0bITgRi4=',
     (SELECT id FROM master_data WHERE short_name = 'ACT'),
     NOW()
 ) ON CONFLICT (user_name) DO NOTHING;

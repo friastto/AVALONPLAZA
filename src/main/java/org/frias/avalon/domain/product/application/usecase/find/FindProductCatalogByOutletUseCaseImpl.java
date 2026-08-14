@@ -1,6 +1,5 @@
 package org.frias.avalon.domain.product.application.usecase.find;
 
-import lombok.RequiredArgsConstructor;
 import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.core.tenant.TenantContext;
@@ -12,23 +11,35 @@ import org.frias.avalon.domain.product.infraestructure.mapper.ProductOutletMappe
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Caso de uso para obtener el catálogo de productos de una tienda.
  * Garantiza que los empleados de una tienda estén encapsulados en su propia tienda.
  */
 @Service
-@RequiredArgsConstructor
 public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalogByOutletUseCase {
 
     private final ProductOutletRepositoryPort productOutletRepositoryPort;
     private final ProductOutletMapper productOutletMapper;
     private final CurrentUserProviderPort currentUserProvider;
     private final OutletRepositoryPort outletPort;
+    private final TransactionTemplate transactionTemplate;
+
+    public FindProductCatalogByOutletUseCaseImpl(
+            ProductOutletRepositoryPort productOutletRepositoryPort,
+            ProductOutletMapper productOutletMapper,
+            CurrentUserProviderPort currentUserProvider,
+            OutletRepositoryPort outletPort,
+            TransactionTemplate transactionTemplate) {
+        this.productOutletRepositoryPort = productOutletRepositoryPort;
+        this.productOutletMapper = productOutletMapper;
+        this.currentUserProvider = currentUserProvider;
+        this.outletPort = outletPort;
+        this.transactionTemplate = transactionTemplate;
+    }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<ProductResponse> execute(Long outletId, String name, Long categoryId, Pageable pageable) {
         // --- Validar Encapsulacion de Tienda (Tenant Isolation) ---
         boolean isConsumer = currentUserProvider.hasRole("ROLE_CLIENT") || currentUserProvider.hasRole("ROLE_CONSUMER");
@@ -53,8 +64,13 @@ public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalog
         }
 
         try {
-            return productOutletRepositoryPort.findAll(name, outletId, categoryId, pageable)
-                    .map(productOutletMapper::toResponse);
+            Page<ProductResponse> result = transactionTemplate.execute(status ->
+                    productOutletRepositoryPort.findAll(name, outletId, categoryId, pageable)
+                            .map(productOutletMapper::toResponse)
+            );
+            return result != null ? result : Page.empty(pageable);
+        } catch (Exception e) {
+            return Page.empty(pageable);
         } finally {
             TenantContext.clear();
         }
