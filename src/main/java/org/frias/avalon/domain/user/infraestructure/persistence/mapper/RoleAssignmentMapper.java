@@ -1,4 +1,4 @@
-package org.frias.avalon.domain.user.domain.mapper;
+package org.frias.avalon.domain.user.infraestructure.persistence.mapper;
 
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.user.application.dtos.response.AssignmentRoleResponse;
@@ -13,7 +13,6 @@ public interface RoleAssignmentMapper {
     RoleAssignmentDomain toDomain(RoleAssignment role);
 
     AssignmentRoleResponse toResponse(RoleAssignmentDomain domain);
-
 
     AssignmentRoleResponse toResponse(
             UserAvalonDomain user,

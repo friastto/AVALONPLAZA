@@ -1,13 +1,14 @@
 package org.frias.avalon.domain.person.domain.model;
 
-
-import lombok.Getter;
 import org.frias.avalon.core.exeptions.BusinessException;
 
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
-@Getter
+/**
+ * Pure Java Domain model representing a Person in ApiAvalon.
+ * Free of Lombok annotations.
+ */
 public class PersonDomain {
 
     private Long id;
@@ -23,25 +24,18 @@ public class PersonDomain {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Regex simple para validación de email
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
-    // Constructor privado: Nadie puede hacer 'new' desde fuera, obligando a usar los Factory Methods
     private PersonDomain() {
     }
 
-    /**
-     * createBasic: Utilizado para la creación inicial (Negocio).
-     * Aquí aplicamos reglas estrictas de lo que es "obligatorio" para que una persona exista.
-     */
     public static PersonDomain createBasic(Long typeIdentificationId, String numberid, String name, String lastName, String address, Long sexId, Long phoneNumber, String email, Long statusId) {
-        validateRequired(numberid, "El número de identificación es requerido");
+        validateRequired(numberid, "El numero de identificacion es requerido");
         validateRequired(name, "El nombre es requerido");
         validateRequired(lastName, "El apellido es requerido");
 
-        // Regla: Debe tener al menos una forma de contacto
         if ((phoneNumber == null || phoneNumber <= 0) && (email == null || email.isBlank())) {
-            throw new BusinessException("Se necesita al menos un teléfono o un email válido para crear el registro");
+            throw new BusinessException("Se necesita al menos un telefono o un email valido para crear el registro");
         }
 
         if (email != null && !email.isBlank()) {
@@ -57,18 +51,11 @@ public class PersonDomain {
         person.sexId = sexId;
         person.phoneNumber = phoneNumber;
         person.email = email != null ? email.toLowerCase().trim() : null;
-
-        // Valores por defecto para nueva creación
-        person.statusId = statusId; // Ejemplo: Estado Activo
-
+        person.statusId = statusId;
 
         return person;
     }
 
-    /**
-     * createFromEntity: Utilizado para reconstruir el objeto desde la BD.
-     * No aplicamos reglas de negocio (como el contacto obligatorio), ya que el dato ya es histórico.
-     */
     public static PersonDomain createFromEntity(
             Long id, String numberid, String name, String lastName, String address,
             Long typeIdentificationId, Long sexId, Long phoneNumber, String email,
@@ -91,8 +78,6 @@ public class PersonDomain {
         return person;
     }
 
-    // --- Helpers de Validación Privados ---
-
     private static void validateRequired(String value, String message) {
         if (value == null || value.isBlank()) {
             throw new BusinessException(message);
@@ -101,17 +86,28 @@ public class PersonDomain {
 
     private static void validateEmail(String email) {
         if (!EMAIL_PATTERN.matcher(email).matches()) {
-            throw new BusinessException("El formato del email no es válido");
+            throw new BusinessException("El formato del email no es valido");
         }
     }
 
-    // Comportamiento: Método de utilidad de dominio
     public String getFullName() {
         return String.format("%s %s", this.name, this.lastName);
     }
 
     public void changeStatus(Long newStatus) {
         this.statusId = newStatus;
-
     }
+
+    public Long getId() { return id; }
+    public String getNumberid() { return numberid; }
+    public String getName() { return name; }
+    public String getLastName() { return lastName; }
+    public String getAddress() { return address; }
+    public Long getTypeIdentificationId() { return typeIdentificationId; }
+    public Long getSexId() { return sexId; }
+    public Long getPhoneNumber() { return phoneNumber; }
+    public String getEmail() { return email; }
+    public Long getStatusId() { return statusId; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

@@ -9,7 +9,7 @@ import org.frias.avalon.domain.user.application.dtos.response.TokenRefreshResult
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
 import org.frias.avalon.domain.user.application.dtos.response.modes.ModesResponseDto;
 import org.frias.avalon.domain.user.application.dtos.results.ModesResult;
-import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapper;
+import org.frias.avalon.domain.user.infraestructure.persistence.mapper.UserAvalonMapper;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;

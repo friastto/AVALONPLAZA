@@ -43,7 +43,10 @@ public class IdempotencyAspect {
             return joinPoint.proceed();
         }
 
-        String key = "idempotency:" + idempotencyKey.trim();
+        String tenantId = org.frias.avalon.core.tenant.TenantContext.getTenantId() != null 
+                ? String.valueOf(org.frias.avalon.core.tenant.TenantContext.getTenantId()) 
+                : "default";
+        String key = "tenant:" + tenantId + ":idempotency:" + idempotencyKey.trim();
 
         try {
             // 1. Si ya se completó previamente, retornar la respuesta cacheada directamente

@@ -1,13 +1,14 @@
 package org.frias.avalon.domain.outlet.domain.service;
 
-
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
-import org.springframework.stereotype.Service;
 
-@Service
+/**
+ * Pure Java domain utility for geographic coordinate processing.
+ * Free of Spring Framework annotations.
+ */
 public class GeoUtil {
 
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);

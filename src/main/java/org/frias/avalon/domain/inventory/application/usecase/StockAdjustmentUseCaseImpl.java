@@ -1,6 +1,8 @@
 package org.frias.avalon.domain.inventory.application.usecase;
 
+import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.domain.inventory.application.dto.StockAdjustmentRequest;
+import org.frias.avalon.domain.inventory.application.dto.StockAdjustmentResponse;
 import org.frias.avalon.domain.inventory.application.event.StockAdjustmentNotificationEvent;
 import org.frias.avalon.domain.inventory.infrastructure.entity.StockMovementEntity;
 import org.frias.avalon.domain.inventory.infrastructure.repository.JpaStockMovementRepository;
@@ -10,25 +12,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityNotFoundException;
-
 /**
- * Use case for manual stock adjustments performed by Store Managers.
- *
- * Business rules:
- * 1. The store manager can adjust stock immediately without waiting for company approval.
- *    This prevents POS sales from being blocked.
- * 2. Every adjustment generates an immutable Kardex (StockMovementEntity) record.
- * 3. A StockAdjustmentNotificationEvent is published asynchronously so the Company
- *    Manager receives an anti-fraud audit alert email.
- *
- * Example: shelf audit shows 5 panelas but system says 3.
- *   -> stock updated 3 -> 5 immediately
- *   -> Kardex entry: ADJUSTMENT_SURPLUS, delta=+2, reason="Conteo fisico de estanteria"
- *   -> Async email to gerente@empresa.com
+ * Implementation of StockAdjustmentUseCase Input Port.
  */
 @Service
-public class StockAdjustmentUseCaseImpl {
+public class StockAdjustmentUseCaseImpl implements StockAdjustmentUseCase {
 
     private final JpaProductOutletRepository productOutletRepository;
     private final JpaStockMovementRepository stockMovementRepository;
@@ -45,25 +33,22 @@ public class StockAdjustmentUseCaseImpl {
     }
 
     @Transactional
-    public void execute(StockAdjustmentRequest request) {
+    @Override
+    public StockAdjustmentResponse execute(StockAdjustmentRequest request) {
 
-        // 1. Load the store product record
         ProductOutlet productOutlet = productOutletRepository.findById(request.productOutletId())
-                .orElseThrow(() -> new EntityNotFoundException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "ProductOutlet not found for id: " + request.productOutletId()));
 
         int before = productOutlet.getStock();
         int after = request.newQuantity();
         int delta = after - before;
 
-        // 2. Determine movement type based on delta direction
         String movementType = delta >= 0 ? "ADJUSTMENT_SURPLUS" : "MERMA";
 
-        // 3. Update stock immediately (store manager autonomy — never blocks POS)
         productOutlet.setStock(after);
         productOutletRepository.save(productOutlet);
 
-        // 4. Write immutable Kardex entry
         StockMovementEntity movement = StockMovementEntity.builder()
                 .productOutletId(request.productOutletId())
                 .outletId(request.outletId())
@@ -75,9 +60,8 @@ public class StockAdjustmentUseCaseImpl {
                 .operatorId(request.operatorId())
                 .build();
 
-        stockMovementRepository.save(movement);
+        StockMovementEntity saved = stockMovementRepository.save(movement);
 
-        // 5. Publish async anti-fraud notification to Company Manager
         eventPublisher.publishEvent(new StockAdjustmentNotificationEvent(
                 request.outletId(),
                 request.productOutletId(),
@@ -88,5 +72,18 @@ public class StockAdjustmentUseCaseImpl {
                 request.operatorId(),
                 "Operador ID " + request.operatorId()
         ));
+
+        return new StockAdjustmentResponse(
+                saved.getId(),
+                saved.getProductOutletId(),
+                saved.getOutletId(),
+                saved.getMovementType(),
+                saved.getQuantityBefore(),
+                saved.getQuantityAfter(),
+                saved.getQuantityDelta(),
+                saved.getReason(),
+                saved.getOperatorId(),
+                saved.getCreatedAt()
+        );
     }
 }

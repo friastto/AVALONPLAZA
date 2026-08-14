@@ -1,33 +1,29 @@
 package org.frias.avalon.domain.product.domain;
 
 import org.frias.avalon.core.exeptions.DomainValidationException;
-import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 /**
- * Entidad core del agregado Product.
- * Diseño Rico.
+ * Pure Java Domain core entity of Product Aggregate.
+ * Rich Domain Model.
  */
-@Getter
 public class ProductDomain {
 
     private final Long id;
     private String name;
     private String description;
     private Integer stock;
-    private Long unitMeasureId; // Permitimos actualización de la unidad de medida
+    private Long unitMeasureId;
     private String imageUrl;
     private BigDecimal price;
-    private final Long outletId; // El outletId generalmente no cambia una vez creado
+    private final Long outletId;
     private Long statusId;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long version;
 
-    // Constructor privado para forzar el uso de Factory Methods
     private ProductDomain(Long id, String name, String description, Integer stock, Long unitMeasureId, String imageUrl, BigDecimal price, Long outletId, Long statusId, LocalDateTime createdAt, LocalDateTime updatedAt, Long version) {
         this.id = id;
         this.name = name;
@@ -43,10 +39,6 @@ public class ProductDomain {
         this.version = version;
     }
 
-    /**
-     * Factory Method para la creación de un nuevo producto.
-     * Valida las invariantes críticas de negocio antes de instanciar.
-     */
     public static ProductDomain create(
             String name,
             String description,
@@ -89,9 +81,6 @@ public class ProductDomain {
         );
     }
 
-    /**
-     * Restaura la entidad desde la base de datos sin disparar validaciones de creacion.
-     */
     public static ProductDomain fromPersistence(
             Long id, String name, String description, Integer stock, Long unitMeasureId, String imageUrl, BigDecimal price, Long outletId, Long statusId, LocalDateTime createdAt, LocalDateTime updatedAt
     ) {
@@ -103,10 +92,6 @@ public class ProductDomain {
     ) {
         return new ProductDomain(id, name, description, stock, unitMeasureId, imageUrl, price, outletId, statusId, createdAt, updatedAt, version);
     }
-
-    // =========================================================================
-    // Métodos de Comportamiento de Negocio (Rich Domain Model)
-    // =========================================================================
 
     public void updateDetails(String name, String description, Integer stockInBaseUnits, Long unitMeasureId, String imageUrl, BigDecimal price) {
         if (name == null || name.isBlank()) {
@@ -173,4 +158,17 @@ public class ProductDomain {
         this.statusId = newStatusId;
         this.updatedAt = LocalDateTime.now();
     }
+
+    public Long getId() { return id; }
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public Integer getStock() { return stock; }
+    public Long getUnitMeasureId() { return unitMeasureId; }
+    public String getImageUrl() { return imageUrl; }
+    public BigDecimal getPrice() { return price; }
+    public Long getOutletId() { return outletId; }
+    public Long getStatusId() { return statusId; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public Long getVersion() { return version; }
 }

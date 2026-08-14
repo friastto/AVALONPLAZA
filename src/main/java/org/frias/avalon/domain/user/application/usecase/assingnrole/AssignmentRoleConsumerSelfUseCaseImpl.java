@@ -7,7 +7,7 @@ import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepository
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.user.application.dtos.response.AssignmentRoleResponse;
 import org.frias.avalon.domain.user.application.service.PermissionService;
-import org.frias.avalon.domain.user.domain.mapper.RoleAssignmentMapper;
+import org.frias.avalon.domain.user.infraestructure.persistence.mapper.RoleAssignmentMapper;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;

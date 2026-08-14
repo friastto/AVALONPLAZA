@@ -2,10 +2,11 @@ package org.frias.avalon.domain.inventory.presentation;
 
 import jakarta.validation.Valid;
 import org.frias.avalon.core.exeptions.ApiResponse;
+import org.frias.avalon.domain.inventory.application.dto.KardexResponseDto;
 import org.frias.avalon.domain.inventory.application.dto.StockAdjustmentRequest;
-import org.frias.avalon.domain.inventory.application.usecase.StockAdjustmentUseCaseImpl;
-import org.frias.avalon.domain.inventory.infrastructure.entity.StockMovementEntity;
-import org.frias.avalon.domain.inventory.infrastructure.repository.JpaStockMovementRepository;
+import org.frias.avalon.domain.inventory.application.dto.StockAdjustmentResponse;
+import org.frias.avalon.domain.inventory.application.usecase.GetKardexUseCase;
+import org.frias.avalon.domain.inventory.application.usecase.StockAdjustmentUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,50 +14,42 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * REST Controller for store inventory management and Kardex audit ledger.
- * Exposes endpoints under /api/v1/inventory for stock adjustments and Kardex history.
+ * Pure Clean Architecture REST Controller for store inventory management and Kardex audit ledger.
  */
 @RestController
 @RequestMapping("/api/v1/inventory")
 public class InventoryController {
 
-    private final StockAdjustmentUseCaseImpl stockAdjustmentUseCase;
-    private final JpaStockMovementRepository stockMovementRepository;
+    private final StockAdjustmentUseCase stockAdjustmentUseCase;
+    private final GetKardexUseCase getKardexUseCase;
 
     public InventoryController(
-            StockAdjustmentUseCaseImpl stockAdjustmentUseCase,
-            JpaStockMovementRepository stockMovementRepository
+            StockAdjustmentUseCase stockAdjustmentUseCase,
+            GetKardexUseCase getKardexUseCase
     ) {
         this.stockAdjustmentUseCase = stockAdjustmentUseCase;
-        this.stockMovementRepository = stockMovementRepository;
+        this.getKardexUseCase = getKardexUseCase;
     }
 
     /**
      * POST /api/v1/inventory/adjust - Performs a manual stock adjustment.
-     * Updates physical stock immediately (store manager autonomy) and logs immutable Kardex entry.
-     *
-     * @param request StockAdjustmentRequest DTO
-     * @return ResponseEntity with success status
      */
     @PostMapping("/adjust")
-    public ResponseEntity<ApiResponse<String>> adjustStock(@Valid @RequestBody StockAdjustmentRequest request) {
-        stockAdjustmentUseCase.execute(request);
+    public ResponseEntity<ApiResponse<StockAdjustmentResponse>> adjustStock(@Valid @RequestBody StockAdjustmentRequest request) {
+        StockAdjustmentResponse response = stockAdjustmentUseCase.execute(request);
         return ResponseEntity.ok(new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Stock adjusted successfully and Kardex recorded",
-                "SUCCESS"
+                response
         ));
     }
 
     /**
      * GET /api/v1/inventory/kardex/product/{productOutletId} - Retrieves Kardex ledger for a store product.
-     *
-     * @param productOutletId Store product identifier
-     * @return List of immutable Kardex movement entries
      */
     @GetMapping("/kardex/product/{productOutletId}")
-    public ResponseEntity<ApiResponse<List<StockMovementEntity>>> getKardexByProduct(@PathVariable Long productOutletId) {
-        List<StockMovementEntity> movements = stockMovementRepository.findByProductOutletIdOrderByCreatedAtDesc(productOutletId);
+    public ResponseEntity<ApiResponse<List<KardexResponseDto>>> getKardexByProduct(@PathVariable Long productOutletId) {
+        List<KardexResponseDto> movements = getKardexUseCase.findByProductOutletId(productOutletId);
         return ResponseEntity.ok(new ApiResponse<>(
                 HttpStatus.OK.value(),
                 movements.isEmpty() ? "No Kardex entries found for product" : "Kardex history retrieved successfully",
@@ -66,13 +59,10 @@ public class InventoryController {
 
     /**
      * GET /api/v1/inventory/kardex/outlet/{outletId} - Retrieves Kardex ledger for a store outlet.
-     *
-     * @param outletId Store outlet identifier
-     * @return List of store Kardex movement entries
      */
     @GetMapping("/kardex/outlet/{outletId}")
-    public ResponseEntity<ApiResponse<List<StockMovementEntity>>> getKardexByOutlet(@PathVariable Long outletId) {
-        List<StockMovementEntity> movements = stockMovementRepository.findByOutletIdOrderByCreatedAtDesc(outletId);
+    public ResponseEntity<ApiResponse<List<KardexResponseDto>>> getKardexByOutlet(@PathVariable Long outletId) {
+        List<KardexResponseDto> movements = getKardexUseCase.findByOutletId(outletId);
         return ResponseEntity.ok(new ApiResponse<>(
                 HttpStatus.OK.value(),
                 movements.isEmpty() ? "No Kardex entries found for outlet" : "Outlet Kardex history retrieved successfully",

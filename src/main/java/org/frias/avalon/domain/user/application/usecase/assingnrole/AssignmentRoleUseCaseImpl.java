@@ -10,7 +10,7 @@ import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.user.application.dtos.request.AssignmentRoleRequestDto;
 import org.frias.avalon.domain.user.application.dtos.response.AssignmentRoleResponse;
 import org.frias.avalon.domain.user.application.service.PermissionService;
-import org.frias.avalon.domain.user.domain.mapper.RoleAssignmentMapper;
+import org.frias.avalon.domain.user.infraestructure.persistence.mapper.RoleAssignmentMapper;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;

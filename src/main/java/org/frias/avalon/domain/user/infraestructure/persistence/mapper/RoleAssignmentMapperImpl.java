@@ -1,4 +1,4 @@
-package org.frias.avalon.domain.user.domain.mapper;
+package org.frias.avalon.domain.user.infraestructure.persistence.mapper;
 
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
@@ -24,21 +24,19 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper {
 
     @Override
     public RoleAssignment toEntity(RoleAssignmentDomain domain) {
-
+        if (domain == null) return null;
         RoleAssignment role = new RoleAssignment();
         role.setId(domain.getId());
         role.setUserId(domain.getUserId());
         role.setRoleId(domain.getRoleId());
         role.setOutletId(domain.getOutletId());
         role.setStatus(domain.getStatus());
-
-
         return role;
     }
 
     @Override
     public RoleAssignmentDomain toDomain(RoleAssignment role) {
-
+        if (role == null) return null;
         return new RoleAssignmentDomain(
                 role.getId(),
                 role.getUserId(),
@@ -50,26 +48,18 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper {
 
     @Override
     public AssignmentRoleResponse toResponse(RoleAssignmentDomain domain) {
-
-
         return null;
     }
 
     @Override
     public AssignmentRoleResponse toResponse(UserAvalonDomain user, MasterRoot userStatus, MasterRoot role, MasterRoot statusActive, Long outletId) {
-
         UserAvalonResponseDto userDto = userMapper.toResponse(user, userStatus);
-
         MasterDataResponseDto rolevalid = masterMapper.toResponse(role);
-
         return new AssignmentRoleResponse(
                 userDto,
                 rolevalid,
                 outletId,
                 new StatusResponseDto(statusActive.getId(), statusActive.getShortName(), statusActive.getFullName())
-
         );
     }
-
-
 }

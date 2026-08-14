@@ -1,4 +1,4 @@
-package org.frias.avalon.domain.cashregister.presentation.dto;
+package org.frias.avalon.domain.cashregister.application.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

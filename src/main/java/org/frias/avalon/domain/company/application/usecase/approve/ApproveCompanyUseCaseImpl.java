@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.company.application.usecase.approve;
 
-import org.frias.avalon.core.tenant.FlywayMultiTenantService;
+import org.frias.avalon.core.tenant.port.TenantSchemaMigrationPort;
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
 import org.frias.avalon.domain.company.domain.model.CompanyDomain;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
@@ -15,11 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ApproveCompanyUseCaseImpl implements ApproveCompanyUseCase {
 
     private final CompanyRepositoryPort companyPort;
-    private final FlywayMultiTenantService flywayMultiTenantService;
+    private final TenantSchemaMigrationPort tenantSchemaMigrationPort;
 
-    public ApproveCompanyUseCaseImpl(CompanyRepositoryPort companyPort, FlywayMultiTenantService flywayMultiTenantService) {
+    public ApproveCompanyUseCaseImpl(CompanyRepositoryPort companyPort, TenantSchemaMigrationPort tenantSchemaMigrationPort) {
         this.companyPort = companyPort;
-        this.flywayMultiTenantService = flywayMultiTenantService;
+        this.tenantSchemaMigrationPort = tenantSchemaMigrationPort;
     }
 
     @Transactional
@@ -40,7 +40,7 @@ public class ApproveCompanyUseCaseImpl implements ApproveCompanyUseCase {
         );
 
         CompanyDomain saved = companyPort.save(approvedDomain);
-        flywayMultiTenantService.migrateTenantSchema("company_" + companyId);
+        tenantSchemaMigrationPort.migrateTenantSchema("company_" + companyId);
 
         return new CompanyResponse(
                 saved.id(),

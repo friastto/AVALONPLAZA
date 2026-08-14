@@ -7,7 +7,7 @@ import org.frias.avalon.domain.cashregister.application.port.CashSessionUseCaseP
 import org.frias.avalon.domain.cashregister.domain.CashExpenseDomain;
 import org.frias.avalon.domain.cashregister.domain.CashSessionDomain;
 import org.frias.avalon.domain.cashregister.domain.OutletCashSummaryDomain;
-import org.frias.avalon.domain.cashregister.presentation.dto.*;
+import org.frias.avalon.domain.cashregister.application.dto.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -190,7 +190,7 @@ public class CashSessionController {
 
     @GetMapping("/outlets/{outletId}/cashiers-history")
     @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
-    public ResponseEntity<List<org.frias.avalon.domain.cashregister.presentation.dto.CashierHistorySummaryResponse>> getOutletCashiersHistory(
+    public ResponseEntity<List<org.frias.avalon.domain.cashregister.application.dto.CashierHistorySummaryResponse>> getOutletCashiersHistory(
             @PathVariable Long outletId
     ) {
         return ResponseEntity.ok(cashSessionUseCasePort.getOutletCashiersHistory(outletId));
@@ -198,7 +198,7 @@ public class CashSessionController {
 
     @GetMapping("/consolidated-history/{outletId}")
     @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
-    public ResponseEntity<org.frias.avalon.domain.cashregister.presentation.dto.PageResponseDto<org.frias.avalon.domain.cashregister.presentation.dto.ConsolidatedHistoryResponse>> getConsolidatedHistory(
+    public ResponseEntity<org.frias.avalon.domain.cashregister.application.dto.PageResponseDto<org.frias.avalon.domain.cashregister.application.dto.ConsolidatedHistoryResponse>> getConsolidatedHistory(
             @PathVariable Long outletId,
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) Integer year,
@@ -212,7 +212,7 @@ public class CashSessionController {
 
     @GetMapping("/discrepancies-history/{outletId}")
     @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
-    public ResponseEntity<org.frias.avalon.domain.cashregister.presentation.dto.PageResponseDto<org.frias.avalon.domain.cashregister.presentation.dto.DiscrepancyHistoryResponse>> getDiscrepanciesHistory(
+    public ResponseEntity<org.frias.avalon.domain.cashregister.application.dto.PageResponseDto<org.frias.avalon.domain.cashregister.application.dto.DiscrepancyHistoryResponse>> getDiscrepanciesHistory(
             @PathVariable Long outletId,
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) String discrepancyType,

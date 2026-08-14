@@ -1,7 +1,7 @@
 package org.frias.avalon.domain.outlet.application.usecase.create;
 
-import jakarta.persistence.EntityNotFoundException;
-import org.frias.avalon.core.tenant.FlywayMultiTenantService;
+import org.frias.avalon.core.exeptions.ResourceNotFoundException;
+import org.frias.avalon.core.tenant.port.TenantSchemaMigrationPort;
 import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
@@ -26,20 +26,20 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
     private final MasterTreeProvider masterTreeProvider;
     private final OutletMapper outletMapper;
     private final LocationMapper locationMapper;
-    private final FlywayMultiTenantService flywayMultiTenantService;
+    private final TenantSchemaMigrationPort tenantSchemaMigrationPort;
 
     public CreateOutletUseCaseImpl(OutletRepositoryPort outletPort,
                                  MasterDataRepositoryPort masterPort,
                                  MasterTreeProvider masterTreeProvider,
                                  OutletMapper outletMapper,
                                  LocationMapper locationMapper,
-                                 FlywayMultiTenantService flywayMultiTenantService) {
+                                 TenantSchemaMigrationPort tenantSchemaMigrationPort) {
         this.outletPort = outletPort;
         this.masterPort = masterPort;
         this.masterTreeProvider = masterTreeProvider;
         this.outletMapper = outletMapper;
         this.locationMapper = locationMapper;
-        this.flywayMultiTenantService = flywayMultiTenantService;
+        this.tenantSchemaMigrationPort = tenantSchemaMigrationPort;
     }
 
     @Transactional
@@ -47,7 +47,7 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
     public OutletResponseDto execute(OutletCreateRequestDto dto) {
 
         MasterRoot status = masterPort.getActiveStatus()
-                .orElseThrow(() -> new EntityNotFoundException("no se pudo activar la tienda en este moemnto "));
+                .orElseThrow(() -> new ResourceNotFoundException("No se pudo activar la tienda en este momento"));
 
         MasterTree tree = masterTreeProvider.getTree();
 
@@ -68,9 +68,9 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
 
         // Auto-provision tenant isolated schema in PostgreSQL (e.g. company_1 or store_2)
         if (outletSaved.getCompanyId() != null) {
-            flywayMultiTenantService.migrateTenantSchema("company_" + outletSaved.getCompanyId());
+            tenantSchemaMigrationPort.migrateTenantSchema("company_" + outletSaved.getCompanyId());
         } else {
-            flywayMultiTenantService.migrateTenantSchema("store_" + outletSaved.getId());
+            tenantSchemaMigrationPort.migrateTenantSchema("store_" + outletSaved.getId());
         }
 
         StatusResponseDto statusResponse = new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName());

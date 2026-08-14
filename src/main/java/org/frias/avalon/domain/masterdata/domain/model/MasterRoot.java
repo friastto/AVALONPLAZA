@@ -1,6 +1,5 @@
 package org.frias.avalon.domain.masterdata.domain.model;
 
-import lombok.Getter;
 import org.frias.avalon.core.exeptions.DomainValidationException;
 public class MasterRoot {
     private final Long id;

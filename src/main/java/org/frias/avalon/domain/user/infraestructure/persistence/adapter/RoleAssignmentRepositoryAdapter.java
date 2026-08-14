@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.user.infraestructure.persistence.adapter;
 
-import org.frias.avalon.domain.user.domain.mapper.RoleAssignmentMapper;
+import org.frias.avalon.domain.user.infraestructure.persistence.mapper.RoleAssignmentMapper;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
 import org.frias.avalon.domain.user.infraestructure.persistence.entity.RoleAssignment;

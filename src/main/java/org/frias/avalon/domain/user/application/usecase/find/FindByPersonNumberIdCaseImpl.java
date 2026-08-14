@@ -5,7 +5,7 @@ import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonResponseDto;
-import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapper;
+import org.frias.avalon.domain.user.infraestructure.persistence.mapper.UserAvalonMapper;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.springframework.stereotype.Service;

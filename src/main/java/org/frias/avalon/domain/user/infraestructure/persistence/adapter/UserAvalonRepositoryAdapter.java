@@ -1,7 +1,7 @@
 package org.frias.avalon.domain.user.infraestructure.persistence.adapter;
 
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
-import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapper;
+import org.frias.avalon.domain.user.infraestructure.persistence.mapper.UserAvalonMapper;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.frias.avalon.domain.user.infraestructure.persistence.entity.UserAvalon;

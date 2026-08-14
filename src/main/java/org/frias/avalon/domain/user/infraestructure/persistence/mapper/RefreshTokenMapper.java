@@ -1,4 +1,4 @@
-package org.frias.avalon.domain.user.domain.mapper;
+package org.frias.avalon.domain.user.infraestructure.persistence.mapper;
 
 import org.frias.avalon.domain.user.domain.model.RefreshTokenDomain;
 import org.frias.avalon.domain.user.infraestructure.persistence.entity.RefreshToken;

@@ -1,25 +1,22 @@
 package org.frias.avalon.domain.product.domain;
 
 import org.frias.avalon.core.exeptions.DomainValidationException;
-import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 /**
- * Entidad que representa un código de barras asociado a un producto.
- * Es parte del agregado Product.
+ * Pure Java domain entity representing a barcode associated with a product.
+ * Part of Product Aggregate.
  */
-@Getter
 public class BarcodeDomain {
 
     private final Long id;
     private final String barcode;
-    private final Long productOutletId; // A qué producto pertenece
+    private final Long productOutletId;
     private final String description;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Constructor privado para forzar el uso de Factory Methods
     private BarcodeDomain(Long id, String barcode, Long productOutletId, String description, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.barcode = barcode;
@@ -29,9 +26,6 @@ public class BarcodeDomain {
         this.updatedAt = updatedAt;
     }
 
-    /**
-     * Factory Method para crear un nuevo código de barras.
-     */
     public static BarcodeDomain create(String barcode, Long productOutletId, String description) {
         if (barcode == null || barcode.isBlank()) {
             throw new DomainValidationException("Barcode cannot be blank");
@@ -50,15 +44,14 @@ public class BarcodeDomain {
         );
     }
 
-    /**
-     * Restaura la entidad desde la base de datos.
-     */
     public static BarcodeDomain fromPersistence(Long id, String barcode, Long productOutletId, String description, LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new BarcodeDomain(id, barcode, productOutletId, description, createdAt, updatedAt);
     }
 
-    // No hay métodos de comportamiento de negocio para Barcode por ahora,
-    // ya que se considera mayormente inmutable una vez creado.
-    // Si se necesitara cambiar la descripción, se añadiría un método aquí.
-    // public void updateDescription(String newDescription) { ... }
+    public Long getId() { return id; }
+    public String getBarcode() { return barcode; }
+    public Long getProductOutletId() { return productOutletId; }
+    public String getDescription() { return description; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

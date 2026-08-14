@@ -1,4 +1,4 @@
-package org.frias.avalon.domain.user.domain.mapper;
+package org.frias.avalon.domain.user.infraestructure.persistence.mapper;
 
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;

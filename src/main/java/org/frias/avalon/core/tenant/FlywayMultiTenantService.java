@@ -14,8 +14,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.frias.avalon.core.tenant.port.TenantSchemaMigrationPort;
+
 @Service
-public class FlywayMultiTenantService {
+public class FlywayMultiTenantService implements TenantSchemaMigrationPort {
 
     private final DataSource dataSource;
 

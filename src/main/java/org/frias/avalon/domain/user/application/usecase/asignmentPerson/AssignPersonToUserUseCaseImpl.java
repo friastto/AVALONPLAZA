@@ -11,7 +11,7 @@ import org.frias.avalon.domain.person.application.dto.request.CreatePersonReques
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.user.application.dtos.response.UserAvalonDto;
-import org.frias.avalon.domain.user.domain.mapper.UserAvalonMapper;
+import org.frias.avalon.domain.user.infraestructure.persistence.mapper.UserAvalonMapper;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.user.infraestructure.persistence.adapter;
 
-import org.frias.avalon.domain.user.domain.mapper.RefreshTokenMapper;
+import org.frias.avalon.domain.user.infraestructure.persistence.mapper.RefreshTokenMapper;
 import org.frias.avalon.domain.user.domain.model.RefreshTokenDomain;
 import org.frias.avalon.domain.user.domain.port.RefreshTokenRepositoryPort;
 import org.frias.avalon.domain.user.infraestructure.persistence.repository.RefreshTokenRepository;

@@ -1,4 +1,4 @@
-package org.frias.avalon.domain.cashregister.presentation.dto;
+package org.frias.avalon.domain.cashregister.application.dto;
 import lombok.Builder;
 import lombok.Data;
 import org.frias.avalon.domain.cashregister.domain.CashPickupDomain;
