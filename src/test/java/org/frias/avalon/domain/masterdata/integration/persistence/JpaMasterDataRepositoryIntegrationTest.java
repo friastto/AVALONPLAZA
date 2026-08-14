@@ -19,7 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-@Sql("/data-test.sql")
+
 @AllArgsConstructor(onConstructor_ = {@Autowired})
 @DisplayName("Pruebas de Integración - Capa de Persistencia (JpaMasterDataRepository)")
 class JpaMasterDataRepositoryIntegrationTest {

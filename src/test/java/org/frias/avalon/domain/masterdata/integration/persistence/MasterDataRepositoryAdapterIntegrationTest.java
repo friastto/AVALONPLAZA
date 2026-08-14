@@ -22,7 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 @Import({MasterDataMapperServiceImpl.class, MasterDataRepositoryAdapter.class})
-@Sql("/data-test.sql")
+
 
 @DisplayName("Pruebas de Integración - Capa de Adaptador de Persistencia")
 class MasterDataRepositoryAdapterIntegrationTest {

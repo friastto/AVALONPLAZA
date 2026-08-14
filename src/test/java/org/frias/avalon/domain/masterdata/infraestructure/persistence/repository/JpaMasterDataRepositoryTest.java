@@ -19,7 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Sql("/data-test.sql")
+
 class JpaMasterDataRepositoryTest {
 @Autowired
     private JpaMasterDataRepository jpaMasterDataRepository;

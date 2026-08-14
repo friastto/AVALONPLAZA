@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
     MasterTreeProvider.class,
     MasterDataRepositoryAdapter.class
 })
-@Sql("/data-test.sql")
+
 @DisplayName("Pruebas de Integración - UserAvalonRepositoryAdapter (BD Real)")
 class UserAvalonRepositoryAdapterIntegrationTest {
 

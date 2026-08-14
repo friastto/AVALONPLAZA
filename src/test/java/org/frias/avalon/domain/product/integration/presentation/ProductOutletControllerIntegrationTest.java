@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
             "removebg.apikey=mock-removebg-key",
             "spring.sql.init.mode=never" 
         })
-@Sql(scripts = "/data-test.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+
 @DisplayName("Pruebas de Integración E2E - ProductOutletController")
 class ProductOutletControllerIntegrationTest {
 

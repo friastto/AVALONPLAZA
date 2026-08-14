@@ -24,7 +24,7 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas Unitarias para CreateMasterDataUseCase")
-@Sql("data-test.sql")
+
 class CreateMasterDataUseCaseImplTest {
 
     @Mock
