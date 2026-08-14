@@ -15,6 +15,8 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
@@ -27,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
             "removebg.apikey=mock-removebg-key",
             "spring.sql.init.mode=never" 
         })
-
+@Transactional
 @DisplayName("Pruebas de Integración E2E - ProductOutletController")
 class ProductOutletControllerIntegrationTest {
 
