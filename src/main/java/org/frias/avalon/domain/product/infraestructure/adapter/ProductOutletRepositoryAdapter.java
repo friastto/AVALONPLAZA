@@ -34,9 +34,6 @@ public class ProductOutletRepositoryAdapter implements ProductOutletRepositoryPo
     @Override
     public Optional<ProductDomain> findById(Long id) {
         Optional<ProductOutlet> entity = jpaProductOutletRepository.findById(id);
-        if (entity.isEmpty()) {
-            entity = jpaProductOutletRepository.findByIdFromPublicSchema(id);
-        }
         return entity.map(productOutletMapper::toDomain);
     }
 
@@ -52,9 +49,6 @@ public class ProductOutletRepositoryAdapter implements ProductOutletRepositoryPo
                 .and(ProductSpecification.hasCategoryId(categoryId));
 
         Page<ProductOutlet> entityPage = jpaProductOutletRepository.findAll(spec, pageable);
-        if (entityPage.isEmpty() && outletId != null) {
-            entityPage = jpaProductOutletRepository.findFromPublicSchema(outletId, name, pageable);
-        }
         return entityPage.map(productOutletMapper::toDomain);
     }
 }

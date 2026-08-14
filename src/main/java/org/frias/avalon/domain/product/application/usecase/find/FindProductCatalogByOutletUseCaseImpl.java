@@ -3,6 +3,9 @@ package org.frias.avalon.domain.product.application.usecase.find;
 import lombok.RequiredArgsConstructor;
 import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.core.permissions.CurrentUserProviderPort;
+import org.frias.avalon.core.tenant.TenantContext;
+import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
+import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.product.application.dto.response.ProductResponse;
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
 import org.frias.avalon.domain.product.infraestructure.mapper.ProductOutletMapper;
@@ -22,6 +25,7 @@ public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalog
     private final ProductOutletRepositoryPort productOutletRepositoryPort;
     private final ProductOutletMapper productOutletMapper;
     private final CurrentUserProviderPort currentUserProvider;
+    private final OutletRepositoryPort outletPort;
 
     @Override
     @Transactional(readOnly = true)
@@ -37,7 +41,23 @@ public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalog
             }
         }
 
-        return productOutletRepositoryPort.findAll(name, outletId, categoryId, pageable)
-                .map(productOutletMapper::toResponse);
+        // Estero-Aislamiento Multi-Tenant: cambiar contexto al esquema de la tienda solicitada
+        if (outletId != null) {
+            OutletDomain outlet = outletPort.findById(outletId).orElse(null);
+            if (outlet != null) {
+                if (outlet.getCompanyId() != null) {
+                    TenantContext.setCurrentTenant("company_" + outlet.getCompanyId());
+                } else {
+                    TenantContext.setCurrentTenant("store_" + outlet.getId());
+                }
+            }
+        }
+
+        try {
+            return productOutletRepositoryPort.findAll(name, outletId, categoryId, pageable)
+                    .map(productOutletMapper::toResponse);
+        } finally {
+            TenantContext.clear();
+        }
     }
 }
