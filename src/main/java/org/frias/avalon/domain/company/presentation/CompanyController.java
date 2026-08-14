@@ -4,9 +4,13 @@ import jakarta.validation.Valid;
 import org.frias.avalon.core.exeptions.ApiResponse;
 import org.frias.avalon.domain.company.application.dto.request.CreateCompanyRequest;
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
+import org.frias.avalon.domain.company.application.usecase.approve.ApproveCompanyUseCase;
 import org.frias.avalon.domain.company.application.usecase.create.CreateCompanyUseCase;
 import org.frias.avalon.domain.company.application.usecase.find.FindAllCompaniesUseCase;
-import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
+import org.frias.avalon.domain.company.application.usecase.find.FindCompanyByIdUseCase;
+import org.frias.avalon.domain.company.application.usecase.find.FindOutletsByCompanyUseCase;
+import org.frias.avalon.domain.company.application.usecase.find.FindPendingCompaniesUseCase;
+import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * REST controller for managing companies.
- * Exposes endpoints /api/v1/companies for GET, POST, and PUT operations.
+ * Pure Clean Architecture REST Controller for managing companies.
+ * Strictly orchestrates application Use Cases and returns standardized ApiResponse wrappers.
  */
 @RestController
 @RequestMapping("/api/v1/companies")
@@ -23,26 +27,25 @@ public class CompanyController {
 
     private final CreateCompanyUseCase createCompanyUseCase;
     private final FindAllCompaniesUseCase findAllCompaniesUseCase;
-    private final CompanyRepositoryPort companyRepositoryPort;
-    private final org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort;
-    private final org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper outletMapper;
-
-    private final org.frias.avalon.core.tenant.FlywayMultiTenantService flywayMultiTenantService;
+    private final FindPendingCompaniesUseCase findPendingCompaniesUseCase;
+    private final FindCompanyByIdUseCase findCompanyByIdUseCase;
+    private final FindOutletsByCompanyUseCase findOutletsByCompanyUseCase;
+    private final ApproveCompanyUseCase approveCompanyUseCase;
 
     public CompanyController(
             CreateCompanyUseCase createCompanyUseCase,
             FindAllCompaniesUseCase findAllCompaniesUseCase,
-            CompanyRepositoryPort companyRepositoryPort,
-            org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort,
-            org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper outletMapper,
-            org.frias.avalon.core.tenant.FlywayMultiTenantService flywayMultiTenantService
+            FindPendingCompaniesUseCase findPendingCompaniesUseCase,
+            FindCompanyByIdUseCase findCompanyByIdUseCase,
+            FindOutletsByCompanyUseCase findOutletsByCompanyUseCase,
+            ApproveCompanyUseCase approveCompanyUseCase
     ) {
         this.createCompanyUseCase = createCompanyUseCase;
         this.findAllCompaniesUseCase = findAllCompaniesUseCase;
-        this.companyRepositoryPort = companyRepositoryPort;
-        this.outletRepositoryPort = outletRepositoryPort;
-        this.outletMapper = outletMapper;
-        this.flywayMultiTenantService = flywayMultiTenantService;
+        this.findPendingCompaniesUseCase = findPendingCompaniesUseCase;
+        this.findCompanyByIdUseCase = findCompanyByIdUseCase;
+        this.findOutletsByCompanyUseCase = findOutletsByCompanyUseCase;
+        this.approveCompanyUseCase = approveCompanyUseCase;
     }
 
     /**
@@ -59,23 +62,11 @@ public class CompanyController {
     }
 
     /**
-     * GET /api/v1/companies/pending - Retrieves companies pending approval (status RVW / 1L).
+     * GET /api/v1/companies/pending - Retrieves companies pending approval (status RVW).
      */
     @GetMapping("/pending")
     public ResponseEntity<ApiResponse<List<CompanyResponse>>> findPending() {
-        List<CompanyResponse> pendingCompanies = companyRepositoryPort.findByStatusId(1L).stream()
-                .map(domain -> new CompanyResponse(
-                        domain.id(),
-                        domain.nit(),
-                        domain.name(),
-                        domain.email(),
-                        domain.statusId(),
-                        domain.defaultCashThresholdAmount(),
-                        domain.createdAt(),
-                        domain.updatedAt()
-                ))
-                .toList();
-
+        List<CompanyResponse> pendingCompanies = findPendingCompaniesUseCase.execute();
         return ResponseEntity.ok(new ApiResponse<>(
                 HttpStatus.OK.value(),
                 pendingCompanies.isEmpty() ? "No pending companies found" : "Pending companies retrieved successfully",
@@ -84,64 +75,15 @@ public class CompanyController {
     }
 
     /**
-     * POST /api/v1/companies/{id}/approve - Approves company request (status -> APR / 1L) and provisions tenant schema.
-     */
-    @PostMapping("/{id}/approve")
-    public ResponseEntity<ApiResponse<CompanyResponse>> approveCompany(@PathVariable Long id) {
-        return companyRepositoryPort.findById(id).map(company -> {
-            org.frias.avalon.domain.company.domain.model.CompanyDomain approvedDomain = new org.frias.avalon.domain.company.domain.model.CompanyDomain(
-                    company.id(),
-                    company.nit(),
-                    company.name(),
-                    company.email(),
-                    1L,
-                    company.defaultCashThresholdAmount(),
-                    company.createdAt(),
-                    company.updatedAt()
-            );
-
-            org.frias.avalon.domain.company.domain.model.CompanyDomain saved = companyRepositoryPort.save(approvedDomain);
-            flywayMultiTenantService.migrateTenantSchema("company_" + id);
-
-            CompanyResponse response = new CompanyResponse(
-                    saved.id(),
-                    saved.nit(),
-                    saved.name(),
-                    saved.email(),
-                    saved.statusId(),
-                    saved.defaultCashThresholdAmount(),
-                    saved.createdAt(),
-                    saved.updatedAt()
-            );
-
-            return ResponseEntity.ok(new ApiResponse<>(
-                    HttpStatus.OK.value(),
-                    "Company approved successfully and tenant schema provisioned",
-                    response
-            ));
-        }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "Company not found", null)));
-    }
-
-    /**
      * GET /api/v1/companies/{id} - Retrieves company details by ID.
      */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CompanyResponse>> findById(@PathVariable Long id) {
-        return companyRepositoryPort.findById(id)
+        return findCompanyByIdUseCase.execute(id)
                 .map(company -> ResponseEntity.ok(new ApiResponse<>(
                         HttpStatus.OK.value(),
                         "Company retrieved successfully",
-                        new CompanyResponse(
-                                company.id(),
-                                company.nit(),
-                                company.name(),
-                                company.email(),
-                                company.statusId(),
-                                company.defaultCashThresholdAmount(),
-                                company.createdAt(),
-                                company.updatedAt()
-                        )
+                        company
                 )))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "Company not found", null)));
@@ -151,11 +93,8 @@ public class CompanyController {
      * GET /api/v1/companies/{id}/outlets - Retrieves all outlets linked to company.
      */
     @GetMapping("/{id}/outlets")
-    public ResponseEntity<ApiResponse<List<org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto>>> findOutletsByCompany(@PathVariable Long id) {
-        List<org.frias.avalon.domain.outlet.domain.model.OutletDomain> outlets = outletRepositoryPort.findByCompanyId(id);
-        List<org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto> responseDtos = outlets.stream()
-                .map(outletMapper::toResponse)
-                .collect(java.util.stream.Collectors.toList());
+    public ResponseEntity<ApiResponse<List<OutletResponseDto>>> findOutletsByCompany(@PathVariable Long id) {
+        List<OutletResponseDto> responseDtos = findOutletsByCompanyUseCase.execute(id);
         return ResponseEntity.ok(new ApiResponse<>(
                 HttpStatus.OK.value(),
                 responseDtos.isEmpty() ? "No outlets found for company" : "Outlets retrieved successfully",
@@ -164,7 +103,7 @@ public class CompanyController {
     }
 
     /**
-     * POST /api/v1/companies - Creates a new company.
+     * POST /api/v1/companies - Creates a new company request.
      */
     @PostMapping
     public ResponseEntity<ApiResponse<CompanyResponse>> create(@Valid @RequestBody CreateCompanyRequest request) {
@@ -178,19 +117,15 @@ public class CompanyController {
     }
 
     /**
-     * PUT /api/v1/companies/{id}/threshold - Updates default cash drop threshold for company.
+     * POST /api/v1/companies/{id}/approve - Approves company request and provisions tenant schema.
      */
-    @PutMapping("/{id}/threshold")
-    public ResponseEntity<ApiResponse<Void>> updateThreshold(
-            @PathVariable Long id,
-            @RequestBody java.util.Map<String, java.math.BigDecimal> payload
-    ) {
-        java.math.BigDecimal thresholdAmount = payload.get("thresholdAmount");
-        companyRepositoryPort.updateDefaultThreshold(id, thresholdAmount);
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<CompanyResponse>> approveCompany(@PathVariable Long id) {
+        CompanyResponse approved = approveCompanyUseCase.execute(id);
         return ResponseEntity.ok(new ApiResponse<>(
                 HttpStatus.OK.value(),
-                "Default company threshold updated successfully",
-                null
+                "Company approved successfully and tenant schema provisioned",
+                approved
         ));
     }
 }
