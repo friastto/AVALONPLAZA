@@ -13,4 +13,6 @@ public interface JpaCompanyRepository extends JpaRepository<CompanyEntity, Long>
     Optional<CompanyEntity> findByNit(String nit);
 
     boolean existsByNit(String nit);
+
+    java.util.List<CompanyEntity> findByStatusId(Long statusId);
 }

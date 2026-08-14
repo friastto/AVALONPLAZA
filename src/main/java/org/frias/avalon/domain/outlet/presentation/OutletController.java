@@ -51,7 +51,7 @@ public class OutletController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<OutletResponseDto>> create(@RequestBody OutletCreateRequestDto data) {
+    public ResponseEntity<ApiResponse<OutletResponseDto>> create(@jakarta.validation.Valid @RequestBody OutletCreateRequestDto data) {
 
         OutletResponseDto newOutlet;
         try {

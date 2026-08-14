@@ -34,7 +34,7 @@ public class CreateCompanyUseCaseImpl implements CreateCompanyUseCase {
                 request.nit(),
                 request.name(),
                 request.email(),
-                null,   // statusId assigned after creation if needed
+                1L,   // statusId (Long)
                 request.defaultCashThresholdAmount(),
                 null,
                 null

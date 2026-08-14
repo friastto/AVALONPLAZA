@@ -23,6 +23,9 @@ public interface CompanyRepositoryPort {
     /** Returns all registered companies. */
     List<CompanyDomain> findAll();
 
+    /** Returns companies filtered by statusId. */
+    List<CompanyDomain> findByStatusId(Long statusId);
+
     /** Updates default cash threshold amount for a company. */
     void updateDefaultThreshold(Long companyId, java.math.BigDecimal thresholdAmount);
 }

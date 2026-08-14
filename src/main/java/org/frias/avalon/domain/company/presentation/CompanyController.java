@@ -27,18 +27,22 @@ public class CompanyController {
     private final org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort;
     private final org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper outletMapper;
 
+    private final org.frias.avalon.core.tenant.FlywayMultiTenantService flywayMultiTenantService;
+
     public CompanyController(
             CreateCompanyUseCase createCompanyUseCase,
             FindAllCompaniesUseCase findAllCompaniesUseCase,
             CompanyRepositoryPort companyRepositoryPort,
             org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort,
-            org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper outletMapper
+            org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper outletMapper,
+            org.frias.avalon.core.tenant.FlywayMultiTenantService flywayMultiTenantService
     ) {
         this.createCompanyUseCase = createCompanyUseCase;
         this.findAllCompaniesUseCase = findAllCompaniesUseCase;
         this.companyRepositoryPort = companyRepositoryPort;
         this.outletRepositoryPort = outletRepositoryPort;
         this.outletMapper = outletMapper;
+        this.flywayMultiTenantService = flywayMultiTenantService;
     }
 
     /**
@@ -52,6 +56,71 @@ public class CompanyController {
                 companies.isEmpty() ? "No companies found" : "Companies retrieved successfully",
                 companies
         ));
+    }
+
+    /**
+     * GET /api/v1/companies/pending - Retrieves companies pending approval (status RVW / 1L).
+     */
+    @GetMapping("/pending")
+    public ResponseEntity<ApiResponse<List<CompanyResponse>>> findPending() {
+        List<CompanyResponse> pendingCompanies = companyRepositoryPort.findByStatusId(1L).stream()
+                .map(domain -> new CompanyResponse(
+                        domain.id(),
+                        domain.nit(),
+                        domain.name(),
+                        domain.email(),
+                        domain.statusId(),
+                        domain.defaultCashThresholdAmount(),
+                        domain.createdAt(),
+                        domain.updatedAt()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                pendingCompanies.isEmpty() ? "No pending companies found" : "Pending companies retrieved successfully",
+                pendingCompanies
+        ));
+    }
+
+    /**
+     * POST /api/v1/companies/{id}/approve - Approves company request (status -> APR / 1L) and provisions tenant schema.
+     */
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<CompanyResponse>> approveCompany(@PathVariable Long id) {
+        return companyRepositoryPort.findById(id).map(company -> {
+            org.frias.avalon.domain.company.domain.model.CompanyDomain approvedDomain = new org.frias.avalon.domain.company.domain.model.CompanyDomain(
+                    company.id(),
+                    company.nit(),
+                    company.name(),
+                    company.email(),
+                    1L,
+                    company.defaultCashThresholdAmount(),
+                    company.createdAt(),
+                    company.updatedAt()
+            );
+
+            org.frias.avalon.domain.company.domain.model.CompanyDomain saved = companyRepositoryPort.save(approvedDomain);
+            flywayMultiTenantService.migrateTenantSchema("company_" + id);
+
+            CompanyResponse response = new CompanyResponse(
+                    saved.id(),
+                    saved.nit(),
+                    saved.name(),
+                    saved.email(),
+                    saved.statusId(),
+                    saved.defaultCashThresholdAmount(),
+                    saved.createdAt(),
+                    saved.updatedAt()
+            );
+
+            return ResponseEntity.ok(new ApiResponse<>(
+                    HttpStatus.OK.value(),
+                    "Company approved successfully and tenant schema provisioned",
+                    response
+            ));
+        }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "Company not found", null)));
     }
 
     /**

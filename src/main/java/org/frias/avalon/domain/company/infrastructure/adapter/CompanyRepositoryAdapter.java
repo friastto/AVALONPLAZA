@@ -47,6 +47,13 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
     }
 
     @Override
+    public List<CompanyDomain> findByStatusId(Long statusId) {
+        return jpa.findByStatusId(statusId).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public void updateDefaultThreshold(Long companyId, java.math.BigDecimal thresholdAmount) {
         jpa.findById(companyId).ifPresent(entity -> {
             entity.setDefaultCashThresholdAmount(thresholdAmount);
