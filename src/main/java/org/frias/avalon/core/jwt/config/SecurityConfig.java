@@ -40,7 +40,6 @@ public class SecurityConfig {
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/avalon/auth/impersonate/**").authenticated()
                         .requestMatchers("/avalon/auth/**").permitAll()
 
 

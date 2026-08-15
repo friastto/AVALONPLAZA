@@ -12,8 +12,6 @@ public interface JwtTokenProviderPort {
 
     String generateAccessToken(UserDetails userDetails, Long outletId, Long companyId);
 
-    String generateImpersonationToken(UserDetails userDetails, Long outletId, List<String> roles);
-
     String generateAccessTokenFromId(Long userId);
 
     UUID generateRefreshToken();
