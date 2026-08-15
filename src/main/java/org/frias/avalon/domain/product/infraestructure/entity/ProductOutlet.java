@@ -22,6 +22,13 @@ public class ProductOutlet {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "product_company_id")
+    private Long productCompanyId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_company_id", insertable = false, updatable = false)
+    private org.frias.avalon.domain.product.infrastructure.entity.ProductCompanyEntity productCompany;
+
     private String localName;
 
     private String localDescription;

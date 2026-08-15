@@ -74,6 +74,7 @@ public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalog
             );
             return result != null ? result : Page.empty(pageable);
         } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(FindProductCatalogByOutletUseCaseImpl.class).error("Error al consultar catalogo por outlet {}: {}", outletId, e.getMessage(), e);
             return Page.empty(pageable);
         } finally {
             TenantContext.clear();

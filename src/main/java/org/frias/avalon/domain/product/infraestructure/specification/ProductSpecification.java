@@ -47,7 +47,11 @@ public class ProductSpecification {
             if (categoryId == null) {
                 return criteriaBuilder.conjunction();
             }
-            return criteriaBuilder.equal(root.get("statusId"), categoryId);
+            // Si el producto en tienda tiene vinculacion corporativa, filtrar a traves de productCompany
+            if (root.get("productCompany") != null) {
+                return criteriaBuilder.equal(root.join("productCompany", jakarta.persistence.criteria.JoinType.LEFT).get("productId"), categoryId);
+            }
+            return criteriaBuilder.conjunction();
         };
     }
 }
