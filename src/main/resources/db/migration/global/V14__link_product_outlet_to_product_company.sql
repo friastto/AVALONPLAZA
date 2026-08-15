@@ -1,4 +1,20 @@
--- Migracion Global V14: Anadir columna y relacion product_company_id en product_outlet para esquemas de empresa
+-- Migracion Global V14: Crear la tabla base public.product_outlet y anadir product_company_id en esquemas company_*
+CREATE TABLE IF NOT EXISTS public.product_outlet (
+    id BIGSERIAL PRIMARY KEY,
+    product_company_id BIGINT,
+    local_name VARCHAR(255),
+    local_description TEXT,
+    stock INT NOT NULL DEFAULT 0,
+    unit_measure_id BIGINT NOT NULL DEFAULT 1,
+    local_image_url TEXT[],
+    local_price NUMERIC(38,2) NOT NULL DEFAULT 0.00,
+    outlet_id BIGINT,
+    status_id BIGINT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    version BIGINT DEFAULT 0
+);
+
 DO $$
 DECLARE
     rec RECORD;
