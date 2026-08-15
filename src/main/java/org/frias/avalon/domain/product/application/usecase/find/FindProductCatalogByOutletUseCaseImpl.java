@@ -13,6 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+
 /**
  * Caso de uso para obtener el catálogo de productos de una tienda.
  * Garantiza que los empleados de una tienda estén encapsulados en su propia tienda.
@@ -31,12 +34,13 @@ public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalog
             ProductOutletMapper productOutletMapper,
             CurrentUserProviderPort currentUserProvider,
             OutletRepositoryPort outletPort,
-            TransactionTemplate transactionTemplate) {
+            PlatformTransactionManager transactionManager) {
         this.productOutletRepositoryPort = productOutletRepositoryPort;
         this.productOutletMapper = productOutletMapper;
         this.currentUserProvider = currentUserProvider;
         this.outletPort = outletPort;
-        this.transactionTemplate = transactionTemplate;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
     @Override

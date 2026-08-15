@@ -19,6 +19,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+
 /**
  * Implementation of FindOutletDetailByIdUseCase Input Port.
  */
@@ -36,12 +39,13 @@ public class FindOutletDetailByIdUseCaseImpl implements FindOutletDetailByIdUseC
             ProductOutletRepositoryPort productRepository,
             OutletMapper outletMapper,
             ProductOutletMapper productMapper,
-            TransactionTemplate transactionTemplate) {
+            PlatformTransactionManager transactionManager) {
         this.outletRepository = outletRepository;
         this.productRepository = productRepository;
         this.outletMapper = outletMapper;
         this.productMapper = productMapper;
-        this.transactionTemplate = transactionTemplate;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
     @Override
