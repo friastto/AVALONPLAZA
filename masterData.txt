@@ -237,7 +237,7 @@ MASTER DATA - ESTRUCTURA REFACTORIZADA (JSON PARA API)
 				{"fullName": "VISITANTE_APP", "shortName": "VISAPP", "parentShortName": "GUEST", "statusId": "ACT"},
 				{"fullName": "PROSPECTO", "shortName": "VISPROSPEC", "parentShortName": "GUEST", "statusId": "ACT"},
 				{"fullName": "COMPRADOR_INVITADO", "shortName": "INVITADO", "parentShortName": "GUEST", "statusId": "ACT"},
-				{"fullName": "ANONIMO", "shortName": "USANONIMO", "parentShortName": "GUEST", "statusId": "ACT"},
+				{"fullName": "USUARIO_ANONIMO", "shortName": "USANONIMO", "parentShortName": "GUEST", "statusId": "ACT"},
 
 	// ==========================================
 	// 7. PROMOCIONES Y DESCUENTOS
