@@ -96,6 +96,7 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(200, "Su contraseña ha sido restablecida exitosamente.", null));
     }
 
+    @Deprecated
     @PostMapping("/impersonate/{outletId}")
     public ResponseEntity<ApiResponse<AuthResponse>> impersonate(@org.springframework.web.bind.annotation.PathVariable Long outletId) {
         AuthResponse auth = impersonateOutletUseCase.execute(outletId);

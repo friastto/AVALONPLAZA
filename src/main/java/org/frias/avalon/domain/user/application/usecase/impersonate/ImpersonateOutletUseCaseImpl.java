@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+@Deprecated
 @Service
 @AllArgsConstructor
 public class ImpersonateOutletUseCaseImpl implements ImpersonateOutletUseCase {
