@@ -29,6 +29,11 @@ El español es el único idioma permitido para todas las explicaciones y descrip
 - **Nivel 3 (Tienda Outlet - product_outlet):** Hereda automaticamente los productos de Nivel 2 para todas las tiendas de la compañia (`company_id`).
 - **Sugerencias de Tienda y Propagacion:** Las solicitudes creadas por tiendas (`product_suggestion_request`) en estado `PENDING` son aprobadas por el `GERGEN` mediante `/avalon/products/suggestions/{id}/approve`, promoviendolas a Nivel 2 e iniciando la propagacion automatica en cascada a Nivel 3 para todas las tiendas de esa empresa.
 
+## Reglas del Modelo de Accesos y Permisos de 3 Niveles (RBAC Multi-Tenant)
+- **Nivel 1 (SuperAdmin Global - ADMINTI, ADMINSYS):** Acceso global sin restriccion de esquema a public y a cualquier esquema company_*.
+- **Nivel 2 (Gerencia de Empresa - GERGEN):** Acceso limitado al ambito de su `company_id`. Autoridad para aprobar sugerencias de productos (`/avalon/products/suggestions/{id}/approve`), configurar umbrales corporativos y listar el consolidado multi-sede.
+- **Nivel 3 (Operativo de Tienda - ADMOULT, GERENTE, CJTURNO, VENDEDOR):** Acceso encapsulado por `TenantContext` al esquema de su tienda (`company_{id}` / `outlet_{id}`). Operaciones: ejecucion de ventas POS, sesiones de caja, arqueos a ciegas en 3 pasos y creacion de sugerencias de producto (`PENDING`).
+
 ## Diagrama de Arquitectura de la API (ApiAvalon)
 
 ```mermaid
