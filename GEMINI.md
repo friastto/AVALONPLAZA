@@ -23,8 +23,11 @@ El español es el único idioma permitido para todas las explicaciones y descrip
 ## Archivo de Referencia Obligatorio (masterData.txt)
 - `masterData.txt`: Documento de referencia permanente en la raíz con la jerarquía del árbol de datos maestros. NUNCA debe ser eliminado.
 
-
-
+## Reglas del Modelo de Catalogos de 3 Niveles (B2B Multi-Tenant)
+- **Nivel 1 (Global Avalon - public.product):** Catalogo maestro de productos globales preestablecidos.
+- **Nivel 2 (Catalogo Empresa - public.product_company):** Catalogo corporativo habilitado por el Gerente de Empresa (`GERGEN`).
+- **Nivel 3 (Tienda Outlet - product_outlet):** Hereda automaticamente los productos de Nivel 2 para todas las tiendas de la compañia (`company_id`).
+- **Sugerencias de Tienda y Propagacion:** Las solicitudes creadas por tiendas (`product_suggestion_request`) en estado `PENDING` son aprobadas por el `GERGEN` mediante `/avalon/products/suggestions/{id}/approve`, promoviendolas a Nivel 2 e iniciando la propagacion automatica en cascada a Nivel 3 para todas las tiendas de esa empresa.
 
 ## Diagrama de Arquitectura de la API (ApiAvalon)
 
