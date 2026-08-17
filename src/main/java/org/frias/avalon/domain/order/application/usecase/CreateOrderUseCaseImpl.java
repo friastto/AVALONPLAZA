@@ -23,14 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Service
+@Service("omnichannelCreateOrderUseCaseImpl")
 @RequiredArgsConstructor
 public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
 
     private final OrderRepositoryPort orderRepositoryPort;
     private final MasterDataRepositoryPort masterDataRepositoryPort;
     private final JpaProductOutletRepository jpaProductOutletRepository;
-    private final OrderMapper orderMapper;
+    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
     private final OrderWebSocketController orderWebSocketController;
 
     @Override

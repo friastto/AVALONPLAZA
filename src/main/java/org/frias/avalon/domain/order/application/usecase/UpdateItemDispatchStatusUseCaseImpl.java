@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class UpdateItemDispatchStatusUseCaseImpl implements UpdateItemDispatchStatusUseCase {
 
     private final OrderRepositoryPort orderRepositoryPort;
-    private final OrderMapper orderMapper;
+    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
     private final OrderWebSocketController orderWebSocketController;
 
     @Override

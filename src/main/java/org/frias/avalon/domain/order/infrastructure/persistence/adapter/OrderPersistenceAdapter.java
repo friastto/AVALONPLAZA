@@ -25,7 +25,7 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
     private final JpaOrderRepository jpaOrderRepository;
     private final JpaOrderItemRepository jpaOrderItemRepository;
     private final JpaOrderStatusHistoryRepository jpaOrderStatusHistoryRepository;
-    private final OrderMapper orderMapper;
+    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
 
     @Override
     public OrderDomain save(OrderDomain order) {

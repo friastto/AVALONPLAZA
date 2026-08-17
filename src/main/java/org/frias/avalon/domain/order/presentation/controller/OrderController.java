@@ -22,12 +22,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final CreateOrderUseCase createOrderUseCase;
+    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelCreateOrderUseCaseImpl") CreateOrderUseCase createOrderUseCase;
     private final ClaimOrderFifoUseCase claimOrderFifoUseCase;
     private final UpdateItemDispatchStatusUseCase updateItemDispatchStatusUseCase;
     private final CompleteOrderAndEmitSaleUseCase completeOrderAndEmitSaleUseCase;
     private final OrderRepositoryPort orderRepositoryPort;
-    private final OrderMapper orderMapper;
+    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
 
     @PostMapping
     public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
