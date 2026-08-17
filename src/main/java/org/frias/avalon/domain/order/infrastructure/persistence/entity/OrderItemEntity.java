@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
+@Entity(name = "OmnichannelOrderItemEntity")
 @Table(name = "omnichannel_order_items")
 @Data
 @Builder

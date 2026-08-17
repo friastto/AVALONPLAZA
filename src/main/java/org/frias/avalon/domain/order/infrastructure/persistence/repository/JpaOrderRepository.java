@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 public interface JpaOrderRepository extends JpaRepository<OrderEntity, Long> {
     Optional<OrderEntity> findByOrderCode(String orderCode);
 
-    @Query("SELECT o FROM OrderEntity o WHERE o.outletId = :outletId AND o.orderStatusId = :statusId AND o.claimedByUserId IS NULL ORDER BY o.createdAt ASC LIMIT 1")
+    @Query("SELECT o FROM OmnichannelOrderEntity o WHERE o.outletId = :outletId AND o.orderStatusId = :statusId AND o.claimedByUserId IS NULL ORDER BY o.createdAt ASC LIMIT 1")
     Optional<OrderEntity> findNextPendingOrderFifo(@Param("outletId") Long outletId, @Param("statusId") Long statusId);
 
     List<OrderEntity> findAllByOutletIdOrderByCreatedAtDesc(Long outletId);
