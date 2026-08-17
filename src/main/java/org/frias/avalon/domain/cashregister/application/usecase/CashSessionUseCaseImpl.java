@@ -103,6 +103,7 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
         if (session == null) return null;
         LocalDateTime now = LocalDateTime.now();
         Long personIdToQuery = session.getEmployeeId();
+        Long userIdToQuery = session.getEmployeeId();
         if (session.getEmployeeId() != null) {
             Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findById(session.getEmployeeId());
             if (userOpt.isPresent() && userOpt.get().getPersonId() != null) {
@@ -110,12 +111,28 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
             }
         }
 
-        List<SaleDomain> sessionSales = saleRepositoryPort.findByOutletAndEmployeeAndDateBetween(
-                session.getOutletId(),
-                personIdToQuery,
-                session.getOpenedAt(),
-                now
-        );
+        List<SaleDomain> sessionSales = new java.util.ArrayList<>();
+        if (personIdToQuery != null) {
+            sessionSales.addAll(saleRepositoryPort.findByOutletAndEmployeeAndDateBetween(
+                    session.getOutletId(),
+                    personIdToQuery,
+                    session.getOpenedAt(),
+                    now
+            ));
+        }
+        if (userIdToQuery != null && !userIdToQuery.equals(personIdToQuery)) {
+            List<SaleDomain> salesByUserId = saleRepositoryPort.findByOutletAndEmployeeAndDateBetween(
+                    session.getOutletId(),
+                    userIdToQuery,
+                    session.getOpenedAt(),
+                    now
+            );
+            for (SaleDomain s : salesByUserId) {
+                if (sessionSales.stream().noneMatch(existing -> existing.getId().equals(s.getId()))) {
+                    sessionSales.add(s);
+                }
+            }
+        }
 
         BigDecimal cashSales = BigDecimal.ZERO;
         BigDecimal cardSales = BigDecimal.ZERO;
