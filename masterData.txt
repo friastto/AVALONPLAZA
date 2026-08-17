@@ -61,6 +61,24 @@ MASTER DATA - ESTRUCTURA REFACTORIZADA (JSON PARA API)
 			{"fullName": "MANTENIMIENTO", "shortName": "MNT", "parentShortName": "STSSYS", "statusId": "ACT"},
 			{"fullName": "SINCRONIZADO", "shortName": "SYNC", "parentShortName": "STSSYS", "statusId": "ACT"},
 
+		{"fullName": "STS_ORDERS", "shortName": "STSORD", "parentShortName": "ROOTSTS", "statusId": "ACT"},
+			{"fullName": "PEDIDO_PENDIENTE", "shortName": "ORD_PEN", "parentShortName": "STSORD", "statusId": "ACT"},
+			{"fullName": "PEDIDO_RECIBIDO", "shortName": "ORD_REC", "parentShortName": "STSORD", "statusId": "ACT"},
+			{"fullName": "PEDIDO_DESPACHADO", "shortName": "ORD_DISP", "parentShortName": "STSORD", "statusId": "ACT"},
+			{"fullName": "PEDIDO_ENTREGADO", "shortName": "ORD_DEL", "parentShortName": "STSORD", "statusId": "ACT"},
+			{"fullName": "PEDIDO_CANCELADO", "shortName": "ORD_CAN", "parentShortName": "STSORD", "statusId": "ACT"},
+
+		{"fullName": "STS_PAYMENTS", "shortName": "STSPAY", "parentShortName": "ROOTSTS", "statusId": "ACT"},
+			{"fullName": "PAGO_PENDIENTE", "shortName": "PAY_PEN", "parentShortName": "STSPAY", "statusId": "ACT"},
+			{"fullName": "PAGO_PAGADO", "shortName": "PAY_PAD", "parentShortName": "STSPAY", "statusId": "ACT"},
+			{"fullName": "PAGO_REEMBOLSADO", "shortName": "PAY_REF", "parentShortName": "STSPAY", "statusId": "ACT"},
+
+		{"fullName": "STS_CLAIMS", "shortName": "STSCLM", "parentShortName": "ROOTSTS", "statusId": "ACT"},
+			{"fullName": "RECLAMO_PENDIENTE", "shortName": "CLM_PEN", "parentShortName": "STSCLM", "statusId": "ACT"},
+			{"fullName": "RECLAMO_APROBADO", "shortName": "CLM_APR", "parentShortName": "STSCLM", "statusId": "ACT"},
+			{"fullName": "RECLAMO_RECHAZADO", "shortName": "CLM_REC", "parentShortName": "STSCLM", "statusId": "ACT"},
+			{"fullName": "RECLAMO_RESUELTO", "shortName": "CLM_SOL", "parentShortName": "STSCLM", "statusId": "ACT"},
+
 	// ==========================================
 	// 2. GENERO
 	// ==========================================
