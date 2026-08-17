@@ -340,7 +340,8 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
             throw new BusinessException("No se pueden registrar retiros parciales en una sesión de caja cerrada");
         }
 
-        CashPickupDomain pickup = CashPickupDomain.create(sessionId, registeredBy, amount, reason);
+        Long validRegisteredBy = (registeredBy != null && registeredBy > 0) ? registeredBy : session.getEmployeeId();
+        CashPickupDomain pickup = CashPickupDomain.create(sessionId, validRegisteredBy, amount, reason);
         return cashSessionRepositoryPort.savePickup(pickup);
     }
 
