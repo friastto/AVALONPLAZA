@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Component
+@Component("omnichannelOrderPersistenceAdapter")
 @RequiredArgsConstructor
 public class OrderPersistenceAdapter implements OrderRepositoryPort {
 

@@ -5,6 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
+import org.springframework.stereotype.Repository;
+
+@Repository("omnichannelJpaOrderItemRepository")
 public interface JpaOrderItemRepository extends JpaRepository<OrderItemEntity, Long> {
     List<OrderItemEntity> findAllByOrderId(Long orderId);
 }

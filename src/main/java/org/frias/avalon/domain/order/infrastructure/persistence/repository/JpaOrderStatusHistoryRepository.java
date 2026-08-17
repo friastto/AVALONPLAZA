@@ -5,6 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
+import org.springframework.stereotype.Repository;
+
+@Repository("omnichannelJpaOrderStatusHistoryRepository")
 public interface JpaOrderStatusHistoryRepository extends JpaRepository<OrderStatusHistoryEntity, Long> {
     List<OrderStatusHistoryEntity> findAllByOrderIdOrderByCreatedAtDesc(Long orderId);
 }

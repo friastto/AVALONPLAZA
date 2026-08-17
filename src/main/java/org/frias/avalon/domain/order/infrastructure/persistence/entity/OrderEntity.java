@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "omnichannel_orders")
 @Data
 @Builder
 @NoArgsConstructor
