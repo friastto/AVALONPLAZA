@@ -77,10 +77,10 @@ class FindAllOutletsUseCaseImplTest {
         LocationDto locationDto2 = new LocationDto(6.25184, -75.56359);
 
         OutletResponseDto dto1 = new OutletResponseDto(
-                1L, "OUTLET001", "Tienda Norte", "Calle 100 #15-30", "1234567", "900.123.456-1", locationDto1, null, null
+                1L, "OUTLET001", "Tienda Norte", "Calle 100 #15-30", "1234567", "900.123.456-1", locationDto1, null, null, false, java.math.BigDecimal.ZERO
         );
         OutletResponseDto dto2 = new OutletResponseDto(
-                2L, "OUTLET002", "Tienda Sur", "Carrera 43A #30-40", "7654321", "900.765.432-2", locationDto2, null, null
+                2L, "OUTLET002", "Tienda Sur", "Carrera 43A #30-40", "7654321", "900.765.432-2", locationDto2, null, null, false, java.math.BigDecimal.ZERO
         );
 
         given(outletPort.findAll(criteria, pageable)).willReturn(mockOutletsPage);

@@ -22,7 +22,6 @@ public class OutletMapperImpl implements OutletMapper {
         this.masterTreeProvider = masterTreeProvider;
     }
 
-
     @Override
     public OutletDomain toDomain(Outlet o) {
         if (o == null) return null;
@@ -39,6 +38,8 @@ public class OutletMapperImpl implements OutletMapper {
                 o.getStatusId(),
                 location,
                 o.getCashThresholdAmount(),
+                o.getDeliveryEnabled(),
+                o.getDeliveryFee(),
                 o.getCompanyId(),
                 o.getCreatedAt(),
                 o.getUpdatedAt()
@@ -61,6 +62,8 @@ public class OutletMapperImpl implements OutletMapper {
                 .statusId(od.getStatusId())
                 .location(point)
                 .cashThresholdAmount(od.getCashThresholdAmount())
+                .deliveryEnabled(od.getDeliveryEnabled())
+                .deliveryFee(od.getDeliveryFee())
                 .companyId(od.getCompanyId())
                 .createdAt(od.getCreatedAt())
                 .updatedAt(od.getUpdatedAt())
@@ -86,7 +89,9 @@ public class OutletMapperImpl implements OutletMapper {
                 od.getNit(),
                 locationDto,
                 statusResponseDto,
-                od.getCompanyId()
+                od.getCompanyId(),
+                od.getDeliveryEnabled(),
+                od.getDeliveryFee()
         );
     }
 }

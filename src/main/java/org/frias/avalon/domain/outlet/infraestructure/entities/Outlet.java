@@ -48,6 +48,13 @@ public class Outlet {
 
     private BigDecimal cashThresholdAmount;
 
+    @Column(name = "delivery_enabled")
+    @Builder.Default
+    private Boolean deliveryEnabled = false;
+
+    @Column(name = "delivery_fee", precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal deliveryFee = BigDecimal.ZERO;
 
     private LocalDateTime createdAt;
 

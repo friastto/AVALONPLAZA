@@ -81,6 +81,7 @@ public class FindOutletDetailByIdUseCaseImpl implements FindOutletDetailByIdUseC
 
         return new OutletDetailResponse(
                 baseOutletDto.id(),
+                baseOutletDto.companyId(),
                 baseOutletDto.code(),
                 baseOutletDto.name(),
                 baseOutletDto.address(),
@@ -88,6 +89,8 @@ public class FindOutletDetailByIdUseCaseImpl implements FindOutletDetailByIdUseC
                 baseOutletDto.nit(),
                 baseOutletDto.location(),
                 baseOutletDto.statusResponseDto(),
+                baseOutletDto.deliveryEnabled(),
+                baseOutletDto.deliveryFee(),
                 productResponses
         );
     }

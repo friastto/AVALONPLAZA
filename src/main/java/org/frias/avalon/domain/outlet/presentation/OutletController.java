@@ -5,6 +5,7 @@ import org.frias.avalon.domain.outlet.application.dto.request.FindOutletRequestD
 import org.frias.avalon.domain.outlet.application.dto.request.OutletCreateRequestDto;
 import org.frias.avalon.domain.outlet.application.dto.request.OutletNearbyByRadiusRequestDto;
 import org.frias.avalon.domain.outlet.application.dto.request.OutletSearchCriteria;
+import org.frias.avalon.domain.outlet.application.dto.request.UpdateDeliverySettingsRequestDto;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletDetailResponse;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletLightResponse;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
@@ -14,15 +15,16 @@ import org.frias.avalon.domain.outlet.application.usecase.find.FindNearbyOutlets
 import org.frias.avalon.domain.outlet.application.usecase.find.FindOutletDetailByIdUseCase;
 import org.frias.avalon.domain.outlet.application.usecase.find.FindOutletNearbyByRadiusUseCase;
 import org.frias.avalon.domain.outlet.application.usecase.find.FindOutletUseCase;
+import org.frias.avalon.domain.outlet.application.dto.response.OutletDashboardResponse;
+import org.frias.avalon.domain.outlet.application.dto.response.CashCutResponse;
+import org.frias.avalon.domain.outlet.application.usecase.find.GetOutletDashboardUseCase;
+import org.frias.avalon.domain.outlet.application.usecase.update.ExecuteCashCutUseCase;
+import org.frias.avalon.domain.outlet.application.usecase.update.UpdateDeliverySettingsUseCase;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.frias.avalon.domain.outlet.application.dto.response.OutletDashboardResponse;
-import org.frias.avalon.domain.outlet.application.dto.response.CashCutResponse;
-import org.frias.avalon.domain.outlet.application.usecase.find.GetOutletDashboardUseCase;
-import org.frias.avalon.domain.outlet.application.usecase.update.ExecuteCashCutUseCase;
 
 import java.util.List;
 
@@ -38,8 +40,9 @@ public class OutletController {
     private final FindAllOutletsUseCase findAllOutletsUseCase;
     private final GetOutletDashboardUseCase getOutletDashboardUseCase;
     private final ExecuteCashCutUseCase executeCashCutUseCase;
+    private final UpdateDeliverySettingsUseCase updateDeliverySettingsUseCase;
 
-    public OutletController(CreateOutletUseCase createUseCase, FindOutletNearbyByRadiusUseCase findOutletNearbyByRadiusUseCase, FindOutletUseCase findOutletUseCase, FindNearbyOutletsLightUseCase findNearbyOutletsLightUseCase, FindOutletDetailByIdUseCase findOutletDetailByIdUseCase, FindAllOutletsUseCase findAllOutletsUseCase, GetOutletDashboardUseCase getOutletDashboardUseCase, ExecuteCashCutUseCase executeCashCutUseCase) {
+    public OutletController(CreateOutletUseCase createUseCase, FindOutletNearbyByRadiusUseCase findOutletNearbyByRadiusUseCase, FindOutletUseCase findOutletUseCase, FindNearbyOutletsLightUseCase findNearbyOutletsLightUseCase, FindOutletDetailByIdUseCase findOutletDetailByIdUseCase, FindAllOutletsUseCase findAllOutletsUseCase, GetOutletDashboardUseCase getOutletDashboardUseCase, ExecuteCashCutUseCase executeCashCutUseCase, UpdateDeliverySettingsUseCase updateDeliverySettingsUseCase) {
         this.createUseCase = createUseCase;
         this.findOutletNearbyByRadiusUseCase = findOutletNearbyByRadiusUseCase;
         this.findOutletUseCase = findOutletUseCase;
@@ -48,6 +51,7 @@ public class OutletController {
         this.findAllOutletsUseCase = findAllOutletsUseCase;
         this.getOutletDashboardUseCase = getOutletDashboardUseCase;
         this.executeCashCutUseCase = executeCashCutUseCase;
+        this.updateDeliverySettingsUseCase = updateDeliverySettingsUseCase;
     }
 
     @PostMapping("/create")
@@ -161,5 +165,15 @@ public class OutletController {
         CashCutResponse response = executeCashCutUseCase.execute(id);
         return ResponseEntity.status(200)
                 .body(new ApiResponse<>(200, "Arqueo de caja ejecutado exitosamente", response));
+    }
+
+    @PutMapping("/{id}/delivery-settings")
+    public ResponseEntity<ApiResponse<OutletResponseDto>> updateDeliverySettings(
+            @PathVariable Long id,
+            @RequestBody UpdateDeliverySettingsRequestDto request
+    ) {
+        OutletResponseDto response = updateDeliverySettingsUseCase.execute(id, request);
+        return ResponseEntity.status(200)
+                .body(new ApiResponse<>(200, "Configuración de delivery actualizada exitosamente", response));
     }
 }

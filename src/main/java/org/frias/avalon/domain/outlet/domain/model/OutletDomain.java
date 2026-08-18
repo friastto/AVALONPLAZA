@@ -21,6 +21,8 @@ public class OutletDomain {
     private final Long statusId;
     private final LocationDomain location;
     private BigDecimal cashThresholdAmount;
+    private Boolean deliveryEnabled;
+    private BigDecimal deliveryFee;
     private final Long companyId;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
@@ -35,6 +37,8 @@ public class OutletDomain {
             Long statusId,
             LocationDomain location,
             BigDecimal cashThresholdAmount,
+            Boolean deliveryEnabled,
+            BigDecimal deliveryFee,
             Long companyId,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
@@ -48,6 +52,8 @@ public class OutletDomain {
         this.statusId = statusId;
         this.location = location;
         this.cashThresholdAmount = cashThresholdAmount;
+        this.deliveryEnabled = deliveryEnabled != null ? deliveryEnabled : false;
+        this.deliveryFee = deliveryFee != null ? deliveryFee : BigDecimal.ZERO;
         this.companyId = companyId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -88,6 +94,8 @@ public class OutletDomain {
                 status,
                 location,
                 cashThresholdAmount,
+                false,
+                BigDecimal.ZERO,
                 companyId,
                 LocalDateTime.now(),
                 null
@@ -95,14 +103,14 @@ public class OutletDomain {
     }
 
     public static OutletDomain fromPersistence(Long id, String code, String name, String address, String phone, String nit, Long status, LocationDomain location) {
-        return fromPersistence(id, code, name, address, phone, nit, status, location, null, null, null, null);
+        return fromPersistence(id, code, name, address, phone, nit, status, location, null, false, BigDecimal.ZERO, null, null, null);
     }
 
     public static OutletDomain fromPersistence(Long id, String code, String name, String address, String phone, String nit, Long status, LocationDomain location, BigDecimal cashThresholdAmount) {
-        return fromPersistence(id, code, name, address, phone, nit, status, location, cashThresholdAmount, null, null, null);
+        return fromPersistence(id, code, name, address, phone, nit, status, location, cashThresholdAmount, false, BigDecimal.ZERO, null, null, null);
     }
 
-    public static OutletDomain fromPersistence(Long id, String code, String name, String address, String phone, String nit, Long status, LocationDomain location, BigDecimal cashThresholdAmount, Long companyId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public static OutletDomain fromPersistence(Long id, String code, String name, String address, String phone, String nit, Long status, LocationDomain location, BigDecimal cashThresholdAmount, Boolean deliveryEnabled, BigDecimal deliveryFee, Long companyId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new OutletDomain(
                 id,
                 code,
@@ -113,6 +121,8 @@ public class OutletDomain {
                 status,
                 location,
                 cashThresholdAmount,
+                deliveryEnabled,
+                deliveryFee,
                 companyId,
                 createdAt,
                 updatedAt
@@ -121,6 +131,14 @@ public class OutletDomain {
 
     public void setCashThresholdAmount(BigDecimal cashThresholdAmount) {
         this.cashThresholdAmount = cashThresholdAmount;
+    }
+
+    public void setDeliveryEnabled(Boolean deliveryEnabled) {
+        this.deliveryEnabled = deliveryEnabled != null ? deliveryEnabled : false;
+    }
+
+    public void setDeliveryFee(BigDecimal deliveryFee) {
+        this.deliveryFee = deliveryFee != null ? deliveryFee : BigDecimal.ZERO;
     }
 
     public void codeGenerator() {
@@ -146,6 +164,8 @@ public class OutletDomain {
     public Long getStatusId() { return statusId; }
     public LocationDomain getLocation() { return location; }
     public BigDecimal getCashThresholdAmount() { return cashThresholdAmount; }
+    public Boolean getDeliveryEnabled() { return deliveryEnabled; }
+    public BigDecimal getDeliveryFee() { return deliveryFee; }
     public Long getCompanyId() { return companyId; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

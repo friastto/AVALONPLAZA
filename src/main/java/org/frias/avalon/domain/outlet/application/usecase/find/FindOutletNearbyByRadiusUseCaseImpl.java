@@ -15,6 +15,7 @@ import org.frias.avalon.domain.outlet.infraestructure.mapper.LocationMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -57,10 +58,12 @@ public class FindOutletNearbyByRadiusUseCaseImpl implements FindOutletNearbyByRa
                             outletDomain.getNit(),
                             currentLocation,
                             new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName()),
-                            outletDomain.getCompanyId()
+                            outletDomain.getCompanyId(),
+                            outletDomain.getDeliveryEnabled(),
+                            outletDomain.getDeliveryFee()
                     );
                 }
-        ).toList();
+        ).collect(Collectors.toList());
 
     }
 }

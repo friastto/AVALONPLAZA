@@ -86,7 +86,9 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
                 outletSaved.getNit(),
                 locationDto,
                 statusResponse,
-                outletSaved.getCompanyId()
+                outletSaved.getCompanyId(),
+                outletSaved.getDeliveryEnabled(),
+                outletSaved.getDeliveryFee()
         );
     }
 }
