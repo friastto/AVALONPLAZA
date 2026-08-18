@@ -2,6 +2,7 @@ package org.frias.avalon.domain.product.infraestructure.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.frias.avalon.core.permissions.CurrentUserProviderPort;
+import org.frias.avalon.core.permissions.UserContext;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
@@ -11,9 +12,12 @@ import org.frias.avalon.domain.product.application.dto.response.ProductResponse;
 import org.frias.avalon.domain.product.domain.ProductDomain;
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
+import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
+import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -24,6 +28,7 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
     private final UnitConversionService unitConversionService;
     private final JpaOrderRepository jpaOrderRepository;
     private final CurrentUserProviderPort currentUserProvider;
+    private final UserAvalonRepositoryPort userAvalonRepositoryPort;
 
     @Override
     public ProductDomain toDomain(ProductOutlet entity) {
@@ -93,10 +98,16 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
             reservedGlobalUnits = jpaOrderRepository.sumQuantityByProductOutletIdAndStatusIn(domain.getId(), activeStatusIds);
             if (reservedGlobalUnits == null) reservedGlobalUnits = 0;
 
-            org.frias.avalon.core.permissions.UserContext userCtx = currentUserProvider.getCurrentUserContext();
-            if (userCtx != null && userCtx.getUserId() != null) {
-                reservedUserUnits = jpaOrderRepository.sumQuantityByProductOutletIdAndCustomerIdAndStatusIn(domain.getId(), userCtx.getUserId(), activeStatusIds);
-                if (reservedUserUnits == null) reservedUserUnits = 0;
+            UserContext userCtx = currentUserProvider.getCurrentUserContext();
+            if (userCtx != null && userCtx.username() != null) {
+                Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findByUserName(userCtx.username());
+                if (userOpt.isPresent()) {
+                    Long customerId = userOpt.get().getId();
+                    Integer userSum = jpaOrderRepository.sumQuantityByProductOutletIdAndCustomerIdAndStatusIn(domain.getId(), customerId, activeStatusIds);
+                    if (userSum != null) {
+                        reservedUserUnits = userSum;
+                    }
+                }
             }
         } catch (Exception e) {
             // Silencioso si la consulta no retorna datos
