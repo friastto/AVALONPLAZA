@@ -6,6 +6,7 @@ import org.frias.avalon.core.permissions.UserContext;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
 import org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository;
 import org.frias.avalon.domain.product.application.dto.response.ProductResponse;
@@ -16,6 +17,7 @@ import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +31,7 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
     private final JpaOrderRepository jpaOrderRepository;
     private final CurrentUserProviderPort currentUserProvider;
     private final UserAvalonRepositoryPort userAvalonRepositoryPort;
+    private final MasterDataRepositoryPort masterDataRepositoryPort;
 
     @Override
     public ProductDomain toDomain(ProductOutlet entity) {
@@ -94,7 +97,17 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
         Integer reservedGlobalUnits = 0;
         Integer reservedUserUnits = 0;
         try {
-            List<Long> activeStatusIds = List.of(1L, 2L); // ORD_PEN (1L) y ORD_REC (2L)
+            List<Long> activeStatusIds = new ArrayList<>();
+            Long ordPenId = masterDataRepositoryPort.getIdByCode("ORD_PEN");
+            if (ordPenId != null) activeStatusIds.add(ordPenId);
+            Long ordRecId = masterDataRepositoryPort.getIdByCode("ORD_REC");
+            if (ordRecId != null) activeStatusIds.add(ordRecId);
+            Long penId = masterDataRepositoryPort.getIdByCode("PEN");
+            if (penId != null && !activeStatusIds.contains(penId)) activeStatusIds.add(penId);
+            if (activeStatusIds.isEmpty()) {
+                activeStatusIds = List.of(1L, 2L);
+            }
+
             reservedGlobalUnits = jpaOrderRepository.sumQuantityByProductOutletIdAndStatusIn(domain.getId(), activeStatusIds);
             if (reservedGlobalUnits == null) reservedGlobalUnits = 0;
 
