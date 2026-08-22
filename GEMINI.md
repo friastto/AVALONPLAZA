@@ -17,6 +17,7 @@ El espanol es el unico idioma permitido para todas las explicaciones y descripci
 - Todo commit debe seguir la nomenclatura: `COMMIT VERSION X.Y.Z <tipo>(<modulo>): <descripcion>`
 - Consultar previamente `git log -n 5` para incrementar la version correlativa (`COMMIT VERSION 0.0.X`).
 - Los commits deben ser atomicos, pequenos y frecuentes sobre codigo que compila correctamente. Sin megacommits.
+- **Regla Estricta de Aprobacion Previa:** NUNCA ejecutar `git commit` de forma automatica. Primero verificar la compilacion y ejecucion exitosa de la solucion, presentar los resultados al usuario y esperar su APROBACION EXPLICITA para proceder con el commit.
 
 ## Archivo de Referencia Obligatorio (masterData.txt)
 - `masterData.txt`: Documento de referencia permanente en la raiz con la jerarquia del arbol de datos maestros (`parent_id`, categorias, tipos de documento, estados, unidades). NUNCA debe ser eliminado ni ignorado.
