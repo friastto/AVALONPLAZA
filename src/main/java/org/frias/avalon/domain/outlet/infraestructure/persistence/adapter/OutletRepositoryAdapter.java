@@ -81,7 +81,8 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
 
     @Override
     public OutletDomain update(OutletDomain domain) {
-        return null;
+        Outlet o = outletMapper.toEntity(domain);
+        return outletMapper.toDomain(jpa.save(o));
     }
 
     @Override
