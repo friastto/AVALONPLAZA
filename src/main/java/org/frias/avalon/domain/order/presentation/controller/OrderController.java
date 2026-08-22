@@ -67,6 +67,13 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<OrderResponse>> getOrdersByCustomer(@PathVariable Long customerId) {
+        List<OrderDomain> orders = orderRepositoryPort.findAllByCustomerId(customerId);
+        List<OrderResponse> response = orders.stream().map(orderMapper::toResponse).collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long orderId) {
         OrderDomain order = orderRepositoryPort.findById(orderId)
