@@ -113,24 +113,17 @@ public class CreateSaleWithEmailIntegrationTest {
                     return personRepository.saveAndFlush(c);
                 });
 
-        // 4. Obtener o crear producto en store_4
-
-        List<ProductOutlet> products = productRepository.findAll();
-        ProductOutlet product = products.stream()
-                .filter(p -> p.getOutletId().equals(4L))
-                .findFirst()
-                .orElseGet(() -> {
-                    ProductOutlet newProd = new ProductOutlet();
-                    newProd.setLocalName("Producto Test Email");
-                    newProd.setLocalDescription("Desc");
-                    newProd.setLocalPrice(new BigDecimal("1000.00"));
-                    newProd.setStock(50);
-                    newProd.setUnitMeasureId(22L); // UNIDAD validadas en masterData
-                    newProd.setOutletId(4L);
-                    newProd.setStatusId(1L);
-                    newProd.setCreatedAt(LocalDateTime.now());
-                    return productRepository.saveAndFlush(newProd);
-                });
+        // 4. Crear producto exclusivo de prueba con stock 100 en store_4
+        ProductOutlet newProd = new ProductOutlet();
+        newProd.setLocalName("Producto Test Email " + System.currentTimeMillis());
+        newProd.setLocalDescription("Desc");
+        newProd.setLocalPrice(new BigDecimal("1000.00"));
+        newProd.setStock(100);
+        newProd.setUnitMeasureId(22L); // UNIDAD validada en masterData
+        newProd.setOutletId(4L);
+        newProd.setStatusId(1L);
+        newProd.setCreatedAt(LocalDateTime.now());
+        ProductOutlet product = productRepository.saveAndFlush(newProd);
 
         // 5. Preparar petición de venta
         SaleItemRequest itemRequest = new SaleItemRequest(product.getId(), "1");
