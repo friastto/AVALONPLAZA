@@ -56,9 +56,15 @@ public class FlywayMultiTenantService implements TenantSchemaMigrationPort {
     @EventListener(ApplicationReadyEvent.class)
     public void migrateAllTenants() {
         migrateGlobalSchema();
+        List<String> defaultSchemas = List.of("company_1", "company_2", "store_1", "store_4");
+        for (String schema : defaultSchemas) {
+            migrateTenantSchema(schema);
+        }
         List<String> storeSchemas = getAllStoreSchemas();
         for (String schema : storeSchemas) {
-            migrateTenantSchema(schema);
+            if (!defaultSchemas.contains(schema)) {
+                migrateTenantSchema(schema);
+            }
         }
     }
 
