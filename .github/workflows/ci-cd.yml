@@ -38,7 +38,7 @@ jobs:
         image: postgis/postgis:16-3.4-alpine
         env:
           POSTGRES_DB: avalon_integration_test
-          POSTGRES_USER: test_user
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: test_password
         ports:
           - 5432:5432
@@ -63,7 +63,7 @@ jobs:
         run: chmod +x mvnw
 
       - name: Run Unit & Integration Tests (PostgreSQL Service)
-        run: ./mvnw test -B -Dspring.datasource.url=jdbc:postgresql://localhost:5432/avalon_integration_test -Dspring.datasource.username=test_user -Dspring.datasource.password=test_password -Djacoco.skip=true
+        run: ./mvnw test -B -Dspring.datasource.url=jdbc:postgresql://localhost:5432/avalon_integration_test -Dspring.datasource.username=postgres -Dspring.datasource.password=test_password -Djacoco.skip=true
 
       - name: Upload JaCoCo Test Coverage Report
         uses: actions/upload-artifact@v4
