@@ -63,11 +63,7 @@ jobs:
         run: chmod +x mvnw
 
       - name: Run Unit & Integration Tests with JaCoCo Coverage
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/avalon_integration_test
-          SPRING_DATASOURCE_USERNAME: test_user
-          SPRING_DATASOURCE_PASSWORD: test_password
-        run: ./mvnw verify -B
+        run: ./mvnw verify -B -Dspring.datasource.url=jdbc:postgresql://localhost:5432/avalon_integration_test -Dspring.datasource.username=test_user -Dspring.datasource.password=test_password
 
       - name: Upload JaCoCo Test Coverage Report
         uses: actions/upload-artifact@v4
