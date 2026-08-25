@@ -10,13 +10,13 @@ public class TenantIdentifierResolver implements CurrentTenantIdentifierResolver
 
     @Override
     public String resolveCurrentTenantIdentifier() {
-        Long companyId = TenantContext.getTenantId();
-        if (companyId != null && companyId > 0) {
-            return "company_" + companyId;
-        }
         Long tenantOutletId = TenantContext.getTenantOutletId();
         if (tenantOutletId != null && tenantOutletId > 0) {
             return "store_" + tenantOutletId;
+        }
+        Long companyId = TenantContext.getTenantId();
+        if (companyId != null && companyId > 0) {
+            return "company_" + companyId;
         }
         return DEFAULT_TENANT;
     }

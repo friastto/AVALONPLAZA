@@ -38,9 +38,19 @@ class MasterRootControllerIntegrationTest {
     @Autowired
     private MasterDataRepositoryPort masterDataRepositoryPort;
 
+    @Autowired
+    private org.frias.avalon.core.jwt.service.JwtTokenProviderPort jwtTokenProvider;
+
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        org.springframework.security.core.userdetails.UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username("admin_test")
+                .password("password")
+                .authorities("ROLE_ADMINTI", "ADMINTI")
+                .build();
+        String token = jwtTokenProvider.generateAccessToken(userDetails, 1L);
+        headers.setBearerAuth(token);
         return headers;
     }
 
@@ -48,18 +58,18 @@ class MasterRootControllerIntegrationTest {
     @DisplayName("Flujo Completo: Debería crear un MasterData correctamente (E2E)")
     void createMasterData_EndToEnd() {
         // Arrange
-        MasterDataNewDto requestDto = new MasterDataNewDto("NUEVO NODO E2E", "NODE2E", "STSGEN", "ACT");
+        String uniqueCode = "N2E" + (System.currentTimeMillis() % 10000);
+        MasterDataNewDto requestDto = new MasterDataNewDto("NUEVO NODO E2E " + uniqueCode, uniqueCode, "STSGEN", "ACT");
         HttpEntity<MasterDataNewDto> requestEntity = new HttpEntity<>(requestDto, createHeaders());
 
         // Act
-        ResponseEntity<String> response = restTemplate.postForEntity("/masterRoot/create", requestEntity, String.class);
+        ResponseEntity<String> response = restTemplate.postForEntity("/avalon/masterdata/create", requestEntity, String.class);
 
-        System.out.println(response.getBody().toString());
-
+        System.out.println(response.getBody() != null ? response.getBody() : "");
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Debería retornar 200 OK");
-        assertTrue(response.getBody().contains("NODE2E"));
+        assertTrue(response.getBody().contains(uniqueCode));
         assertTrue(response.getBody().contains("se creo el tipo exitosamente"));
     }
 
@@ -71,7 +81,7 @@ class MasterRootControllerIntegrationTest {
         HttpEntity<MasterDataNewDto> requestEntity = new HttpEntity<>(invalidDto, createHeaders());
 
         // Act
-        ResponseEntity<String> response = restTemplate.postForEntity("/masterRoot/create", requestEntity, String.class);
+        ResponseEntity<String> response = restTemplate.postForEntity("/avalon/masterdata/create", requestEntity, String.class);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -84,13 +94,11 @@ class MasterRootControllerIntegrationTest {
         HttpEntity<Void> requestEntity = new HttpEntity<>(createHeaders());
         
         // IMPORTANTE: Obtenemos el ID real dinámicamente desde la base de datos
-        // En lugar de usar un ID fijo como "1", buscamos el ID del nodo "ACT" que sabemos que existe en data-test.sql.
-        // Hacemos esto porque los IDs autoincrementales pueden variar entre ejecuciones en H2 si la secuencia no se reinicia.
         Long realId = masterDataRepositoryPort.getIdByCode("ACT");
         assertNotNull(realId, "El nodo ACT debe existir en la base de datos de prueba");
 
         // Act
-        ResponseEntity<String> response = restTemplate.exchange("/masterRoot/search/v2/" + realId, HttpMethod.GET, requestEntity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange("/avalon/masterdata/search/v2/" + realId, HttpMethod.GET, requestEntity, String.class);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -104,8 +112,7 @@ class MasterRootControllerIntegrationTest {
         HttpEntity<Void> requestEntity = new HttpEntity<>(createHeaders());
 
         // Act
-        // Usamos un ID que es muy improbable que exista
-        ResponseEntity<String> response = restTemplate.exchange("/masterRoot/search/v2/99999999", HttpMethod.GET, requestEntity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange("/avalon/masterdata/search/v2/99999999", HttpMethod.GET, requestEntity, String.class);
 
         // Assert
         assertTrue(response.getStatusCode() == HttpStatus.NOT_FOUND || response.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR);
