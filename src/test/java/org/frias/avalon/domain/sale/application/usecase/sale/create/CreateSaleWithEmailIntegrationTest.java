@@ -22,13 +22,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-
+import org.frias.avalon.core.tenant.TenantContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Transactional
 public class CreateSaleWithEmailIntegrationTest {
 
     @Autowired
@@ -46,6 +45,21 @@ public class CreateSaleWithEmailIntegrationTest {
     @MockBean
     private CurrentUserProviderPort currentUserProvider;
 
+    @Autowired
+    private org.frias.avalon.core.tenant.FlywayMultiTenantService flywayMultiTenantService;
+
+    @org.junit.jupiter.api.BeforeEach
+    public void setUp() {
+        flywayMultiTenantService.migrateTenantSchema("store_4");
+        TenantContext.clear();
+        TenantContext.setTenantOutletId(4L);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    public void tearDown() {
+        TenantContext.clear();
+    }
+
     @Test
     public void testCreateSaleAndSendEmail() throws InterruptedException {
         System.out.println("--- STARTING CREATE SALE & EMAIL INTEGRATION TEST ---");
@@ -57,19 +71,23 @@ public class CreateSaleWithEmailIntegrationTest {
         Mockito.when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
         Mockito.when(currentUserProvider.hasRole("ROLE_ADMINTI")).thenReturn(true);
 
-        // 2. Crear Empleado (Person) y Usuario (UserAvalon) en la BD para que no falle al buscar el usuario autenticado
+        // 2. Crear Empleado (Person) y Usuario (UserAvalon) en la BD
         String employeeUsername = "SoporteAvalon";
         userRepository.findByUserName(employeeUsername).ifPresent(u -> userRepository.delete(u));
         
-        PersonEntity employeePerson = new PersonEntity();
-        employeePerson.setNumberId("88888888");
-        employeePerson.setName("Soporte");
-        employeePerson.setLastName("Avalon");
-        employeePerson.setEmail("soporte@avalon.com");
-        employeePerson.setIdentificationId(135L); // Válido
-        employeePerson.setStatusId(1L); // ACT
-        employeePerson.setCreatedAt(LocalDateTime.now());
-        personRepository.saveAndFlush(employeePerson);
+        String empDoc = "88888888";
+        PersonEntity employeePerson = personRepository.findByNumberId(empDoc)
+                .orElseGet(() -> {
+                    PersonEntity p = new PersonEntity();
+                    p.setNumberId(empDoc);
+                    p.setName("Soporte");
+                    p.setLastName("Avalon");
+                    p.setEmail("soporte@avalon.com");
+                    p.setIdentificationId(135L); // Válido
+                    p.setStatusId(1L); // ACT
+                    p.setCreatedAt(LocalDateTime.now());
+                    return personRepository.saveAndFlush(p);
+                });
         
         UserAvalon employeeUser = new UserAvalon();
         employeeUser.setUserName(employeeUsername);
@@ -80,21 +98,23 @@ public class CreateSaleWithEmailIntegrationTest {
         employeeUser.setCreatedAt(LocalDateTime.now());
         userRepository.saveAndFlush(employeeUser);
 
-        // 3. Crear Cliente de prueba con un correo real en la BD real de desarrollo
+        // 3. Crear Cliente de prueba en la BD
         String clientDoc = "999888777";
-        personRepository.findByNumberId(clientDoc).ifPresent(p -> personRepository.delete(p));
-        
-        PersonEntity client = new PersonEntity();
-        client.setNumberId(clientDoc);
-        client.setName("Cliente");
-        client.setLastName("Prueba Email");
-        client.setEmail("friastto@gmail.com"); // Enviamos a este correo de prueba
-        client.setIdentificationId(135L); // Cédula de ciudadanía u otro válido en tu masterData
-        client.setStatusId(1L); // ACT
-        client.setCreatedAt(LocalDateTime.now());
-        personRepository.saveAndFlush(client);
+        PersonEntity client = personRepository.findByNumberId(clientDoc)
+                .orElseGet(() -> {
+                    PersonEntity c = new PersonEntity();
+                    c.setNumberId(clientDoc);
+                    c.setName("Cliente");
+                    c.setLastName("Prueba Email");
+                    c.setEmail("friastto@gmail.com"); // Enviamos a este correo de prueba
+                    c.setIdentificationId(135L); // Cédula de ciudadanía u otro válido en tu masterData
+                    c.setStatusId(1L); // ACT
+                    c.setCreatedAt(LocalDateTime.now());
+                    return personRepository.saveAndFlush(c);
+                });
 
-        // 4. Crear Producto de prueba en la BD (o buscar uno existente en outlet 4L)
+        // 4. Obtener o crear producto en store_4
+
         List<ProductOutlet> products = productRepository.findAll();
         ProductOutlet product = products.stream()
                 .filter(p -> p.getOutletId().equals(4L))
@@ -123,14 +143,14 @@ public class CreateSaleWithEmailIntegrationTest {
                 true // sendEmail = true
         );
 
-        // 6. Ejecutar la venta
+        // 6. Ejecutar la venta en el esquema de tienda
         SaleResponse saleResponse = createSaleUseCase.execute(saleRequest);
         assertNotNull(saleResponse);
         System.out.println("Sale created: " + saleResponse.saleCode());
 
-        // 7. Esperar 15 segundos para ver si el correo se envía asíncronamente
+        // 7. Esperar para ver si el correo se envía asíncronamente
         System.out.println("Waiting for async email listener...");
-        Thread.sleep(15000);
+        Thread.sleep(1000);
         System.out.println("--- CREATE SALE & EMAIL INTEGRATION TEST FINISHED ---");
     }
 }
