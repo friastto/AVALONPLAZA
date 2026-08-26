@@ -63,9 +63,10 @@ jobs:
         run: chmod +x mvnw
 
       - name: Run Unit & Integration Tests (PostgreSQL Service)
-        run: ./mvnw test -B -Dspring.datasource.url=jdbc:postgresql://localhost:5432/avalon_integration_test -Dspring.datasource.username=postgres -Dspring.datasource.password=test_password -Djacoco.skip=true
+        run: ./mvnw test -B -Dspring.datasource.url=jdbc:postgresql://127.0.0.1:5432/avalon_integration_test -Dspring.datasource.username=postgres -Dspring.datasource.password=test_password
 
       - name: Upload JaCoCo Test Coverage Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-coverage-report
@@ -75,7 +76,7 @@ jobs:
   docker-build-push:
     name: Docker Build & Container Registry
     needs: test-and-quality
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/AV_CORE_2'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/AV_CORE_2'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code Repository
@@ -95,7 +96,7 @@ jobs:
   deploy:
     name: CD Deployment
     needs: docker-build-push
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Deployment Webhook
