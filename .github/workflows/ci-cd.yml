@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 25 (Temurin)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'temurin'
@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 25 (Temurin)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'temurin'
@@ -63,6 +63,10 @@ jobs:
         run: chmod +x mvnw
 
       - name: Run Unit & Integration Tests (PostgreSQL Service)
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://127.0.0.1:5432/avalon_integration_test
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: test_password
         run: ./mvnw test -B -Dspring.datasource.url=jdbc:postgresql://127.0.0.1:5432/avalon_integration_test -Dspring.datasource.username=postgres -Dspring.datasource.password=test_password
 
       - name: Upload JaCoCo Test Coverage Report
