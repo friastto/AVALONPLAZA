@@ -5,11 +5,12 @@ import org.frias.avalon.domain.product.application.dto.request.ProductNewDataReq
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
 
 import java.math.BigDecimal;
 
@@ -18,19 +19,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.transaction.annotation.Transactional;
 
 @ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {
-            "app.jwt.secret=supersecretjwtkeythatisatleast32characterslong",
-            "app.jwt.expiration-ms=3600000",
-            "app.jwt.refresh-expiration-ms=86400000",
-            "aws.accessKey=mock-access-key",
-            "aws.secretKey=mock-secret-key",
-            "aws.region=us-east-1",
-            "removebg.apikey=mock-removebg-key",
-            "spring.sql.init.mode=never" 
-        })
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@EnableAutoConfiguration(exclude = {MailSenderAutoConfiguration.class})
 @Transactional
-@DisplayName("Pruebas de Integración E2E - ProductOutletController")
+@DisplayName("Pruebas de Integracion E2E - ProductOutletController")
 class ProductOutletControllerIntegrationTest {
 
     @Autowired
