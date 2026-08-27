@@ -4,24 +4,43 @@ import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataRes
 import org.frias.avalon.domain.notification.application.event.SaleCreatedEvent;
 import org.frias.avalon.domain.sale.application.dto.response.SaleItemResponse;
 import org.frias.avalon.domain.sale.application.dto.response.SaleResponse;
+import org.frias.avalon.domain.notification.application.port.EmailSenderPort;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+
 @SpringBootTest
+@ActiveProfiles("test")
+@EnableAutoConfiguration(exclude = {MailSenderAutoConfiguration.class})
+@Transactional
 public class SaleCreatedEventListenerIntegrationTest {
 
     @Autowired
     private SaleCreatedEventListener listener;
 
+    @MockBean
+    private EmailSenderPort emailSenderPort;
+
     @Test
-    public void testSendEmailReal() throws InterruptedException {
-        System.out.println("--- STARTING REAL EMAIL SENDING TEST ---");
+    @DisplayName("Should handle sale created event and invoke email sender port")
+    public void testSendEmailReal() {
+        System.out.println("--- STARTING SALE CREATED EVENT LISTENER INTEGRATION TEST ---");
         
         MasterDataResponseDto payDto = new MasterDataResponseDto(1L, "EFE", "Efectivo");
         MasterDataResponseDto statusDto = new MasterDataResponseDto(2L, "ACT", "Activo");
@@ -43,16 +62,17 @@ public class SaleCreatedEventListenerIntegrationTest {
                 List.of(item)
         );
 
-        SaleCreatedEvent event = new SaleCreatedEvent(this, saleResponse, "friastto@gmail.com");
+        SaleCreatedEvent event = new SaleCreatedEvent(this, saleResponse, "test@avalon.com");
         
-        try {
-            listener.handleSaleCreated(event);
-            System.out.println("--- REAL EMAIL SENDING TEST INVOKED, WAITING FOR ASYNC THREAD ---");
-            Thread.sleep(15000); // Esperar 15 segundos para dar tiempo a la tarea asíncrona
-            System.out.println("--- WAITING FINISHED ---");
-        } catch (Exception e) {
-            System.err.println("--- TEST FAILED WITH EXCEPTION ---");
-            e.printStackTrace();
-        }
+        listener.handleSaleCreated(event);
+
+        verify(emailSenderPort).sendEmailWithAttachment(
+                eq("test@avalon.com"),
+                any(String.class),
+                any(String.class),
+                any(byte[].class),
+                any(String.class)
+        );
+        System.out.println("--- SALE CREATED EVENT LISTENER TEST FINISHED ---");
     }
 }
