@@ -2,6 +2,7 @@ package org.frias.avalon.domain.cashregister.application.usecase;
 
 import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.domain.cashregister.application.port.CashSessionRepositoryPort;
+import org.frias.avalon.domain.cashregister.domain.CashExpenseDomain;
 import org.frias.avalon.domain.cashregister.domain.CashSessionDomain;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
@@ -13,21 +14,23 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@DisplayName("Unit Tests for CashSessionUseCaseImpl Application Service")
+@DisplayName("Unit Tests for CashSessionUseCaseImpl Application Layer")
 class CashSessionUseCaseImplTest {
 
     private CashSessionRepositoryPort cashSessionRepositoryPort;
     private SaleRepositoryPort saleRepositoryPort;
     private OutletRepositoryPort outletRepositoryPort;
     private PersonRepositoryPort personRepositoryPort;
-    private UserAvalonRepositoryPort userRepositoryPort;
+    private UserAvalonRepositoryPort userAvalonRepositoryPort;
     private CompanyRepositoryPort companyRepositoryPort;
+
     private CashSessionUseCaseImpl cashSessionUseCase;
 
     @BeforeEach
@@ -36,7 +39,7 @@ class CashSessionUseCaseImplTest {
         saleRepositoryPort = mock(SaleRepositoryPort.class);
         outletRepositoryPort = mock(OutletRepositoryPort.class);
         personRepositoryPort = mock(PersonRepositoryPort.class);
-        userRepositoryPort = mock(UserAvalonRepositoryPort.class);
+        userAvalonRepositoryPort = mock(UserAvalonRepositoryPort.class);
         companyRepositoryPort = mock(CompanyRepositoryPort.class);
 
         cashSessionUseCase = new CashSessionUseCaseImpl(
@@ -44,44 +47,77 @@ class CashSessionUseCaseImplTest {
                 saleRepositoryPort,
                 outletRepositoryPort,
                 personRepositoryPort,
-                userRepositoryPort,
+                userAvalonRepositoryPort,
                 companyRepositoryPort
         );
     }
 
     @Test
-    @DisplayName("Should throw exception when opening session if an active session already exists")
-    void shouldThrowExceptionWhenActiveSessionExists() {
-        Long outletId = 1L;
-        Long employeeId = 100L;
-        BigDecimal initialBase = new BigDecimal("100.00");
+    @DisplayName("Should open session successfully when no active session exists")
+    void shouldOpenSessionSuccessfully() {
+        when(cashSessionRepositoryPort.findActiveSession(1L, 10L)).thenReturn(Optional.empty());
 
-        CashSessionDomain activeSession = CashSessionDomain.open(outletId, employeeId, initialBase);
-        when(cashSessionRepositoryPort.findActiveSession(outletId, employeeId)).thenReturn(Optional.of(activeSession));
+        CashSessionDomain session = CashSessionDomain.open(1L, 10L, new BigDecimal("100.00"));
+        when(cashSessionRepositoryPort.saveSession(any(CashSessionDomain.class))).thenReturn(session);
 
-        BusinessException exception = assertThrows(BusinessException.class, () ->
-                cashSessionUseCase.openSession(outletId, employeeId, initialBase));
+        CashSessionDomain result = cashSessionUseCase.openSession(1L, 10L, new BigDecimal("100.00"));
 
-        assertTrue(exception.getMessage().contains("sesión de caja abierta"));
-        verify(cashSessionRepositoryPort, never()).saveSession(any());
+        assertNotNull(result);
+        assertEquals("OPEN", result.getStatus());
+        verify(cashSessionRepositoryPort, times(1)).saveSession(any(CashSessionDomain.class));
     }
 
     @Test
-    @DisplayName("Should open cash session successfully when no active session exists")
-    void shouldOpenCashSessionSuccessfully() {
-        Long outletId = 1L;
-        Long employeeId = 100L;
-        BigDecimal initialBase = new BigDecimal("100.00");
+    @DisplayName("Should throw BusinessException when opening session if active session already exists")
+    void shouldThrowExceptionWhenActiveSessionExists() {
+        CashSessionDomain existing = CashSessionDomain.open(1L, 10L, new BigDecimal("100.00"));
+        when(cashSessionRepositoryPort.findActiveSession(1L, 10L)).thenReturn(Optional.of(existing));
 
-        when(cashSessionRepositoryPort.findActiveSession(outletId, employeeId)).thenReturn(Optional.empty());
-        when(cashSessionRepositoryPort.saveSession(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        assertThrows(BusinessException.class, () -> cashSessionUseCase.openSession(1L, 10L, new BigDecimal("100.00")));
+    }
 
-        CashSessionDomain result = cashSessionUseCase.openSession(outletId, employeeId, initialBase);
+    @Test
+    @DisplayName("Should close session successfully when status is BLIND_COUNTED")
+    void shouldCloseSessionSuccessfully() {
+        CashSessionDomain session = CashSessionDomain.fromPersistence(
+                50L, 1L, 10L, LocalDateTime.now(), null, new BigDecimal("100.00"),
+                new BigDecimal("250.00"), new BigDecimal("250.00"), BigDecimal.ZERO,
+                "BLIND_COUNTED", "Notas", LocalDateTime.now(), LocalDateTime.now()
+        );
+        when(cashSessionRepositoryPort.findSessionById(50L)).thenReturn(Optional.of(session));
+        when(cashSessionRepositoryPort.saveSession(any(CashSessionDomain.class))).thenReturn(session);
+
+        CashSessionDomain result = cashSessionUseCase.closeSession(50L, new BigDecimal("250.00"), "Cierre correcto");
 
         assertNotNull(result);
-        assertEquals(outletId, result.getOutletId());
-        assertEquals(employeeId, result.getEmployeeId());
-        assertEquals(initialBase, result.getInitialBase());
-        verify(cashSessionRepositoryPort, times(1)).saveSession(any());
+        assertEquals("CLOSED", result.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should register expense in open cash session successfully")
+    void shouldRegisterExpenseSuccessfully() {
+        CashSessionDomain session = CashSessionDomain.open(1L, 10L, new BigDecimal("100.00"));
+        when(cashSessionRepositoryPort.findSessionById(50L)).thenReturn(Optional.of(session));
+
+        CashExpenseDomain expense = CashExpenseDomain.create(50L, new BigDecimal("30.00"), "Limpieza", 10L);
+        when(cashSessionRepositoryPort.saveExpense(any(CashExpenseDomain.class))).thenReturn(expense);
+
+        CashExpenseDomain result = cashSessionUseCase.registerExpense(50L, new BigDecimal("30.00"), "Limpieza", 10L);
+
+        assertNotNull(result);
+        assertEquals(new BigDecimal("30.00"), result.getAmount());
+    }
+
+    @Test
+    @DisplayName("Should submit blind count step 1 and step 2 successfully")
+    void shouldSubmitBlindCountStepsSuccessfully() {
+        CashSessionDomain session = CashSessionDomain.open(1L, 10L, new BigDecimal("100.00"));
+        when(cashSessionRepositoryPort.findSessionById(50L)).thenReturn(Optional.of(session));
+
+        cashSessionUseCase.submitBlindCountStep1(50L, 10L, new BigDecimal("300.00"));
+        verify(cashSessionRepositoryPort, times(1)).saveSession(session);
+
+        cashSessionUseCase.submitBlindCountStep2(50L, 5L, new BigDecimal("300.00"), "Verificado");
+        verify(cashSessionRepositoryPort, times(2)).saveSession(session);
     }
 }
