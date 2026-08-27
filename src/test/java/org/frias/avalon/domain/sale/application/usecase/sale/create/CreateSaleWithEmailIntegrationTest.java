@@ -48,6 +48,9 @@ public class CreateSaleWithEmailIntegrationTest {
     @MockBean
     private CurrentUserProviderPort currentUserProvider;
 
+    @MockBean
+    private org.frias.avalon.domain.notification.application.port.EmailSenderPort emailSenderPort;
+
     @Autowired
     private org.frias.avalon.core.tenant.FlywayMultiTenantService flywayMultiTenantService;
 
