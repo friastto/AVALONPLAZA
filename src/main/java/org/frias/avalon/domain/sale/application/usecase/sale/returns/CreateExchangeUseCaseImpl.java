@@ -274,14 +274,14 @@ public class CreateExchangeUseCaseImpl implements CreateExchangeUseCase {
                 paymentStatusMsg = "Excedente de $" + netDifference + " cargado a la libreta de fiado del cliente.";
             } else {
                 // Pago en efectivo / digital
-                BigDecimal received = request.amountReceived() != null ? request.amountReceived() : netDifference;
-                newSaleDomain.applyPayment(received, false);
+                BigDecimal extraPaid = request.amountReceived() != null ? request.amountReceived() : netDifference;
+                newSaleDomain.applyPayment(totalReturned.add(extraPaid), false);
                 paymentStatusMsg = "Excedente de $" + netDifference + " cobrado exitosamente.";
             }
         } else if (netDifference.compareTo(BigDecimal.ZERO) < 0) {
             // El nuevo producto es más barato (saldo a favor del cliente)
             BigDecimal surplus = netDifference.abs();
-            newSaleDomain.applyPayment(BigDecimal.ZERO, false);
+            newSaleDomain.applyPayment(newSaleDomain.getTotalAmount(), false);
 
             CreditAccountDomain creditAccount = creditRepositoryPort.findByClientIdAndOutletId(clientDomain.getId(), originalSale.getOutletId()).orElse(null);
             if (creditAccount != null && creditAccount.getCurrentDebt().compareTo(BigDecimal.ZERO) > 0) {
@@ -302,7 +302,7 @@ public class CreateExchangeUseCaseImpl implements CreateExchangeUseCase {
             }
         } else {
             // Cambio de valor exacto
-            newSaleDomain.applyPayment(BigDecimal.ZERO, false);
+            newSaleDomain.applyPayment(newSaleDomain.getTotalAmount(), false);
             paymentStatusMsg = "Cambio realizado de igual valor. Sin saldos pendientes.";
         }
 

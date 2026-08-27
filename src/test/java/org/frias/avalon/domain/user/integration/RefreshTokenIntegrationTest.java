@@ -4,20 +4,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.frias.avalon.domain.user.application.dtos.request.AuthRequest;
 import org.frias.avalon.domain.user.application.dtos.request.TokenRefreshRequest;
 import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@EnableAutoConfiguration(exclude = {MailSenderAutoConfiguration.class})
+@Transactional
 public class RefreshTokenIntegrationTest {
 
     @Autowired
