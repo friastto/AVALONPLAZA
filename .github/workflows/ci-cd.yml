@@ -33,6 +33,7 @@ jobs:
     name: Integration Tests & Quality (JaCoCo)
     needs: build-and-compile
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgis/postgis:16-3.4-alpine
@@ -64,7 +65,7 @@ jobs:
 
       - name: Run Unit & Integration Tests (PostgreSQL Service)
         env:
-          MAVEN_OPTS: "-Xmx2048m -XX:MaxMetaspaceSize=512m"
+          MAVEN_OPTS: "-Xmx2048m -XX:MaxMetaspaceSize=512m -XX:+EnableDynamicAgentLoading"
           SPRING_DATASOURCE_URL: jdbc:postgresql://127.0.0.1:5432/avalon_integration_test
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: test_password

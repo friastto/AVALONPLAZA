@@ -23,8 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -47,28 +47,28 @@ public class CreateSaleWithEmailIntegrationTest {
     @Autowired
     private CreateSaleUseCase createSaleUseCase;
 
-    @MockBean
+    @MockitoBean
     private SaleRepositoryPort saleRepositoryPort;
 
-    @MockBean
+    @MockitoBean
     private ProductOutletRepositoryPort productOutletRepositoryPort;
 
-    @MockBean
+    @MockitoBean
     private PersonRepositoryPort personRepositoryPort;
 
-    @MockBean
+    @MockitoBean
     private UserAvalonRepositoryPort userAvalonRepositoryPort;
 
-    @MockBean
+    @MockitoBean
     private MasterDataRepositoryPort masterDataRepositoryPort;
 
-    @MockBean
+    @MockitoBean
     private CurrentUserProviderPort currentUserProvider;
 
-    @MockBean
+    @MockitoBean
     private CreditRepositoryPort creditRepositoryPort;
 
-    @MockBean
+    @MockitoBean
     private EmailSenderPort emailSenderPort;
 
     @Test
