@@ -199,7 +199,7 @@ class FindAllSalesUseCaseImplTest {
             SaleItemDomain item = new SaleItemDomain(1L, productId, 2, "2 UN", new BigDecimal("5000.00"), new BigDecimal("10000.00"), 1L);
             SaleDomain sale = SaleDomain.fromPersistence(
                     100L, saleUuid, new BigDecimal("10000.00"), new BigDecimal("10000.00"), BigDecimal.ZERO,
-                    2L, outletId, clientId, 3L, 15L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of(item)
+                    2L, 3L, clientId, outletId, 15L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of(item)
             );
             Page<SaleDomain> salePage = new PageImpl<>(List.of(sale), pageable, 1);
 
@@ -207,6 +207,7 @@ class FindAllSalesUseCaseImplTest {
             when(masterTreeProvider.getTree()).thenReturn(masterTree);
             when(masterTree.getById(2L)).thenReturn(new MasterRoot(2L, "EFE", "Efectivo", 0L, 1L));
             when(masterTree.getById(3L)).thenReturn(new MasterRoot(3L, "CMP", "Completada", 0L, 1L));
+            when(masterTree.getById(10L)).thenReturn(new MasterRoot(10L, "UND", "Unidad Medida", 0L, 1L));
 
             when(saleRepositoryPort.findByOutletId(outletId, pageable)).thenReturn(salePage);
 
@@ -217,7 +218,7 @@ class FindAllSalesUseCaseImplTest {
             when(personRepositoryPort.findById(clientId)).thenReturn(Optional.of(client));
 
             ProductDomain product = ProductDomain.fromPersistence(
-                    productId, "Arroz 1kg", "Arroz", 50, 1L, "", new BigDecimal("5000.00"), outletId, 1L, LocalDateTime.now(), LocalDateTime.now()
+                    productId, "Arroz 1kg", "Arroz", 50, 10L, "", new BigDecimal("5000.00"), outletId, 1L, LocalDateTime.now(), LocalDateTime.now()
             );
             when(productOutletRepositoryPort.findById(productId)).thenReturn(Optional.of(product));
 

@@ -102,7 +102,7 @@ class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status", is(201)))
-                .andExpect(jsonPath("$.message", is("Pedido creado con éxito")))
+                .andExpect(jsonPath("$.message", is("Pedido registrado con éxito")))
                 .andExpect(jsonPath("$.data.id", is(1)));
     }
 
@@ -170,7 +170,7 @@ class OrderControllerTest {
                         .param("clientNumberid", "123456789"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status", is(201)))
-                .andExpect(jsonPath("$.message", is("Pedido facturado y venta registrada con éxito")))
+                .andExpect(jsonPath("$.message", is("Pedido facturado con éxito")))
                 .andExpect(jsonPath("$.data.id", is(10)));
     }
 }

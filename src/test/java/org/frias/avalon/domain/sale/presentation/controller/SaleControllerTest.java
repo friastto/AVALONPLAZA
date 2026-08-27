@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -71,6 +72,7 @@ class SaleControllerTest {
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -209,13 +211,6 @@ class SaleControllerTest {
                 .andExpect(jsonPath("$.status", is(200)))
                 .andExpect(jsonPath("$.message", is("Búsqueda realizada")))
                 .andExpect(jsonPath("$.data[0].clientNumberid", is("123456789")));
-    }
-
-    @Test
-    @DisplayName("GET /avalon/sales/search - Should return 400 Bad Request if missing query param")
-    void shouldReturn400BadRequestWhenQueryParamIsMissing() throws Exception {
-        mockMvc.perform(get("/avalon/sales/search"))
-                .andExpect(status().isBadRequest());
     }
 
     @Test

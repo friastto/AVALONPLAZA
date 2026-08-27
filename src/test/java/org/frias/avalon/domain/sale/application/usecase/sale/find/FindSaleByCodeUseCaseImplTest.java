@@ -122,7 +122,7 @@ class FindSaleByCodeUseCaseImplTest {
             SaleItemDomain item = new SaleItemDomain(1L, productId, 2, "2 UN", new BigDecimal("5000.00"), new BigDecimal("10000.00"), 1L);
             SaleDomain sale = SaleDomain.fromPersistence(
                     100L, defaultSaleUuid, new BigDecimal("10000.00"), new BigDecimal("10000.00"), BigDecimal.ZERO,
-                    2L, outletId, clientId, 3L, 15L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of(item)
+                    2L, 3L, clientId, outletId, 15L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of(item)
             );
             when(saleRepositoryPort.findByCode(defaultSaleUuid)).thenReturn(Optional.of(sale));
 
@@ -136,9 +136,10 @@ class FindSaleByCodeUseCaseImplTest {
             when(masterTreeProvider.getTree()).thenReturn(masterTree);
             when(masterTree.getById(2L)).thenReturn(new MasterRoot(2L, "TAR", "Tarjeta", 0L, 1L));
             when(masterTree.getById(3L)).thenReturn(new MasterRoot(3L, "CMP", "Completada", 0L, 1L));
+            when(masterTree.getById(10L)).thenReturn(new MasterRoot(10L, "UND", "Unidad Medida", 0L, 1L));
 
             ProductDomain product = ProductDomain.fromPersistence(
-                    productId, "Aceite 1L", "Aceite vegetal", 20, 1L, "", new BigDecimal("5000.00"), outletId, 1L, LocalDateTime.now(), LocalDateTime.now()
+                    productId, "Aceite 1L", "Aceite vegetal", 20, 10L, "", new BigDecimal("5000.00"), outletId, 1L, LocalDateTime.now(), LocalDateTime.now()
             );
             when(productOutletRepositoryPort.findById(productId)).thenReturn(Optional.of(product));
 

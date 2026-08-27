@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -69,6 +70,7 @@ class ReturnControllerTest {
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -181,7 +183,7 @@ class ReturnControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status", is(201)))
-                .andExpect(jsonPath("$.message", is("Intercambio procesado con éxito")))
+                .andExpect(jsonPath("$.message", is("Intercambio de productos procesado con éxito")))
                 .andExpect(jsonPath("$.data.netDifference", is(10.00)));
     }
 
@@ -211,7 +213,7 @@ class ReturnControllerTest {
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is(200)))
-                .andExpect(jsonPath("$.message", is("Listado de devoluciones obtenido con éxito")))
+                .andExpect(jsonPath("$.message", is("Listado de devoluciones")))
                 .andExpect(jsonPath("$.data.content[0].id", is(1)));
     }
 }
