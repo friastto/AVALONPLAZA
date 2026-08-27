@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Transactional
 public class CreateSaleWithEmailIntegrationTest {
 
     @Autowired
@@ -77,16 +78,14 @@ public class CreateSaleWithEmailIntegrationTest {
         Long cashPaymentMethodId = masterDataRepository.findByShortName("EFE").orElseThrow().getId();
 
         // 2. Configurar Mock Security Context
-        UserContext mockContext = new UserContext("SoporteAvalon", List.of("ROLE_ADMINTI"), 4L);
+        String employeeUsername = "test_seller_email";
+        UserContext mockContext = new UserContext(employeeUsername, List.of("ROLE_ADMINTI"), 4L);
         Mockito.when(currentUserProvider.getCurrentUserContext()).thenReturn(mockContext);
         Mockito.when(currentUserProvider.getCurrentOutletId()).thenReturn(4L);
         Mockito.when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
         Mockito.when(currentUserProvider.hasRole("ROLE_ADMINTI")).thenReturn(true);
 
-        // 3. Crear Empleado (Person) y Usuario (UserAvalon) en la BD
-        String employeeUsername = "SoporteAvalon";
-        userRepository.findByUserName(employeeUsername).ifPresent(u -> userRepository.delete(u));
-        
+        // 3. Crear Empleado (Person) y Usuario (UserAvalon) en la BD si no existe
         String empDoc = "88888888";
         PersonEntity employeePerson = personRepository.findByNumberId(empDoc)
                 .orElseGet(() -> {
@@ -101,14 +100,17 @@ public class CreateSaleWithEmailIntegrationTest {
                     return personRepository.saveAndFlush(p);
                 });
         
-        UserAvalon employeeUser = new UserAvalon();
-        employeeUser.setUserName(employeeUsername);
-        employeeUser.setHashSalt("salt");
-        employeeUser.setHashPassword("password");
-        employeeUser.setStatusId(activeStatusId);
-        employeeUser.setPersonId(employeePerson.getId());
-        employeeUser.setCreatedAt(LocalDateTime.now());
-        userRepository.saveAndFlush(employeeUser);
+        userRepository.findByUserName(employeeUsername)
+                .orElseGet(() -> {
+                    UserAvalon employeeUser = new UserAvalon();
+                    employeeUser.setUserName(employeeUsername);
+                    employeeUser.setHashSalt("salt");
+                    employeeUser.setHashPassword("password");
+                    employeeUser.setStatusId(activeStatusId);
+                    employeeUser.setPersonId(employeePerson.getId());
+                    employeeUser.setCreatedAt(LocalDateTime.now());
+                    return userRepository.saveAndFlush(employeeUser);
+                });
 
         // 4. Crear Cliente de prueba en la BD
         String clientDoc = "999888777";
