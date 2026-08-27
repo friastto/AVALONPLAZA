@@ -42,6 +42,9 @@ public class CreateSaleWithEmailIntegrationTest {
     @Autowired
     private JpaProductOutletRepository productRepository;
 
+    @Autowired
+    private org.frias.avalon.domain.masterdata.infraestructure.persistence.repository.JpaMasterDataRepository masterDataRepository;
+
     @MockBean
     private CurrentUserProviderPort currentUserProvider;
 
@@ -64,14 +67,20 @@ public class CreateSaleWithEmailIntegrationTest {
     public void testCreateSaleAndSendEmail() throws InterruptedException {
         System.out.println("--- STARTING CREATE SALE & EMAIL INTEGRATION TEST ---");
 
-        // 1. Configurar Mock Security Context
+        // 1. Dynamic MasterData lookups (avoid fragile hardcoded IDs in CI)
+        Long activeStatusId = masterDataRepository.findByShortName("ACT").orElseThrow().getId();
+        Long ccIdentId = masterDataRepository.findByShortName("CC").orElseThrow().getId();
+        Long unitMeasureId = masterDataRepository.findByShortName("UND").orElseThrow().getId();
+        Long cashPaymentMethodId = masterDataRepository.findByShortName("EFE").orElseThrow().getId();
+
+        // 2. Configurar Mock Security Context
         UserContext mockContext = new UserContext("SoporteAvalon", List.of("ROLE_ADMINTI"), 4L);
         Mockito.when(currentUserProvider.getCurrentUserContext()).thenReturn(mockContext);
         Mockito.when(currentUserProvider.getCurrentOutletId()).thenReturn(4L);
         Mockito.when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
         Mockito.when(currentUserProvider.hasRole("ROLE_ADMINTI")).thenReturn(true);
 
-        // 2. Crear Empleado (Person) y Usuario (UserAvalon) en la BD
+        // 3. Crear Empleado (Person) y Usuario (UserAvalon) en la BD
         String employeeUsername = "SoporteAvalon";
         userRepository.findByUserName(employeeUsername).ifPresent(u -> userRepository.delete(u));
         
@@ -83,8 +92,8 @@ public class CreateSaleWithEmailIntegrationTest {
                     p.setName("Soporte");
                     p.setLastName("Avalon");
                     p.setEmail("soporte@avalon.com");
-                    p.setIdentificationId(135L); // Válido
-                    p.setStatusId(1L); // ACT
+                    p.setIdentificationId(ccIdentId);
+                    p.setStatusId(activeStatusId);
                     p.setCreatedAt(LocalDateTime.now());
                     return personRepository.saveAndFlush(p);
                 });
@@ -93,12 +102,12 @@ public class CreateSaleWithEmailIntegrationTest {
         employeeUser.setUserName(employeeUsername);
         employeeUser.setHashSalt("salt");
         employeeUser.setHashPassword("password");
-        employeeUser.setStatusId(1L); // ACT
+        employeeUser.setStatusId(activeStatusId);
         employeeUser.setPersonId(employeePerson.getId());
         employeeUser.setCreatedAt(LocalDateTime.now());
         userRepository.saveAndFlush(employeeUser);
 
-        // 3. Crear Cliente de prueba en la BD
+        // 4. Crear Cliente de prueba en la BD
         String clientDoc = "999888777";
         PersonEntity client = personRepository.findByNumberId(clientDoc)
                 .orElseGet(() -> {
@@ -106,31 +115,31 @@ public class CreateSaleWithEmailIntegrationTest {
                     c.setNumberId(clientDoc);
                     c.setName("Cliente");
                     c.setLastName("Prueba Email");
-                    c.setEmail("friastto@gmail.com"); // Enviamos a este correo de prueba
-                    c.setIdentificationId(135L); // Cédula de ciudadanía u otro válido en tu masterData
-                    c.setStatusId(1L); // ACT
+                    c.setEmail("friastto@gmail.com");
+                    c.setIdentificationId(ccIdentId);
+                    c.setStatusId(activeStatusId);
                     c.setCreatedAt(LocalDateTime.now());
                     return personRepository.saveAndFlush(c);
                 });
 
-        // 4. Crear producto exclusivo de prueba con stock 100 en store_4
+        // 5. Crear producto exclusivo de prueba con stock 100 en store_4
         ProductOutlet newProd = new ProductOutlet();
         newProd.setLocalName("Producto Test Email " + System.currentTimeMillis());
         newProd.setLocalDescription("Desc");
         newProd.setLocalPrice(new BigDecimal("1000.00"));
         newProd.setStock(100);
-        newProd.setUnitMeasureId(22L); // UNIDAD validada en masterData
+        newProd.setUnitMeasureId(unitMeasureId);
         newProd.setOutletId(4L);
-        newProd.setStatusId(1L);
+        newProd.setStatusId(activeStatusId);
         newProd.setCreatedAt(LocalDateTime.now());
         ProductOutlet product = productRepository.saveAndFlush(newProd);
 
-        // 5. Preparar petición de venta
+        // 6. Preparar peticion de venta
         SaleItemRequest itemRequest = new SaleItemRequest(product.getId(), "1");
         CreateSaleRequest saleRequest = new CreateSaleRequest(
                 clientDoc,
                 4L, // outletId
-                139L, // paymentMethodId (Efectivo)
+                cashPaymentMethodId, // paymentMethodId (Efectivo)
                 new BigDecimal("1000.00"), // amountReceived
                 List.of(itemRequest),
                 true // sendEmail = true
