@@ -1,4 +1,4 @@
-package org.frias.avalon.domain.sale.application.usecase.order.invoice;
+package org.frias.avalon.domain.sale.application.usecase.sale.create;
 
 import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.core.exeptions.DomainValidationException;
@@ -16,6 +16,7 @@ import org.frias.avalon.domain.product.domain.ProductDomain;
 import org.frias.avalon.domain.sale.application.dto.response.SaleResponse;
 import org.frias.avalon.domain.sale.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.sale.application.port.SaleRepositoryPort;
+import org.frias.avalon.domain.sale.application.usecase.order.invoice.InvoiceOrderUseCaseImpl;
 import org.frias.avalon.domain.sale.domain.OrderDomain;
 import org.frias.avalon.domain.sale.domain.OrderItemDomain;
 import org.frias.avalon.domain.sale.domain.SaleDomain;
