@@ -43,4 +43,8 @@ public interface JpaSaleRepository extends JpaRepository<SaleEntity, Long> {
     java.util.List<SaleEntity> findByOutletIdAndEmployeeIdAndSaleDateBetween(Long outletId, Long employeeId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate);
 
     java.util.List<SaleEntity> findByOutletIdAndSaleDateBetween(Long outletId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate);
+
+    java.util.List<SaleEntity> findByOutletIdIn(java.util.List<Long> outletIds);
+
+    java.util.List<SaleEntity> findByOutletIdInAndSaleDateBetween(java.util.List<Long> outletIds, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate);
 }
