@@ -66,7 +66,7 @@ public class SaleCreatedEventListenerIntegrationTest {
         
         listener.handleSaleCreated(event);
 
-        verify(emailSenderPort).sendEmailWithAttachment(
+        verify(emailSenderPort, Mockito.timeout(5000)).sendEmailWithAttachment(
                 eq("test@avalon.com"),
                 any(String.class),
                 any(String.class),

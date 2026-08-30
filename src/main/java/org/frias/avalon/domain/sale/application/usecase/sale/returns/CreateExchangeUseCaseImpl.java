@@ -120,7 +120,7 @@ public class CreateExchangeUseCaseImpl implements CreateExchangeUseCase {
                 try {
                     displayQty = new BigDecimal(itemReq.quantity().replace(",", "."));
                 } catch (Exception e) {
-                    throw new BusinessException("Cantidad decimal inválida para producto pesable: " + product.getName());
+                    throw new BusinessException("Cantidad decimal invalida para producto pesable: " + product.getName());
                 }
                 qtyInBaseUnits = weightConversionService.convertToBaseUnit(displayQty, unitCode);
             } else {
@@ -199,7 +199,7 @@ public class CreateExchangeUseCaseImpl implements CreateExchangeUseCase {
                 try {
                     displayQty = new BigDecimal(exReq.quantity().replace(",", "."));
                 } catch (Exception e) {
-                    throw new BusinessException("Cantidad inválida para producto pesable: " + product.getName());
+                    throw new BusinessException("Cantidad invalida para producto pesable: " + product.getName());
                 }
                 qtyInBaseUnits = weightConversionService.convertToBaseUnit(displayQty, unitCode);
             } else {
@@ -308,9 +308,13 @@ public class CreateExchangeUseCaseImpl implements CreateExchangeUseCase {
 
         SaleDomain savedNewSale = saleRepositoryPort.save(newSaleDomain);
 
-        MasterDataResponseDto payDto = new MasterDataResponseDto(payMethodNode.getId(), payMethodNode.getShortName(), payMethodNode.getFullName());
+        MasterDataResponseDto payDto = payMethodNode != null
+                ? new MasterDataResponseDto(payMethodNode.getId(), payMethodNode.getShortName(), payMethodNode.getFullName())
+                : new MasterDataResponseDto(null, null, null);
         MasterRoot statusNode = masterTree.getById(savedNewSale.getStatusId());
-        MasterDataResponseDto statusDto = new MasterDataResponseDto(statusNode.getId(), statusNode.getShortName(), statusNode.getFullName());
+        MasterDataResponseDto statusDto = statusNode != null
+                ? new MasterDataResponseDto(statusNode.getId(), statusNode.getShortName(), statusNode.getFullName())
+                : new MasterDataResponseDto(null, null, null);
 
         SaleResponse newSaleResponse = new SaleResponse(
                 savedNewSale.getId(), savedNewSale.getSaleCode(), savedNewSale.getTotalAmount(),

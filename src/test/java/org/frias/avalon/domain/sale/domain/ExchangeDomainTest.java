@@ -126,7 +126,7 @@ class ExchangeDomainTest {
 
             newSale.applyPayment(new BigDecimal("10000.00"), false);
             assertEquals(new BigDecimal("10000.00"), newSale.getAmountReceived());
-            assertEquals(BigDecimal.ZERO, newSale.getChangeGiven());
+            assertEquals(0, BigDecimal.ZERO.compareTo(newSale.getChangeGiven()));
         }
 
         @Test
@@ -137,8 +137,8 @@ class ExchangeDomainTest {
 
             newSale.applyPayment(BigDecimal.ZERO, true);
 
-            assertEquals(BigDecimal.ZERO, newSale.getAmountReceived());
-            assertEquals(BigDecimal.ZERO, newSale.getChangeGiven());
+            assertEquals(0, BigDecimal.ZERO.compareTo(newSale.getAmountReceived()));
+            assertEquals(0, BigDecimal.ZERO.compareTo(newSale.getChangeGiven()));
         }
     }
 }

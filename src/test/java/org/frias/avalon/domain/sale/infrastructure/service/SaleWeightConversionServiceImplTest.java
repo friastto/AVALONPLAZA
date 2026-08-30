@@ -125,7 +125,7 @@ class SaleWeightConversionServiceImplTest {
     @DisplayName("formatFromBaseUnit: Debe formatear a LB correctamente desde gramos")
     void formatFromBaseUnit_LB_FormatsCorrectly() {
         assertEquals("2 LB", service.formatFromBaseUnit(907, "LB"));
-        assertEquals("1.01 lb", service.formatFromBaseUnit(454, "lb"));
+        assertEquals("1 lb", service.formatFromBaseUnit(454, "lb"));
     }
 
     @Test

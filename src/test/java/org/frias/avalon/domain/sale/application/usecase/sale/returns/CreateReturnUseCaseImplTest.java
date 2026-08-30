@@ -172,7 +172,7 @@ class CreateReturnUseCaseImplTest {
 
             SaleDomain saleFromOtherOutlet = SaleDomain.fromPersistence(
                     100L, defaultSaleUuid, new BigDecimal("17500.00"), new BigDecimal("20000.00"), new BigDecimal("2500.00"),
-                    5L, 99L, clientId, 1L, employeePersonId, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of()
+                    5L, 1L, clientId, 99L, employeePersonId, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of()
             );
             when(saleRepositoryPort.findByCode(defaultSaleUuid)).thenReturn(Optional.of(saleFromOtherOutlet));
 
