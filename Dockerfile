@@ -32,11 +32,11 @@ USER 1001:1001
 # Exponer el puerto configurado (8900)
 EXPOSE 8900
 
-# Variables de entorno recomendadas de la JVM para contenedores
-ENV JAVA_OPTS="-XX:+UseG1GC -XX:+UseContainerSupport"
+# Variables de entorno recomendadas de la JVM para contenedores en Render (512MB RAM)
+ENV JAVA_OPTS="-Xmx340m -Xms128m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:+UseContainerSupport"
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+# Healthcheck con periodo de gracia amplio para migraciones Flyway remotas
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
   CMD curl -f http://localhost:${PORT:-8900}/actuator/health || exit 1
 
 # Comando de inicio
