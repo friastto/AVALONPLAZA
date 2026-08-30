@@ -2,6 +2,9 @@
 FROM eclipse-temurin:25-jdk-noble AS build
 WORKDIR /app
 
+# Instalar unzip y curl para que Maven Wrapper pueda descargar y extraer Apache Maven
+RUN apt-get update && apt-get install -y --no-install-recommends unzip curl && rm -rf /var/lib/apt/lists/*
+
 # Copiar el wrapper de Maven y el archivo pom.xml para cachear dependencias
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
