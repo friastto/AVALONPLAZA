@@ -36,8 +36,8 @@ EXPOSE 8900
 ENV JAVA_OPTS="-XX:+UseG1GC -XX:+UseContainerSupport"
 
 # Healthcheck
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8900/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-8900}/actuator/health || exit 1
 
 # Comando de inicio
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
