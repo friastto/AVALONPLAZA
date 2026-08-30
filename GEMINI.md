@@ -13,10 +13,17 @@ El español es el único idioma permitido para todas las explicaciones y descrip
 - **Uso Obligatorio de MCP JetBrains Companion:** Se deben utilizar las herramientas `jetbrains-companion` (`ide_get_active_editor`, `ide_get_open_files`, `ide_get_diagnostics`, `ide_open_file`) para interactuar con los entornos de desarrollo abiertos por el usuario: **IntelliJ IDEA** (para la API Spring Boot `ApiAvalon`) y **Android Studio** (para la aplicación móvil `AvalonMovilApp`).
 
 ## Reglas de Control de Versiones con Git (Commit Convention y Flujo de Ramas)
-- Todo desarrollo de características o refactorización debe realizarse **primero en la rama `AV_CORE_2`**. Nunca en `master` directamente.
+- Todo desarrollo de caracteristicas o refactorizacion debe realizarse **primero en la rama `AV_CORE_2`**. Nunca en `master` directamente.
 - Todo commit debe seguir la nomenclatura: `COMMIT VERSION X.Y.Z <tipo>(<modulo>): <descripcion>`
-- Consultar previamente `git log -n 5` para incrementar la versión correlativa (`COMMIT VERSION 0.0.X`).
-- Los commits deben ser atómicos, pequeños y frecuentes sobre código que compila correctamente. Sin megacommits.
+- Consultar previamente `git log -n 5` para incrementar la version correlativa (`COMMIT VERSION 0.0.X`).
+- Los commits deben ser atomicos, pequenos y frecuentes sobre codigo que compila correctamente. Sin megacommits.
+- **Regla Estricta de Aprobacion Previa:** NUNCA ejecutar `git commit` de forma automatica. Primero verificar la compilacion y ejecucion exitosa de la solucion (700+ tests en verde), presentar los resultados al usuario y esperar su APROBACION EXPLICITA para proceder con el commit.
+- **Flujo de Publicacion a Remoto:** El commit se realiza en `AV_CORE_2`, luego se hace `git checkout master`, `git merge AV_CORE_2`, y se sube unicamente `master` (`git push origin master`) para evitar duplicidad de ejecuciones en CI/CD. Retornar siempre a `AV_CORE_2` al finalizar.
+- **Monitoreo Proactivo de GitHub Actions:** Tras cada push a `master`, se debe consultar activamente el estado del pipeline en GitHub Actions a traves de la API REST (`/actions/runs`) hasta validar que los 4 Jobs finalicen exitosamente:
+  1. `Build & Compile (JDK 25)`
+  2. `Integration Tests & Quality (JaCoCo)`
+  3. `Docker Build & Container Registry`
+  4. `CD Deployment`
 
 
 
@@ -285,11 +292,14 @@ Todas las soluciones generadas deben seguir estrictamente:
 - Nunca expongas datos sensibles en los logs o en las respuestas de la API.
 
 ## Reglas de Pruebas (Testing)
-- **Práctica "Test-First":** Cada nueva funcionalidad o refactorización debe ir acompañada de sus correspondientes pruebas (unitarias y/o de integración). No se debe entregar código de producción sin su prueba.
-- Genera pruebas unitarias utilizando JUnit 5 y Mockito para la capa de Dominio y Aplicación.
-- **Desacoplamiento Total de H2:** H2 permanece deshabilitado y comentado en `pom.xml` y en los archivos de propiedades. Las pruebas de integración se ejecutarán exclusivamente sobre **PostgreSQL real** (vía Testcontainers / BD Postgres de test) con migraciones Flyway activas.
-- **Garantía de Cero Residuos en BD (Zero Residual Data):** Toda prueba sobre la base de datos real debe ser transaccional con rollback automático (`@Transactional`) o ejecutar scripts de limpieza post-ejecución (`TRUNCATE`), asegurando que no queden datos de prueba residuales.
-- Utiliza nombres de pruebas significativos en inglés y sigue la estructura Arrange, Act, Assert (Organizar, Actuar, Verificar).
+- **Practica "Test-First":** Cada nueva funcionalidad o refactorizacion debe ir acompanada de sus correspondientes pruebas (unitarias y/o de integracion). No se debe entregar codigo de produccion sin su prueba.
+- **Comando Estandar de Ejecucion:** `./mvnw test -Dspring.profiles.active=test` ejecuta la suite completa de pruebas unitarias y de integracion con reporte de cobertura JaCoCo.
+- **Pruebas Unitarias Aisladas:** Genera pruebas unitarias utilizando JUnit 5 y Mockito para las capas de Dominio y Aplicacion sin levantar el contexto de Spring ni acceder a base de datos.
+- **Desacoplamiento Total de H2:** H2 permanece deshabilitado y comentado en `pom.xml` y en los archivos de propiedades. Las pruebas de integracion se ejecutaran exclusivamente sobre **PostgreSQL real** con migraciones Flyway activas.
+- **Optimizacion de Conexiones Hikari en Tests:** Para prevenir el error de agotamiento de conexiones en PostgreSQL (`FATAL: demasiados clientes`) durante suites masivas (700+ tests), `application-test.properties` mantendra `spring.datasource.hikari.maximum-pool-size=3` y `minimum-idle=1`.
+- **Validacion de MasterTree en Pruebas:** En pruebas de integracion que interactuen con el arbol de datos maestros (`MasterTreeProvider`), se debe asegurar la carga/refresco del arbol en memoria previo a la ejecucion de la logica de negocio.
+- **Garantia de Cero Residuos en BD (Zero Residual Data):** Toda prueba sobre la base de datos real debe ser transaccional con rollback automatico (`@Transactional`) o ejecutar scripts de limpieza post-ejecucion, asegurando que no queden datos de prueba residuales.
+- **Estructura y Convencion:** Utiliza nombres de pruebas significativos en ingles y sigue la estructura Arrange, Act, Assert (Organizar, Actuar, Verificar).
 
 ## Formato de Respuesta
 Para cada solución, proporciona siempre:
