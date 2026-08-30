@@ -5,7 +5,7 @@ WORKDIR /app
 # Copiar el wrapper de Maven y el archivo pom.xml para cachear dependencias
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
-RUN chmod +x mvnw
+RUN sed -i 's/\r$//' mvnw && chmod +x mvnw
 
 # Copiar el codigo fuente y compilar el JAR omitiendo los tests
 COPY src ./src
@@ -15,7 +15,8 @@ RUN ./mvnw clean package -DskipTests -B
 FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
 
-# Crear usuario sin privilegios root
+# Instalar curl para healthcheck y crear usuario sin privilegios root
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 RUN groupadd -g 1000 avalon && useradd -u 1000 -g avalon -s /bin/sh avalon
 
 # Copiar el JAR compilado desde la etapa 1 y asignar permisos
