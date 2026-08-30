@@ -1,5 +1,5 @@
-# Etapa 1: Fase de compilación
-FROM eclipse-temurin:25-jdk AS build
+# Etapa 1: Fase de compilacion
+FROM eclipse-temurin:25-jdk-noble AS build
 WORKDIR /app
 
 # Copiar el wrapper de Maven y el archivo pom.xml para cachear dependencias
@@ -7,12 +7,12 @@ COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 RUN chmod +x mvnw
 
-# Copiar el código fuente y compilar el JAR omitiendo los tests
+# Copiar el codigo fuente y compilar el JAR omitiendo los tests
 COPY src ./src
 RUN ./mvnw clean package -DskipTests -B
 
-# Etapa 2: Fase de ejecución (Runtime ligero con hardening de seguridad)
-FROM eclipse-temurin:25-jre
+# Etapa 2: Fase de ejecucion (Runtime ligero con hardening de seguridad)
+FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
 
 # Crear usuario sin privilegios root
