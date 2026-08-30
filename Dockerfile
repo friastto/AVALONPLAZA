@@ -20,14 +20,14 @@ WORKDIR /app
 
 # Instalar curl para healthcheck y crear usuario sin privilegios root
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
-RUN groupadd -g 1000 avalon && useradd -u 1000 -g avalon -s /bin/sh avalon
+RUN groupadd -g 1001 avalon && useradd -u 1001 -g avalon -s /bin/sh avalon
 
 # Copiar el JAR compilado desde la etapa 1 y asignar permisos
 COPY --from=build /app/target/avalon-0.0.1-SNAPSHOT.jar app.jar
 RUN chown -R avalon:avalon /app
 
 # Cambiar a usuario no root
-USER 1000:1000
+USER 1001:1001
 
 # Exponer el puerto configurado (8900)
 EXPOSE 8900
