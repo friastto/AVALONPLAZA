@@ -3,6 +3,7 @@ package org.frias.avalon.domain.company.presentation;
 import jakarta.validation.Valid;
 import org.frias.avalon.core.exeptions.ApiResponse;
 import org.frias.avalon.domain.company.application.dto.request.CreateCompanyRequest;
+import org.frias.avalon.domain.company.application.dto.response.CompanyDashboardResponse;
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
 import org.frias.avalon.domain.company.application.usecase.approve.ApproveCompanyUseCase;
 import org.frias.avalon.domain.company.application.usecase.create.CreateCompanyUseCase;
@@ -10,6 +11,7 @@ import org.frias.avalon.domain.company.application.usecase.find.FindAllCompanies
 import org.frias.avalon.domain.company.application.usecase.find.FindCompanyByIdUseCase;
 import org.frias.avalon.domain.company.application.usecase.find.FindOutletsByCompanyUseCase;
 import org.frias.avalon.domain.company.application.usecase.find.FindPendingCompaniesUseCase;
+import org.frias.avalon.domain.company.application.usecase.find.GetCompanyDashboardUseCase;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +33,7 @@ public class CompanyController {
     private final FindCompanyByIdUseCase findCompanyByIdUseCase;
     private final FindOutletsByCompanyUseCase findOutletsByCompanyUseCase;
     private final ApproveCompanyUseCase approveCompanyUseCase;
+    private final GetCompanyDashboardUseCase getCompanyDashboardUseCase;
 
     public CompanyController(
             CreateCompanyUseCase createCompanyUseCase,
@@ -38,7 +41,8 @@ public class CompanyController {
             FindPendingCompaniesUseCase findPendingCompaniesUseCase,
             FindCompanyByIdUseCase findCompanyByIdUseCase,
             FindOutletsByCompanyUseCase findOutletsByCompanyUseCase,
-            ApproveCompanyUseCase approveCompanyUseCase
+            ApproveCompanyUseCase approveCompanyUseCase,
+            GetCompanyDashboardUseCase getCompanyDashboardUseCase
     ) {
         this.createCompanyUseCase = createCompanyUseCase;
         this.findAllCompaniesUseCase = findAllCompaniesUseCase;
@@ -46,6 +50,7 @@ public class CompanyController {
         this.findCompanyByIdUseCase = findCompanyByIdUseCase;
         this.findOutletsByCompanyUseCase = findOutletsByCompanyUseCase;
         this.approveCompanyUseCase = approveCompanyUseCase;
+        this.getCompanyDashboardUseCase = getCompanyDashboardUseCase;
     }
 
     /**
@@ -126,6 +131,28 @@ public class CompanyController {
                 HttpStatus.OK.value(),
                 "Company approved successfully and tenant schema provisioned",
                 approved
+        ));
+    }
+
+    /**
+     * GET /api/v1/companies/{id}/dashboard - Retrieves company-wide consolidated financial dashboard.
+     *
+     * @param id        Company ID.
+     * @param period    Temporal filter ('HOY', 'MES', 'ANIO', 'HISTORICO').
+     * @param outletId  Optional outlet ID to filter down to a specific store.
+     * @return Consolidated metrics and store performance.
+     */
+    @GetMapping("/{id}/dashboard")
+    public ResponseEntity<ApiResponse<CompanyDashboardResponse>> getCompanyDashboard(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "MES") String period,
+            @RequestParam(required = false) Long outletId
+    ) {
+        CompanyDashboardResponse dashboard = getCompanyDashboardUseCase.execute(id, period, outletId);
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Company dashboard retrieved successfully",
+                dashboard
         ));
     }
 }
