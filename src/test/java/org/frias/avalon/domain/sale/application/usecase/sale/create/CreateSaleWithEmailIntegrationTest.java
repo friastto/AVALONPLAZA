@@ -4,6 +4,8 @@ import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.core.permissions.UserContext;
 import org.frias.avalon.domain.credit.application.port.CreditRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.notification.application.port.EmailSenderPort;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
@@ -46,6 +48,9 @@ public class CreateSaleWithEmailIntegrationTest {
 
     @Autowired
     private CreateSaleUseCase createSaleUseCase;
+
+    @Autowired
+    private MasterTreeProvider masterTreeProvider;
 
     @MockitoBean
     private SaleRepositoryPort saleRepositoryPort;
@@ -100,6 +105,12 @@ public class CreateSaleWithEmailIntegrationTest {
 
         // 3. Mock MasterData
         when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(2L);
+        when(masterDataRepositoryPort.findAll()).thenReturn(List.of(
+                new MasterRoot(14L, "UND", "UNIDAD", 60L, 2L),
+                new MasterRoot(11L, "EFE", "EFECTIVO", 0L, 2L),
+                new MasterRoot(2L, "ACT", "ACTIVO", 0L, 2L)
+        ));
+        masterTreeProvider.refresh();
 
         // 4. Mock Product (UND is unit ID 14 in seed)
         ProductDomain testProduct = ProductDomain.fromPersistence(

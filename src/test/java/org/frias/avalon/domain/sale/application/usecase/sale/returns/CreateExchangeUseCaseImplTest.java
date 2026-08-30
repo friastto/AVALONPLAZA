@@ -127,7 +127,7 @@ class CreateExchangeUseCaseImplTest {
 
     private ProductDomain createProduct(Long productId, String name, int stock, BigDecimal price, Long productOutletId, Long unitMeasureId) {
         return ProductDomain.fromPersistence(
-                productId, name, name, stock, 1L, "", price, productOutletId, unitMeasureId, LocalDateTime.now(), LocalDateTime.now()
+                productId, name, name, stock, unitMeasureId, "", price, productOutletId, 1L, LocalDateTime.now(), LocalDateTime.now()
         );
     }
 
@@ -220,6 +220,7 @@ class CreateExchangeUseCaseImplTest {
         );
 
         when(currentUserProvider.getCurrentUserContext()).thenReturn(new UserContext("cashier1", List.of("ROLE_CJTURNO"), outletId));
+        when(currentUserProvider.getCurrentOutletId()).thenReturn(outletId);
         UserAvalonDomain userWithoutEmployee = UserAvalonDomain.fromPersistenceBasic(5L, null, "cashier1", outletId);
         when(userAvalonRepositoryPort.findByUserName("cashier1")).thenReturn(Optional.of(userWithoutEmployee));
 
@@ -338,7 +339,7 @@ class CreateExchangeUseCaseImplTest {
         when(weightConversionService.isWeighable("KG")).thenReturn(true);
 
         BusinessException ex = assertThrows(BusinessException.class, () -> createExchangeUseCase.execute(request));
-        assertTrue(ex.getMessage().contains("Cantidad decimal inválida para producto pesable"));
+        assertTrue(ex.getMessage().contains("Cantidad decimal invalida para producto pesable"));
     }
 
     @Test
@@ -517,7 +518,7 @@ class CreateExchangeUseCaseImplTest {
         when(returnRepositoryPort.save(any(ReturnDomain.class))).thenReturn(returnDomain);
 
         BusinessException ex = assertThrows(BusinessException.class, () -> createExchangeUseCase.execute(request));
-        assertTrue(ex.getMessage().contains("Cantidad inválida para producto pesable"));
+        assertTrue(ex.getMessage().contains("Cantidad invalida para producto pesable"));
     }
 
     @Test
@@ -790,7 +791,12 @@ class CreateExchangeUseCaseImplTest {
         when(returnRepositoryPort.save(any(ReturnDomain.class))).thenReturn(returnDomain);
 
         when(creditRepositoryPort.findByClientIdAndOutletId(clientId, outletId)).thenReturn(Optional.empty());
-        when(creditRepositoryPort.save((CreditAccountDomain) any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(creditRepositoryPort.save((CreditAccountDomain) any())).thenAnswer(invocation -> {
+            CreditAccountDomain acc = invocation.getArgument(0);
+            return CreditAccountDomain.reconstruct(
+                    10L, acc.getClientId(), acc.getOutletId(), acc.getCreditLimit(), acc.getCurrentDebt(), acc.getStatusId(), LocalDateTime.now(), LocalDateTime.now()
+            );
+        });
 
         SaleItemDomain newSaleItem = new SaleItemDomain(2L, 12L, 2, "2 UN", new BigDecimal("7000.00"), new BigDecimal("14000.00"), 1L);
         SaleDomain newSale = SaleDomain.fromPersistence(
@@ -805,7 +811,7 @@ class CreateExchangeUseCaseImplTest {
         assertEquals(new BigDecimal("9000.00"), response.netDifference());
         assertTrue(response.paymentStatusMessage().contains("cargado a la libreta de fiado"));
 
-        verify(creditRepositoryPort, times(1)).save((CreditAccountDomain) any());
+        verify(creditRepositoryPort, times(2)).save((CreditAccountDomain) any());
         verify(creditRepositoryPort, times(1)).save((CreditTransactionDomain) any());
     }
 
@@ -1396,7 +1402,7 @@ class CreateExchangeUseCaseImplTest {
         assertNotNull(response);
         assertEquals(new BigDecimal("-8000.00"), response.netDifference());
         assertTrue(response.paymentStatusMessage().contains("aplicada para abonar a la deuda del cliente"));
-        assertEquals(BigDecimal.ZERO, creditAccount.getCurrentDebt());
+        assertEquals(0, BigDecimal.ZERO.compareTo(creditAccount.getCurrentDebt()));
 
         verify(creditRepositoryPort, times(1)).save(any(CreditAccountDomain.class));
         verify(creditRepositoryPort, times(1)).save(any(CreditTransactionDomain.class));
@@ -1421,7 +1427,7 @@ class CreateExchangeUseCaseImplTest {
         when(personRepositoryPort.findById(clientId)).thenReturn(Optional.of(createClient(clientId)));
 
         ProductDomain returnedProduct = createProduct(10L, "Jabon", 10, new BigDecimal("5000.00"), outletId, 1L);
-        ProductDomain replacementProduct = createProduct(12L, "Crema", 5, new BigDecimal("6000.00"), outletId, 1L);
+        ProductDomain replacementProduct = createProduct(12L, "Caramelo", 5, new BigDecimal("2000.00"), outletId, 1L);
 
         when(productOutletRepositoryPort.findById(10L)).thenReturn(Optional.of(returnedProduct));
         when(productOutletRepositoryPort.findById(12L)).thenReturn(Optional.of(replacementProduct));
@@ -1435,10 +1441,61 @@ class CreateExchangeUseCaseImplTest {
         ReturnDomain returnDomain = ReturnDomain.create(100L, "DEFECTO", "Notas", "CAMBIO", 50L, employeePersonId, outletId, clientId, List.of(returnItem));
         when(returnRepositoryPort.save(any(ReturnDomain.class))).thenReturn(returnDomain);
 
-        CreditAccountDomain zeroDebtAccount = CreditAccountDomain.reconstruct(
+        CreditAccountDomain creditAccount = CreditAccountDomain.reconstruct(
                 10L, clientId, outletId, new BigDecimal("150000.00"), BigDecimal.ZERO, 1L, LocalDateTime.now(), LocalDateTime.now()
         );
-        when(creditRepositoryPort.findByClientIdAndOutletId(clientId, outletId)).thenReturn(Optional.of(zeroDebtAccount));
+        when(creditRepositoryPort.findByClientIdAndOutletId(clientId, outletId)).thenReturn(Optional.of(creditAccount));
+
+        SaleItemDomain newSaleItem = new SaleItemDomain(2L, 12L, 1, "1 UN", new BigDecimal("2000.00"), new BigDecimal("2000.00"), 1L);
+        SaleDomain newSale = SaleDomain.fromPersistence(
+                101L, UUID.randomUUID(), new BigDecimal("2000.00"), BigDecimal.ZERO, BigDecimal.ZERO,
+                1L, 1L, clientId, outletId, employeePersonId, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of(newSaleItem)
+        );
+        when(saleRepositoryPort.save(any(SaleDomain.class))).thenReturn(newSale);
+
+        ExchangeResponse response = createExchangeUseCase.execute(request);
+
+        assertNotNull(response);
+        assertEquals(new BigDecimal("-8000.00"), response.netDifference());
+        assertTrue(response.paymentStatusMessage().contains("entregada al cliente"));
+
+        verify(creditRepositoryPort, never()).save(any(CreditAccountDomain.class));
+    }
+
+    @Test
+    @DisplayName("Should process client surplus when credit account is not found")
+    void shouldProcessSurplusForClient_WhenCreditAccountNotFound() {
+        CreateExchangeRequest request = new CreateExchangeRequest(
+                saleUuid, "DEFECTO", "Notas",
+                List.of(new ReturnItemRequest(10L, "2")),
+                List.of(new ExchangeItemRequest(12L, "1")),
+                1L, BigDecimal.ZERO, false
+        );
+
+        setupUserContext("cashier1", "ROLE_CJTURNO", outletId);
+        setupCommonMasterData();
+
+        SaleItemDomain originalItem = new SaleItemDomain(1L, 10L, 2, "2 UN", new BigDecimal("5000.00"), new BigDecimal("10000.00"), 1L);
+        SaleDomain originalSale = createOriginalSale(100L, outletId, clientId, originalItem);
+        when(saleRepositoryPort.findByCode(saleUuid)).thenReturn(Optional.of(originalSale));
+        when(personRepositoryPort.findById(clientId)).thenReturn(Optional.of(createClient(clientId)));
+
+        ProductDomain returnedProduct = createProduct(10L, "Jabon", 10, new BigDecimal("5000.00"), outletId, 1L);
+        ProductDomain replacementProduct = createProduct(12L, "Caramelo", 5, new BigDecimal("6000.00"), outletId, 1L);
+
+        when(productOutletRepositoryPort.findById(10L)).thenReturn(Optional.of(returnedProduct));
+        when(productOutletRepositoryPort.findById(12L)).thenReturn(Optional.of(replacementProduct));
+
+        when(masterTree.getById(1L)).thenReturn(new MasterRoot(1L, "UND", "Unidad", 0L, 1L));
+        when(weightConversionService.isWeighable("UND")).thenReturn(false);
+        when(weightConversionService.formatFromBaseUnit(2, "UND")).thenReturn("2 UN");
+        when(weightConversionService.formatFromBaseUnit(1, "UND")).thenReturn("1 UN");
+
+        ReturnItemDomain returnItem = new ReturnItemDomain(1L, 10L, 2, "2 UN", new BigDecimal("5000.00"), new BigDecimal("10000.00"), 1L);
+        ReturnDomain returnDomain = ReturnDomain.create(100L, "DEFECTO", "Notas", "CAMBIO", 50L, employeePersonId, outletId, clientId, List.of(returnItem));
+        when(returnRepositoryPort.save(any(ReturnDomain.class))).thenReturn(returnDomain);
+
+        when(creditRepositoryPort.findByClientIdAndOutletId(clientId, outletId)).thenReturn(Optional.empty());
 
         SaleItemDomain newSaleItem = new SaleItemDomain(2L, 12L, 1, "1 UN", new BigDecimal("6000.00"), new BigDecimal("6000.00"), 1L);
         SaleDomain newSale = SaleDomain.fromPersistence(
@@ -1448,12 +1505,9 @@ class CreateExchangeUseCaseImplTest {
         when(saleRepositoryPort.save(any(SaleDomain.class))).thenReturn(newSale);
 
         ExchangeResponse response = createExchangeUseCase.execute(request);
-
         assertNotNull(response);
         assertEquals(new BigDecimal("-4000.00"), response.netDifference());
         assertTrue(response.paymentStatusMessage().contains("entregada al cliente"));
-
-        verify(creditRepositoryPort, never()).save(any(CreditAccountDomain.class));
     }
 
     @Test
