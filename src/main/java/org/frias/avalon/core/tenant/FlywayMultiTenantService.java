@@ -56,28 +56,45 @@ public class FlywayMultiTenantService implements TenantSchemaMigrationPort {
     @EventListener(ApplicationReadyEvent.class)
     public void migrateAllTenants() {
         migrateGlobalSchema();
-        List<String> defaultSchemas = List.of("company_1", "company_2", "store_1", "store_4");
-        for (String schema : defaultSchemas) {
+        List<String> activeSchemas = getActiveOutletAndCompanySchemas();
+        for (String schema : activeSchemas) {
             migrateTenantSchema(schema);
-        }
-        List<String> storeSchemas = getAllStoreSchemas();
-        for (String schema : storeSchemas) {
-            if (!defaultSchemas.contains(schema)) {
-                migrateTenantSchema(schema);
-            }
         }
     }
 
-    private List<String> getAllStoreSchemas() {
+    private List<String> getActiveOutletAndCompanySchemas() {
         List<String> schemas = new ArrayList<>();
         try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'company_%' OR schema_name LIKE 'store_%'")) {
-            while (resultSet.next()) {
-                schemas.add(resultSet.getString("schema_name"));
+             Statement statement = connection.createStatement()) {
+
+            // 1. Discover schemas from existing outlets in public.outlet
+            try (ResultSet rs = statement.executeQuery("SELECT id, company_id FROM public.outlet")) {
+                while (rs.next()) {
+                    long outletId = rs.getLong("id");
+                    schemas.add("store_" + outletId);
+                    long companyId = rs.getLong("company_id");
+                    if (companyId > 0 && !schemas.contains("company_" + companyId)) {
+                        schemas.add("company_" + companyId);
+                    }
+                }
+            } catch (SQLException ignored) {
+                // Table public.outlet might not exist yet during first initialization
             }
+
+            // 2. Discover any other existing tenant schemas already in PostgreSQL
+            try (ResultSet rs = statement.executeQuery(
+                    "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'company_%' OR schema_name LIKE 'store_%'")) {
+                while (rs.next()) {
+                    String schemaName = rs.getString("schema_name");
+                    if (!schemas.contains(schemaName)) {
+                        schemas.add(schemaName);
+                    }
+                }
+            } catch (SQLException ignored) {
+            }
+
         } catch (SQLException e) {
-            // Log or ignore if table/schemata not available yet
+            // Log or ignore if connection error
         }
         return schemas;
     }
