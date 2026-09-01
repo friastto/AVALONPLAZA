@@ -10,4 +10,6 @@ import java.util.List;
 public interface JpaRoleAssignmentRepository extends JpaRepository<RoleAssignment, Long> {
     List<RoleAssignment> findByUserId(Long id);
     List<RoleAssignment> findByOutletId(Long outletId);
+    List<RoleAssignment> findByCompanyId(Long companyId);
+    java.util.Optional<RoleAssignment> findByCompanyIdAndRoleId(Long companyId, Long roleId);
 }

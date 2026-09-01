@@ -5,13 +5,12 @@ import org.frias.avalon.core.exeptions.ApiResponse;
 import org.frias.avalon.domain.company.application.dto.request.CreateCompanyRequest;
 import org.frias.avalon.domain.company.application.dto.response.CompanyDashboardResponse;
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
+import org.frias.avalon.domain.company.application.dto.request.AssignCompanyManagerRequest;
+import org.frias.avalon.domain.company.application.dto.response.CompanyManagerResponse;
 import org.frias.avalon.domain.company.application.usecase.approve.ApproveCompanyUseCase;
+import org.frias.avalon.domain.company.application.usecase.assign.AssignCompanyManagerUseCase;
 import org.frias.avalon.domain.company.application.usecase.create.CreateCompanyUseCase;
-import org.frias.avalon.domain.company.application.usecase.find.FindAllCompaniesUseCase;
-import org.frias.avalon.domain.company.application.usecase.find.FindCompanyByIdUseCase;
-import org.frias.avalon.domain.company.application.usecase.find.FindOutletsByCompanyUseCase;
-import org.frias.avalon.domain.company.application.usecase.find.FindPendingCompaniesUseCase;
-import org.frias.avalon.domain.company.application.usecase.find.GetCompanyDashboardUseCase;
+import org.frias.avalon.domain.company.application.usecase.find.*;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +33,8 @@ public class CompanyController {
     private final FindOutletsByCompanyUseCase findOutletsByCompanyUseCase;
     private final ApproveCompanyUseCase approveCompanyUseCase;
     private final GetCompanyDashboardUseCase getCompanyDashboardUseCase;
+    private final AssignCompanyManagerUseCase assignCompanyManagerUseCase;
+    private final GetCompanyManagerUseCase getCompanyManagerUseCase;
 
     public CompanyController(
             CreateCompanyUseCase createCompanyUseCase,
@@ -42,7 +43,9 @@ public class CompanyController {
             FindCompanyByIdUseCase findCompanyByIdUseCase,
             FindOutletsByCompanyUseCase findOutletsByCompanyUseCase,
             ApproveCompanyUseCase approveCompanyUseCase,
-            GetCompanyDashboardUseCase getCompanyDashboardUseCase
+            GetCompanyDashboardUseCase getCompanyDashboardUseCase,
+            AssignCompanyManagerUseCase assignCompanyManagerUseCase,
+            GetCompanyManagerUseCase getCompanyManagerUseCase
     ) {
         this.createCompanyUseCase = createCompanyUseCase;
         this.findAllCompaniesUseCase = findAllCompaniesUseCase;
@@ -51,6 +54,8 @@ public class CompanyController {
         this.findOutletsByCompanyUseCase = findOutletsByCompanyUseCase;
         this.approveCompanyUseCase = approveCompanyUseCase;
         this.getCompanyDashboardUseCase = getCompanyDashboardUseCase;
+        this.assignCompanyManagerUseCase = assignCompanyManagerUseCase;
+        this.getCompanyManagerUseCase = getCompanyManagerUseCase;
     }
 
     /**
@@ -153,6 +158,36 @@ public class CompanyController {
                 HttpStatus.OK.value(),
                 "Company dashboard retrieved successfully",
                 dashboard
+        ));
+    }
+
+    /**
+     * POST /api/v1/companies/{id}/manager - Assigns or creates a company general manager (GERGEN).
+     */
+    @PostMapping("/{id}/manager")
+    public ResponseEntity<ApiResponse<CompanyManagerResponse>> assignManager(
+            @PathVariable Long id,
+            @Valid @RequestBody AssignCompanyManagerRequest request
+    ) {
+        CompanyManagerResponse response = assignCompanyManagerUseCase.execute(id, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(
+                        HttpStatus.CREATED.value(),
+                        "Company manager assigned successfully",
+                        response
+                ));
+    }
+
+    /**
+     * GET /api/v1/companies/{id}/manager - Retrieves the active general manager of the company.
+     */
+    @GetMapping("/{id}/manager")
+    public ResponseEntity<ApiResponse<CompanyManagerResponse>> getManager(@PathVariable Long id) {
+        CompanyManagerResponse response = getCompanyManagerUseCase.execute(id);
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Company manager retrieved successfully",
+                response
         ));
     }
 }

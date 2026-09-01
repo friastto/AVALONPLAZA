@@ -30,6 +30,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper {
         role.setUserId(domain.getUserId());
         role.setRoleId(domain.getRoleId());
         role.setOutletId(domain.getOutletId());
+        role.setCompanyId(domain.getCompanyId());
         role.setStatus(domain.getStatus());
         return role;
     }
@@ -42,6 +43,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper {
                 role.getUserId(),
                 role.getRoleId(),
                 role.getOutletId(),
+                role.getCompanyId(),
                 role.getStatus()
         );
     }

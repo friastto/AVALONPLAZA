@@ -27,6 +27,8 @@ public class RoleAssignment {
 
     private Long outletId;
 
+    private Long companyId;
+
     //private Long scope;
 
     // private Long schedule;

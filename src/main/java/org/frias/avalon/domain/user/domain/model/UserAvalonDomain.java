@@ -71,6 +71,18 @@ public class UserAvalonDomain {
         );
     }
 
+    public static UserAvalonDomain createWithPerson(
+            String userName,
+            String hashSalt,
+            String hashPassword,
+            Long statusId,
+            Long personId
+    ) {
+        UserAvalonDomain domain = new UserAvalonDomain(userName, hashSalt, hashPassword, statusId);
+        domain.personId = personId;
+        return domain;
+    }
+
     public static UserAvalonDomain fromPersistenceBasic(Long id, Long personId, String userName, Long statusId) {
         return new UserAvalonDomain(id, personId, userName, statusId);
     }
