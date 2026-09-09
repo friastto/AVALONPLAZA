@@ -117,4 +117,33 @@ class CompanyDashboardIntegrationTest {
         assertEquals("HISTORICO", data.get("period"));
         assertNull(data.get("selectedOutletId"));
     }
+
+    @Test
+    @DisplayName("Deberia conmutar contexto usando headers X-Company-Id y X-Outlet-Id exitosamente (E2E)")
+    void getCompanyDashboard_WithCompanyAndOutletHeaders_Success() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        UserDetails userDetails = User.builder()
+                .username("adminti_test")
+                .password("password")
+                .authorities("ROLE_ADMINTI", "ADMINTI")
+                .build();
+        String token = jwtTokenProvider.generateAccessToken(userDetails, null, null);
+        headers.setBearerAuth(token);
+        headers.set("X-Company-Id", "1");
+        headers.set("X-Outlet-Id", "1");
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                "/api/v1/companies/1/dashboard?period=MES",
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(200, response.getBody().get("status"));
+    }
 }

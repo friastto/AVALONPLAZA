@@ -41,6 +41,22 @@ El español es el único idioma permitido para todas las explicaciones y descrip
 - **Nivel 2 (Gerencia de Empresa - GERGEN):** Acceso limitado al ambito de su `company_id`. Autoridad para aprobar sugerencias de productos (`/avalon/products/suggestions/{id}/approve`), configurar umbrales corporativos y listar el consolidado multi-sede.
 - **Nivel 3 (Operativo de Tienda - ADMOULT, GERENTE, CJTURNO, VENDEDOR):** Acceso encapsulado por `TenantContext` al esquema de su tienda (`company_{id}` / `outlet_{id}`). Operaciones: ejecucion de ventas POS, sesiones de caja, arqueos a ciegas en 3 pasos y creacion de sugerencias de producto (`PENDING`).
 
+## Regla de Validacion Hibrida con MasterTree (BD Plana + Validacion In-Memory O(1))
+1. **Consultas a BD sin JOINs Maestros (I/O Minimo y Cero Sobrecarga):**
+   - Las consultas SQL / JPA hacia tablas transaccionales u operativas (`person`, `user_avalon`, `outlet`, `product_outlet`, `orders`, etc.) deben recuperar unicamente las filas con sus claves foraneas numericas planas (`status_id`, `type_identification_id`, `role_id`, `sex_id`, etc.).
+   - Queda estrictamente prohibido realizar `JOIN`s pesados a la tabla `master_data` en consultas transaccionales masivas o de alta concurrencia.
+
+2. **Validacion y Enriquecimiento In-Memory O(1):**
+   - El caso de uso o mapper toma los IDs numericos obtenidos de la entidad en BD y los valida/enriquece inmediatamente contra el espejo en memoria `MasterTree`:
+     - Validacion de existencia: `tree.getByIdOrThrow(entity.getStatusId())`
+     - Validacion de estado activo/inactivo: `tree.is(statusNode, "ACT")`
+     - Enriquecimiento de etiquetas en DTOs: `statusNode.getFullName()`, `typeIdNode.getFullName()`
+
+3. **Unicidad Semantica y Prohibicion de IDs Hardcodeados:**
+   - Los IDs numericos son variables y dinamicos entre entornos, despliegues o secuencias de base de datos.
+   - Los codigos (`shortName` / `code`, ej. `GERGEN`, `ADMOULT`, `CJTURNO`, `ACT`, `INACT`) son unicos, estables e inmutables en la jerarquia maestra (`masterData.txt`).
+   - Toda condicion de negocio o asignacion debe evaluarse contra el codigo semantico (`tree.getByCode("...")`, `tree.is(node, "...")`), quedando terminantemente prohibido el uso de numeros o IDs literales (`87L`, `1L`, `4L`, etc.) en el codigo fuente.
+
 ## Diagrama de Arquitectura de la API (ApiAvalon)
 
 ```mermaid

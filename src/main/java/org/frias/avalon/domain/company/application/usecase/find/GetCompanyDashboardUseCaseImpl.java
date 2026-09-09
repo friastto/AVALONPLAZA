@@ -1,5 +1,6 @@
 package org.frias.avalon.domain.company.application.usecase.find;
 
+import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.company.application.dto.response.CompanyDashboardResponse;
 import org.frias.avalon.domain.company.application.dto.response.OutletSalesPerformanceDto;
 import org.frias.avalon.domain.company.infrastructure.entity.CompanyEntity;
@@ -9,7 +10,7 @@ import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletReposi
 import org.frias.avalon.domain.sale.infrastructure.entity.SaleEntity;
 import org.frias.avalon.domain.sale.infrastructure.repository.JpaSaleRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -31,19 +32,21 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
     private final JpaCompanyRepository companyRepository;
     private final JpaOutletRepository outletRepository;
     private final JpaSaleRepository saleRepository;
+    private final TransactionTemplate transactionTemplate;
 
     public GetCompanyDashboardUseCaseImpl(
             JpaCompanyRepository companyRepository,
             JpaOutletRepository outletRepository,
-            JpaSaleRepository saleRepository
+            JpaSaleRepository saleRepository,
+            TransactionTemplate transactionTemplate
     ) {
         this.companyRepository = companyRepository;
         this.outletRepository = outletRepository;
         this.saleRepository = saleRepository;
+        this.transactionTemplate = transactionTemplate;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CompanyDashboardResponse execute(Long companyId, String period, Long outletId) {
         CompanyEntity company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new IllegalArgumentException("Company with ID " + companyId + " not found"));
@@ -107,11 +110,38 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
             }
         }
 
+        final LocalDateTime finalStart = startDate;
+        final LocalDateTime finalEnd = endDate;
+
+        Long previousCompanyId = TenantContext.getTenantId();
+        Long previousOutletId = TenantContext.getTenantOutletId();
+
         List<SaleEntity> sales;
-        if (startDate != null && endDate != null) {
-            sales = saleRepository.findByOutletIdInAndSaleDateBetween(targetOutletIds, startDate, endDate);
-        } else {
-            sales = saleRepository.findByOutletIdIn(targetOutletIds);
+        try {
+            TenantContext.setTenantId(companyId);
+            if (outletId != null) {
+                TenantContext.setTenantOutletId(outletId);
+            } else {
+                TenantContext.setTenantOutletId(null);
+            }
+
+            sales = transactionTemplate.execute(status -> {
+                if (finalStart != null && finalEnd != null) {
+                    return saleRepository.findByOutletIdInAndSaleDateBetween(targetOutletIds, finalStart, finalEnd);
+                } else {
+                    return saleRepository.findByOutletIdIn(targetOutletIds);
+                }
+            });
+            if (sales == null) {
+                sales = Collections.emptyList();
+            }
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(GetCompanyDashboardUseCaseImpl.class)
+                    .warn("Could not query sales for company {}: {}", companyId, e.getMessage());
+            sales = Collections.emptyList();
+        } finally {
+            TenantContext.setTenantId(previousCompanyId);
+            TenantContext.setTenantOutletId(previousOutletId);
         }
 
         BigDecimal totalSales = sales.stream()

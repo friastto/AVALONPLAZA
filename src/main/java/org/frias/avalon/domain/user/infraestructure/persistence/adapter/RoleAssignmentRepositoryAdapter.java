@@ -42,4 +42,21 @@ public class RoleAssignmentRepositoryAdapter implements RoleAssignmentRepository
 
         return roleAssignment.stream().map(mapper::toDomain).toList();
     }
+
+    @Override
+    public RoleAssignmentDomain update(RoleAssignmentDomain domain) {
+        RoleAssignment role = mapper.toEntity(domain);
+        return mapper.toDomain(jpa.save(role));
+    }
+
+    @Override
+    public List<RoleAssignmentDomain> findByCompanyId(Long companyId) {
+        List<RoleAssignment> roleAssignment = jpa.findByCompanyId(companyId);
+        return roleAssignment.stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public java.util.Optional<RoleAssignmentDomain> findByCompanyIdAndRoleId(Long companyId, Long roleId) {
+        return jpa.findByCompanyIdAndRoleId(companyId, roleId).map(mapper::toDomain);
+    }
 }

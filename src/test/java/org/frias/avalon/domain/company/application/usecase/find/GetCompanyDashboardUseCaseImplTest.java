@@ -7,12 +7,15 @@ import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.sale.infrastructure.entity.SaleEntity;
 import org.frias.avalon.domain.sale.infrastructure.repository.JpaSaleRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -38,8 +41,19 @@ class GetCompanyDashboardUseCaseImplTest {
     @Mock
     private JpaSaleRepository saleRepository;
 
+    @Mock
+    private TransactionTemplate transactionTemplate;
+
     @InjectMocks
     private GetCompanyDashboardUseCaseImpl useCase;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
+            TransactionCallback<?> callback = invocation.getArgument(0);
+            return callback.doInTransaction(null);
+        });
+    }
 
     @Test
     @DisplayName("Should consolidate company dashboard metrics for month period across multiple outlets")
