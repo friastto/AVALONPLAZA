@@ -5,6 +5,7 @@ import org.frias.avalon.domain.company.application.dto.request.AssignCompanyMana
 import org.frias.avalon.domain.company.application.dto.response.CompanyManagerResponse;
 import org.frias.avalon.domain.company.domain.model.CompanyDomain;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
@@ -42,6 +43,9 @@ class AssignCompanyManagerUseCaseImplTest {
     @Mock
     private RoleAssignmentRepositoryPort roleAssignmentRepository;
 
+    @Mock
+    private MasterTreeProvider masterTreeProvider;
+
     @InjectMocks
     private AssignCompanyManagerUseCaseImpl useCase;
 
@@ -52,6 +56,15 @@ class AssignCompanyManagerUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot rootRole = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(80L, "ROL", "TYPE_ROL", null, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot gerRole = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(86L, "GERENTE", "TYPE_GERENTES", 80L, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot gergenRole = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(87L, "GERGEN", "GERENTE_GENERAL", 86L, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot actStatus = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot inactStatus = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(4L, "INACT", "INACTIVO", null, 1L);
+
+        org.frias.avalon.domain.masterdata.domain.model.MasterTree tree = new org.frias.avalon.domain.masterdata.domain.model.MasterTree(java.util.List.of(rootRole, gerRole, gergenRole, actStatus, inactStatus));
+        lenient().when(masterTreeProvider.getTree()).thenReturn(tree);
+
         testCompany = new CompanyDomain(1L, "900123456", "Empresa Test SAS", "test@empresa.com", 1L, BigDecimal.valueOf(500000), LocalDateTime.now(), LocalDateTime.now());
         testPerson = PersonDomain.createFromEntity(10L, "123456789", "Carlos", "Gomez", "Calle 1", 1L, 1L, 3001234567L, "carlos@test.com", 1L, LocalDateTime.now(), LocalDateTime.now());
         testUser = UserAvalonDomain.createWithPerson("carlos123", "salt", "hashed", 1L, 10L);

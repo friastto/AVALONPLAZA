@@ -86,34 +86,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
                     Long outletIdFromJwt = jwtTokenProvider.extractOutletId(jwt);
+                    Long companyId = jwtTokenProvider.extractCompanyId(jwt);
+                    Long outletId = outletIdFromJwt;
 
-                    String tenantHeader = request.getHeader("X-Tenant-Id");
+                    String companyHeader = request.getHeader("X-Company-Id");
+                    String outletHeader = request.getHeader("X-Outlet-Id");
 
-                    // 🔐 solo ADMINTI puede usar header
-                    if (!SecurityUtils.hasRole("ROLE_ADMINTI") && tenantHeader != null) {
+                    boolean hasAdminRole = SecurityUtils.hasRole("ROLE_ADMINTI") || SecurityUtils.hasRole("ROLE_ADMINSYS");
+
+                    if (!hasAdminRole && (companyHeader != null || outletHeader != null)) {
                         throw new SecurityException("No autorizado para cambiar tenant");
                     }
 
-                    // Zero Trust: Extraer company_id directamente del token JWT
-                    Long companyId = jwtTokenProvider.extractCompanyId(jwt);
-
-                    if (tenantHeader != null) {
+                    if (companyHeader != null && !companyHeader.isBlank()) {
                         try {
-                            companyId = Long.parseLong(tenantHeader);
+                            companyId = Long.parseLong(companyHeader.trim());
                         } catch (NumberFormatException e) {
-                            throw new SecurityException("X-Tenant-Id invalido");
+                            throw new SecurityException("X-Company-Id invalido");
                         }
                     }
 
+                    if (outletHeader != null && !outletHeader.isBlank()) {
+                        try {
+                            outletId = Long.parseLong(outletHeader.trim());
+                        } catch (NumberFormatException e) {
+                            throw new SecurityException("X-Outlet-Id invalido");
+                        }
+                    }
 
                     // 8. Continuamos con el resto del pipeline
-                    //ponemos el company y el outlet en el contexto
+                    // Ponemos el company y el outlet en el contexto
                     if (companyId != null) {
                         TenantContext.setTenantId(companyId);
                     }
-                    if (outletIdFromJwt != null) {
-                        TenantContext.setTenantOutletId(outletIdFromJwt);
-
+                    if (outletId != null) {
+                        TenantContext.setTenantOutletId(outletId);
                     }
                     // --- Lógica para clasificar y establecer roles específicos en TenantContext ---
                     MasterTree masterTree = treeProvider.getTree();

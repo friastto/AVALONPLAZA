@@ -7,7 +7,10 @@ import org.frias.avalon.domain.company.application.dto.response.CompanyDashboard
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
 import org.frias.avalon.domain.company.application.dto.request.AssignCompanyManagerRequest;
 import org.frias.avalon.domain.company.application.dto.response.CompanyManagerResponse;
+import org.frias.avalon.domain.company.application.dto.request.AssignCompanyEmployeeRequest;
+import org.frias.avalon.domain.company.application.dto.response.CompanyEmployeeResponse;
 import org.frias.avalon.domain.company.application.usecase.approve.ApproveCompanyUseCase;
+import org.frias.avalon.domain.company.application.usecase.assign.AssignCompanyEmployeeUseCase;
 import org.frias.avalon.domain.company.application.usecase.assign.AssignCompanyManagerUseCase;
 import org.frias.avalon.domain.company.application.usecase.create.CreateCompanyUseCase;
 import org.frias.avalon.domain.company.application.usecase.find.*;
@@ -35,6 +38,8 @@ public class CompanyController {
     private final GetCompanyDashboardUseCase getCompanyDashboardUseCase;
     private final AssignCompanyManagerUseCase assignCompanyManagerUseCase;
     private final GetCompanyManagerUseCase getCompanyManagerUseCase;
+    private final FindCompanyEmployeesUseCase findCompanyEmployeesUseCase;
+    private final AssignCompanyEmployeeUseCase assignCompanyEmployeeUseCase;
 
     public CompanyController(
             CreateCompanyUseCase createCompanyUseCase,
@@ -45,7 +50,9 @@ public class CompanyController {
             ApproveCompanyUseCase approveCompanyUseCase,
             GetCompanyDashboardUseCase getCompanyDashboardUseCase,
             AssignCompanyManagerUseCase assignCompanyManagerUseCase,
-            GetCompanyManagerUseCase getCompanyManagerUseCase
+            GetCompanyManagerUseCase getCompanyManagerUseCase,
+            FindCompanyEmployeesUseCase findCompanyEmployeesUseCase,
+            AssignCompanyEmployeeUseCase assignCompanyEmployeeUseCase
     ) {
         this.createCompanyUseCase = createCompanyUseCase;
         this.findAllCompaniesUseCase = findAllCompaniesUseCase;
@@ -56,6 +63,8 @@ public class CompanyController {
         this.getCompanyDashboardUseCase = getCompanyDashboardUseCase;
         this.assignCompanyManagerUseCase = assignCompanyManagerUseCase;
         this.getCompanyManagerUseCase = getCompanyManagerUseCase;
+        this.findCompanyEmployeesUseCase = findCompanyEmployeesUseCase;
+        this.assignCompanyEmployeeUseCase = assignCompanyEmployeeUseCase;
     }
 
     /**
@@ -189,5 +198,35 @@ public class CompanyController {
                 "Company manager retrieved successfully",
                 response
         ));
+    }
+
+    /**
+     * GET /api/v1/companies/{id}/employees - Retrieves all staff/employees for company and its outlets.
+     */
+    @GetMapping("/{id}/employees")
+    public ResponseEntity<ApiResponse<List<CompanyEmployeeResponse>>> getEmployees(@PathVariable Long id) {
+        List<CompanyEmployeeResponse> response = findCompanyEmployeesUseCase.execute(id);
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                response.isEmpty() ? "No employees found for company" : "Company employees retrieved successfully",
+                response
+        ));
+    }
+
+    /**
+     * POST /api/v1/companies/{id}/employees - Assigns or creates a new employee for company or its outlets.
+     */
+    @PostMapping("/{id}/employees")
+    public ResponseEntity<ApiResponse<CompanyEmployeeResponse>> assignEmployee(
+            @PathVariable Long id,
+            @Valid @RequestBody AssignCompanyEmployeeRequest request
+    ) {
+        CompanyEmployeeResponse response = assignCompanyEmployeeUseCase.execute(id, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(
+                        HttpStatus.CREATED.value(),
+                        "Company employee assigned successfully",
+                        response
+                ));
     }
 }

@@ -6,6 +6,9 @@ import org.frias.avalon.domain.company.application.dto.request.AssignCompanyMana
 import org.frias.avalon.domain.company.application.dto.response.CompanyManagerResponse;
 import org.frias.avalon.domain.company.domain.model.CompanyDomain;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
@@ -21,29 +24,42 @@ import java.util.Optional;
 @Service
 public class AssignCompanyManagerUseCaseImpl implements AssignCompanyManagerUseCase {
 
-    private static final Long GERGEN_ROLE_ID = 87L;
-    private static final Long STATUS_ACTIVE_ID = 1L;
-
     private final CompanyRepositoryPort companyRepository;
     private final PersonRepositoryPort personRepository;
     private final UserAvalonRepositoryPort userRepository;
     private final RoleAssignmentRepositoryPort roleAssignmentRepository;
+    private final MasterTreeProvider masterTreeProvider;
 
     public AssignCompanyManagerUseCaseImpl(
             CompanyRepositoryPort companyRepository,
             PersonRepositoryPort personRepository,
             UserAvalonRepositoryPort userRepository,
-            RoleAssignmentRepositoryPort roleAssignmentRepository
+            RoleAssignmentRepositoryPort roleAssignmentRepository,
+            MasterTreeProvider masterTreeProvider
     ) {
         this.companyRepository = companyRepository;
         this.personRepository = personRepository;
         this.userRepository = userRepository;
         this.roleAssignmentRepository = roleAssignmentRepository;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     @Override
     @Transactional
     public CompanyManagerResponse execute(Long companyId, AssignCompanyManagerRequest request) {
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot gergenRole = tree.getByCode("GERGEN");
+        if (gergenRole == null) {
+            throw new ResourceNotFoundException("Rol GERGEN no configurado en MasterTree");
+        }
+        Long gergenRoleId = gergenRole.getId();
+
+        MasterRoot activeStatus = tree.getByCode("ACT");
+        Long activeStatusId = activeStatus != null ? activeStatus.getId() : 1L;
+
+        MasterRoot inactiveStatus = tree.getByCode("INACT");
+        Long inactiveStatusId = inactiveStatus != null ? inactiveStatus.getId() : 4L;
+
         // 1. Validar que la compania exista
         CompanyDomain company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Compania no encontrada con id: " + companyId));
@@ -74,7 +90,7 @@ public class AssignCompanyManagerUseCaseImpl implements AssignCompanyManagerUseC
                         request.sexId() != null ? request.sexId() : 1L,
                         phoneNum,
                         request.email(),
-                        STATUS_ACTIVE_ID
+                        activeStatusId
                 );
                 person = personRepository.save(newPerson);
             }
@@ -105,7 +121,7 @@ public class AssignCompanyManagerUseCaseImpl implements AssignCompanyManagerUseC
                         username,
                         salt,
                         hashedPassword,
-                        STATUS_ACTIVE_ID,
+                        activeStatusId,
                         person.getId()
                 );
                 user = userRepository.save(newUser);
@@ -113,35 +129,36 @@ public class AssignCompanyManagerUseCaseImpl implements AssignCompanyManagerUseC
         }
 
         // 4. Validar y Desactivar gerente previo si existe en esta compania
-        Optional<RoleAssignmentDomain> currentManagerOpt = roleAssignmentRepository.findByCompanyIdAndRoleId(companyId, GERGEN_ROLE_ID);
+        Optional<RoleAssignmentDomain> currentManagerOpt = roleAssignmentRepository.findByCompanyIdAndRoleId(companyId, gergenRoleId);
         if (currentManagerOpt.isPresent()) {
             RoleAssignmentDomain currentManager = currentManagerOpt.get();
-            if (currentManager.getUserId().equals(user.getId()) && currentManager.getStatus().equals(STATUS_ACTIVE_ID)) {
+            if (currentManager.getUserId().equals(user.getId()) && currentManager.getStatus().equals(activeStatusId)) {
                 // Ya es el gerente activo
-                return buildResponse(currentManager, companyId, user, person);
+                return buildResponse(currentManager, companyId, user, person, gergenRoleId);
             }
             // Desactivar rol previo
-            currentManager.changeStatus(4L); // 4 = INA
+            currentManager.changeStatus(inactiveStatusId);
             roleAssignmentRepository.update(currentManager);
         }
 
         // 5. Crear la nueva asignacion de rol a nivel de empresa (outletId = null)
         RoleAssignmentDomain newAssignment = RoleAssignmentDomain.createCompanyRole(
                 user.getId(),
-                GERGEN_ROLE_ID,
+                gergenRoleId,
                 companyId,
-                STATUS_ACTIVE_ID
+                activeStatusId
         );
         RoleAssignmentDomain savedAssignment = roleAssignmentRepository.create(newAssignment);
 
-        return buildResponse(savedAssignment, companyId, user, person);
+        return buildResponse(savedAssignment, companyId, user, person, gergenRoleId);
     }
 
     private CompanyManagerResponse buildResponse(
             RoleAssignmentDomain assignment,
             Long companyId,
             UserAvalonDomain user,
-            PersonDomain person
+            PersonDomain person,
+            Long gergenRoleId
     ) {
         String fullName = (person.getName() + " " + (person.getLastName() != null ? person.getLastName() : "")).trim();
         String phoneStr = person.getPhoneNumber() != null ? String.valueOf(person.getPhoneNumber()) : "";
@@ -155,7 +172,7 @@ public class AssignCompanyManagerUseCaseImpl implements AssignCompanyManagerUseC
                 person.getEmail(),
                 phoneStr,
                 user.getUserName(),
-                GERGEN_ROLE_ID,
+                gergenRoleId,
                 "GERGEN",
                 assignment.getStatus(),
                 LocalDateTime.now()
