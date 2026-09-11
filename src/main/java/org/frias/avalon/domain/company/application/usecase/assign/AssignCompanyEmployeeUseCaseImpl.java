@@ -146,6 +146,9 @@ public class AssignCompanyEmployeeUseCaseImpl implements AssignCompanyEmployeeUs
         String outletName = outlet != null ? outlet.getName() : "Sede Corporativa / Empresa";
         String statusName = activeStatus != null ? activeStatus.getFullName() : "ACTIVO";
 
+        MasterRoot typeIdRoot = person.getTypeIdentificationId() != null ? tree.getById(person.getTypeIdentificationId()) : null;
+        String typeIdCode = typeIdRoot != null ? typeIdRoot.getShortName() : "CC";
+
         return new CompanyEmployeeResponse(
                 user.getId(),
                 user.getUserName(),
@@ -162,7 +165,8 @@ public class AssignCompanyEmployeeUseCaseImpl implements AssignCompanyEmployeeUs
                 request.outletId(),
                 outletName,
                 activeStatusId,
-                statusName
+                statusName,
+                typeIdCode
         );
     }
 }

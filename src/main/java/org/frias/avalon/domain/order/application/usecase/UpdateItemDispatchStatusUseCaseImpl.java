@@ -39,6 +39,9 @@ public class UpdateItemDispatchStatusUseCaseImpl implements UpdateItemDispatchSt
 
         OrderResponse response = orderMapper.toResponse(refreshedOrder);
         orderWebSocketController.broadcastOrderStatusChanged(orderId, response);
+        if (refreshedOrder.getOutletId() != null) {
+            orderWebSocketController.broadcastOrderCreated(refreshedOrder.getOutletId(), response);
+        }
 
         return response;
     }

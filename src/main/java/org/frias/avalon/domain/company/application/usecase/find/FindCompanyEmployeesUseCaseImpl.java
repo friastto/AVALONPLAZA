@@ -96,6 +96,9 @@ public class FindCompanyEmployeesUseCaseImpl implements FindCompanyEmployeesUseC
 
             String statusName = statusRoot != null ? statusRoot.getFullName() : "ACTIVO";
 
+            MasterRoot typeIdRoot = (person != null && person.getTypeIdentificationId() != null) ? tree.getById(person.getTypeIdentificationId()) : null;
+            String typeIdCode = typeIdRoot != null ? typeIdRoot.getShortName() : "CC";
+
             result.add(new CompanyEmployeeResponse(
                     user.getId(),
                     user.getUserName(),
@@ -112,7 +115,8 @@ public class FindCompanyEmployeesUseCaseImpl implements FindCompanyEmployeesUseC
                     assignment.getOutletId(),
                     outletName,
                     assignment.getStatus(),
-                    statusName
+                    statusName,
+                    typeIdCode
             ));
         }
 

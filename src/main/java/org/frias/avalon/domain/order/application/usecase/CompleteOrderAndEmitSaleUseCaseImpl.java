@@ -60,6 +60,9 @@ public class CompleteOrderAndEmitSaleUseCaseImpl implements CompleteOrderAndEmit
 
         OrderResponse response = orderMapper.toResponse(updated);
         orderWebSocketController.broadcastOrderStatusChanged(orderId, response);
+        if (updated.getOutletId() != null) {
+            orderWebSocketController.broadcastOrderCreated(updated.getOutletId(), response);
+        }
 
         return response;
     }
