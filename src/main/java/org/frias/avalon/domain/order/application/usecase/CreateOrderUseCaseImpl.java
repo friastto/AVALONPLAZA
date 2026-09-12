@@ -103,8 +103,11 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
                     .build());
         }
 
-        BigDecimal tax = subtotal.multiply(BigDecimal.valueOf(0.19));
-        BigDecimal total = subtotal.add(tax);
+        // Prices already include taxes from the product catalog publication.
+        // BigDecimal tax = subtotal.multiply(BigDecimal.valueOf(0.19));
+        // BigDecimal total = subtotal.add(tax);
+        BigDecimal tax = BigDecimal.ZERO;
+        BigDecimal total = subtotal;
 
         Long customerId = request.getCustomerId();
         if (customerId == null) {
