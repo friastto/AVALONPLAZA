@@ -93,12 +93,21 @@ public class ModesMachineImpl implements ModesMachine {
                         outletInfoDto = new OutletInfoDto(outletDomain.getId(), outletDomain.getName());
                     }
 
-                    employeeResult = new EmployeeResult(
-                            true, // Asumiendo que true significa activo/disponible
-                            outletInfoDto, // Puede ser null si no hay outletDomain
-                            role,
-                            permissionEmployee
-                    );
+                    if (tree.is(role, "GERGEN")) {
+                        adminAvalonResult = new AdminAvalonResult(
+                                true,
+                                outletInfoDto,
+                                role,
+                                permissionEmployee
+                        );
+                    } else {
+                        employeeResult = new EmployeeResult(
+                                true,
+                                outletInfoDto,
+                                role,
+                                permissionEmployee
+                        );
+                    }
                 }else if (tree.isChildOf(role, "SISTEM") || tree.isChildOf(role, "SYSTEM")) {
                     // Si se encuentran múltiples roles de empleado, se tomará el último.
                     // Si solo se espera un rol de empleado, esto es suficiente.

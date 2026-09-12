@@ -216,11 +216,32 @@ class ModesMachineImplTest {
     @DisplayName("Should map ModesResult to ModesResponseDto with nulls when modes are empty")
     void mapperToResponseWithNullModes() {
         ModesResult emptyResult = new ModesResult(null, null, null);
-
         ModesResponseDto response = modesMachine.mapperToResponse(emptyResult);
 
         assertNull(response.client());
         assertNull(response.employee());
         assertNull(response.adminAvalon());
+    }
+
+    @Test
+    @DisplayName("Should resolve AdminAvalon mode for GERGEN role")
+    void resolveGergenAsAdminAvalon() {
+        RoleAssignmentDomain gergenRoleAssign = new RoleAssignmentDomain(1L, 10L, 87L, null, 1L);
+        MasterRoot gergenRole = new MasterRoot(87L, "GERGEN", "Gerente General", 86L, 1L);
+
+        when(masterTree.getById(87L)).thenReturn(gergenRole);
+        when(masterTree.isChildOf(gergenRole, "CONS")).thenReturn(false);
+        when(masterTree.isChildOf(gergenRole, "EMP")).thenReturn(true);
+        when(masterTree.is(gergenRole, "GERGEN")).thenReturn(true);
+        when(permissionService.resolvePermissions(gergenRole)).thenReturn(List.of("COMPANY_ADMIN", "FULL_ADMIN_ACCESS"));
+
+        ModesResult result = modesMachine.resolve(List.of(gergenRoleAssign), null);
+
+        assertNull(result.employee());
+        assertNotNull(result.adminAvalon());
+        assertTrue(result.adminAvalon().status());
+        assertEquals("GERGEN", result.adminAvalon().role().getShortName());
+        assertNull(result.adminAvalon().outlet());
+        assertTrue(result.adminAvalon().permissions().contains("COMPANY_ADMIN"));
     }
 }

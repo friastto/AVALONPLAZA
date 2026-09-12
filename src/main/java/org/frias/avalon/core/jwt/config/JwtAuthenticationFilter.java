@@ -29,14 +29,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProviderPort jwtTokenProvider;
     private final MasterTreeProvider treeProvider;
-
-
     private final CustomUserDetailsService userDetailsService;
+    private final org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort;
 
-    public JwtAuthenticationFilter(JwtTokenProviderPort jwtTokenProvider, MasterTreeProvider treeProvider, CustomUserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtTokenProviderPort jwtTokenProvider, MasterTreeProvider treeProvider, CustomUserDetailsService userDetailsService, org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.treeProvider = treeProvider;
         this.userDetailsService = userDetailsService;
+        this.outletRepositoryPort = outletRepositoryPort;
     }
 
     @Override
@@ -117,8 +117,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if (outletHeader != null && !outletHeader.isBlank()) {
                         try {
                             Long requestedOutletId = Long.parseLong(outletHeader.trim());
-                            if (hasAdminRole || hasGergenRole || (outletIdFromJwt != null && outletIdFromJwt.equals(requestedOutletId))) {
+                            if (hasAdminRole || (outletIdFromJwt != null && outletIdFromJwt.equals(requestedOutletId))) {
                                 outletId = requestedOutletId;
+                            } else if (hasGergenRole) {
+                                final Long currentCompanyId = companyId;
+                                boolean belongsToCompany = outletRepositoryPort.findById(requestedOutletId)
+                                        .map(o -> o.getCompanyId() != null && o.getCompanyId().equals(currentCompanyId))
+                                        .orElse(false);
+                                if (belongsToCompany) {
+                                    outletId = requestedOutletId;
+                                } else {
+                                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                                    response.setContentType("application/json;charset=UTF-8");
+                                    response.getWriter().write("{\"status\": 403, \"message\": \"No autorizado: La tienda no pertenece a su empresa\", \"data\": null}");
+                                    return;
+                                }
                             } else {
                                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                                 response.setContentType("application/json;charset=UTF-8");
