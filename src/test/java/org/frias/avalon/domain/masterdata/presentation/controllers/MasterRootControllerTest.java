@@ -64,6 +64,8 @@ class MasterRootControllerTest {
     private MasterTreeProvider masterTreeProvider;
     @MockitoBean
     private CustomUserDetailsService userDetailsService;
+    @MockitoBean
+    private org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort;
 
 
     @Test
