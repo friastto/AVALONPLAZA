@@ -132,7 +132,7 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
             dispPenStatusId = 1L;
         }
 
-        String orderCode = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        String orderCode = "ORD-" + UUID.randomUUID().toString().toUpperCase();
         LocalDateTime now = LocalDateTime.now();
 
         BigDecimal subtotal = BigDecimal.ZERO;

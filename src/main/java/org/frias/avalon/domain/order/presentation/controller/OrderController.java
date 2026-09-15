@@ -27,6 +27,7 @@ public class OrderController {
     private final ClaimSpecificOrderUseCase claimSpecificOrderUseCase;
     private final UpdateItemDispatchStatusUseCase updateItemDispatchStatusUseCase;
     private final CompleteOrderAndEmitSaleUseCase completeOrderAndEmitSaleUseCase;
+    private final DeliverOrderByQrUseCase deliverOrderByQrUseCase;
     private final OrderRepositoryPort orderRepositoryPort;
     private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
 
@@ -66,6 +67,14 @@ public class OrderController {
             @PathVariable Long orderId,
             @RequestParam Long userId) {
         OrderResponse response = completeOrderAndEmitSaleUseCase.execute(orderId, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{orderCode}/deliver-by-qr")
+    public ResponseEntity<OrderResponse> deliverOrderByQr(
+            @PathVariable String orderCode,
+            @RequestParam Long userId) {
+        OrderResponse response = deliverOrderByQrUseCase.execute(orderCode, userId);
         return ResponseEntity.ok(response);
     }
 
