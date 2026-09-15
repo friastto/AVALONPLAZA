@@ -6,9 +6,11 @@ import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepository
 import org.frias.avalon.domain.order.application.dto.OrderResponse;
 import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.order.domain.OrderDomain;
+import org.frias.avalon.domain.order.domain.OrderItemDomain;
 import org.frias.avalon.domain.order.domain.OrderStatusHistoryDomain;
 import org.frias.avalon.domain.order.infrastructure.persistence.mapper.OrderMapper;
 import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketController;
+import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ public class CompleteOrderAndEmitSaleUseCaseImpl implements CompleteOrderAndEmit
 
     private final OrderRepositoryPort orderRepositoryPort;
     private final MasterDataRepositoryPort masterDataRepositoryPort;
+    private final JpaProductOutletRepository jpaProductOutletRepository;
     private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
     private final OrderWebSocketController orderWebSocketController;
 
@@ -46,6 +49,21 @@ public class CompleteOrderAndEmitSaleUseCaseImpl implements CompleteOrderAndEmit
         order.setOrderStatusId(ordDelStatusId);
         order.setPaymentStatusId(payPadStatusId);
         order.setUpdatedAt(LocalDateTime.now());
+
+        // Descontar inventario fisico de la tienda al completar/entregar la orden
+        if (order.getItems() != null) {
+            for (OrderItemDomain item : order.getItems()) {
+                if (item.getProductOutletId() != null && item.getQuantity() != null) {
+                    jpaProductOutletRepository.findById(item.getProductOutletId()).ifPresent(productOutlet -> {
+                        int currentStock = productOutlet.getStock() != null ? productOutlet.getStock() : 0;
+                        int newStock = Math.max(0, currentStock - item.getQuantity());
+                        productOutlet.setStock(newStock);
+                        productOutlet.setUpdatedAt(LocalDateTime.now());
+                        jpaProductOutletRepository.save(productOutlet);
+                    });
+                }
+            }
+        }
 
         OrderDomain updated = orderRepositoryPort.save(order);
 

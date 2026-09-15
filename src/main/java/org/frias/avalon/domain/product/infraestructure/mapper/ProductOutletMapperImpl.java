@@ -98,14 +98,14 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
         Integer reservedUserUnits = 0;
         try {
             List<Long> activeStatusIds = new ArrayList<>();
-            Long ordPenId = masterDataRepositoryPort.getIdByCode("ORD_PEN");
-            if (ordPenId != null) activeStatusIds.add(ordPenId);
-            Long ordRecId = masterDataRepositoryPort.getIdByCode("ORD_REC");
-            if (ordRecId != null) activeStatusIds.add(ordRecId);
             Long penId = masterDataRepositoryPort.getIdByCode("PEN");
-            if (penId != null && !activeStatusIds.contains(penId)) activeStatusIds.add(penId);
+            if (penId != null) activeStatusIds.add(penId);
+            Long proId = masterDataRepositoryPort.getIdByCode("PRO");
+            if (proId != null) activeStatusIds.add(proId);
+            Long comId = masterDataRepositoryPort.getIdByCode("COM");
+            if (comId != null) activeStatusIds.add(comId);
             if (activeStatusIds.isEmpty()) {
-                activeStatusIds = List.of(1L, 2L);
+                activeStatusIds = List.of(14L, 15L, 16L);
             }
 
             reservedGlobalUnits = jpaOrderRepository.sumQuantityByProductOutletIdAndStatusIn(domain.getId(), activeStatusIds);

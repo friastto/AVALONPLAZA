@@ -29,6 +29,7 @@ class CompleteOrderAndEmitSaleUseCaseImplTest {
     private MasterDataRepositoryPort masterDataRepositoryPort;
     private OrderMapper orderMapper;
     private OrderWebSocketController orderWebSocketController;
+    private org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository jpaProductOutletRepository;
 
     private CompleteOrderAndEmitSaleUseCaseImpl completeOrderAndEmitSaleUseCase;
 
@@ -38,10 +39,12 @@ class CompleteOrderAndEmitSaleUseCaseImplTest {
         masterDataRepositoryPort = mock(MasterDataRepositoryPort.class);
         orderMapper = mock(OrderMapper.class);
         orderWebSocketController = mock(OrderWebSocketController.class);
+        jpaProductOutletRepository = mock(org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository.class);
 
         completeOrderAndEmitSaleUseCase = new CompleteOrderAndEmitSaleUseCaseImpl(
                 orderRepositoryPort,
                 masterDataRepositoryPort,
+                jpaProductOutletRepository,
                 orderMapper,
                 orderWebSocketController
         );
