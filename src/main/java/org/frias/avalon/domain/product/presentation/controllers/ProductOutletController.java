@@ -86,8 +86,10 @@ public class ProductOutletController {
     }
 
     @GetMapping("/{productId}")
-    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable Long productId) {
-        ProductResponse product = findProductByIdUseCase.execute(productId);
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(
+            @PathVariable Long productId,
+            @RequestParam(required = false) Long outletId) {
+        ProductResponse product = findProductByIdUseCase.execute(productId, outletId);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(HttpStatus.OK.value(), "Producto encontrado exitosamente", product));
     }
 

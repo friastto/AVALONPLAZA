@@ -15,4 +15,8 @@ public interface FindProductByIdUseCase {
      * @throws org.frias.avalon.core.exeptions.ResourceNotFoundException if the product is not found.
      */
     ProductResponse execute(Long productId);
+
+    default ProductResponse execute(Long productId, Long outletId) {
+        return execute(productId);
+    }
 }

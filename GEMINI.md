@@ -57,6 +57,33 @@ El español es el único idioma permitido para todas las explicaciones y descrip
    - Los codigos (`shortName` / `code`, ej. `GERGEN`, `ADMOULT`, `CJTURNO`, `ACT`, `INACT`) son unicos, estables e inmutables en la jerarquia maestra (`masterData.txt`).
    - Toda condicion de negocio o asignacion debe evaluarse contra el codigo semantico (`tree.getByCode("...")`, `tree.is(node, "...")`), quedando terminantemente prohibido el uso de numeros o IDs literales (`87L`, `1L`, `4L`, etc.) en el codigo fuente.
 
+## Politica de Stock Apartado Dinamico y Validacion Anti-Sobreventa
+1. **Calculo Agregado de Stock Apartado:**
+   - El stock apartado se calcula dinamicamente sumando las cantidades de los pedidos en curso que posean estados transaccionales activos: `PEN` (Pendiente / id 14), `PRO` (En Preparacion / id 15) y `COM` (Completado/Por Despachar / id 16).
+   - Los estados terminales o cancelados (`CAN`, `ENT`) liberan el apartado o consolidan la salida fisica.
+2. **Validacion Atomica en Creacion de Pedidos (`CreateOrderUseCaseImpl`):**
+   - El stock vendible disponible se define estrictamente como: `Stock Disponible = max(0, Stock Fisico - Stock Apartado)`.
+   - Si la cantidad requerida por un nuevo pedido supera el stock disponible en ese instante, la transaccion se aborta arrojando `InsufficientStockException` (HTTP 400/409), previniendo compras sobrevendidas bajo concurrencia.
+
+## Resolucion Multi-Tenant en Consultas de Producto (ProductDetail)
+1. **Aislamiento Transaccional (`PROPAGATION_REQUIRES_NEW`):**
+   - Los productos fisicos de catalogo residen en esquemas independientes por tienda (`store_{outletId}.product_outlet`).
+   - Para permitir que usuarios externos (ej. consumidores) o peticiones sin contexto de empleado consulten el detalle de un producto, la busqueda en `FindProductByIdUseCaseImpl` se ejecuta en una transaccion con aislamiento `PROPAGATION_REQUIRES_NEW` tras fijar `TenantContext.setTenantOutletId(...)`.
+2. **Conmutacion y Fallback de Esquemas:**
+   - Si la peticion incluye el parametro `outletId`, la transaccion conmuta directamente al esquema de la tienda correspondiente.
+   - Si no se especifica `outletId` (o no se encuentra en el primer intento), el caso de uso ejecuta un recorrido de fallback controlado sobre las tiendas registradas en el sistema hasta localizar el producto en su esquema correspondiente sin provocar errores de recurso estatico (`NoResourceFoundException`).
+
+## Politica de Unidades Base (Gramos) y Conversion de Doble Via (Entrada/Salida)
+1. **Almacenamiento Estricto en Unidad Minima Entera (Integer en BD):**
+   - En la base de datos PostgreSQL, todo stock de inventario (`product_outlet.stock`) y cantidad transaccional de items (`order_items`, `omnichannel_order_items`, `sales`) para productos pesables (`KG`, `LB`, `L`) se almacena **estrictamente en su unidad minima base como entero (`Integer`)**, es decir, en **gramos (`gr`)** o mililitros (`ml`). Para productos no pesables (`UND`), se almacena en unidades enteras.
+2. **Entrada Flexible en DTOs y Conversion Pre-Persistencia (Hacia la BD):**
+   - Las solicitudes de compra (pedidos, ventas, menudeo) deben permitir el ingreso de cantidades enteras, decimales o valores fraccionarios (ej. `0.2` LB por compras de menudeo de $300, o cadenas con comas/puntos `"0,2"`).
+   - En los DTOs de peticion (ej. `OrderItemRequest`), se debe usar `BigDecimal quantity` con validacion `@DecimalMin(value = "0.001", message = "La cantidad debe ser mayor a 0")` y deserializacion flexible, prohibiendo anotaciones rigidas como `@Min(1)` o tipos `Integer` en el DTO que impidan el menudeo.
+   - **Antes de persistir en base de datos o validar stock**, el caso de uso (`CreateOrderUseCaseImpl`, `CreateSaleUseCaseImpl`, `CreateProductOutletUseCaseImpl`) debe convertir obligatoriamente el valor ingresado a la unidad base entera usando `UnitConversionService.convertToSmallestUnit(...)` para obtener `baseQuantity` en gramos (tipo `Integer`).
+3. **Conversion Pre-Respuesta a Valor Entendible (Salida de la API hacia el Usuario):**
+   - Queda terminantemente prohibido exponer los gramos internos crudos (ej. responder `90` o `1500`) al usuario final o a la aplicacion movil en las respuestas de la API.
+   - Todo DTO de salida (`ProductResponse.displayStock`, `SaleItemResponse.displayQuantity`, `OrderItemResponse.displayQuantity`) debe convertir el entero base almacenado de vuelta a la expresion legible y entendible en la unidad de medida del producto mediante `UnitConversionService.convertFromSmallestUnit(...)` (ej. `"0.200 LB"`, `"1.500 KG"`, `"2 UND"`), garantizando claridad para el cliente y para la mesa de empaque.
+
 ## Diagrama de Arquitectura de la API (ApiAvalon)
 
 ```mermaid

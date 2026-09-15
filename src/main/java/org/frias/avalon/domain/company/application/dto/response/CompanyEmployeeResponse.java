@@ -16,6 +16,7 @@ public record CompanyEmployeeResponse(
         Long outletId,
         String outletName,
         Long statusId,
-        String statusName
+        String statusName,
+        String typeIdentificationCode
 ) {
 }

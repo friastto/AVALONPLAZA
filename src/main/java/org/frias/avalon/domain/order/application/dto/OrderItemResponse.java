@@ -16,6 +16,7 @@ public class OrderItemResponse {
     private Long productOutletId;
     private String productName;
     private Integer quantity;
+    private String displayQuantity;
     private BigDecimal unitPrice;
     private BigDecimal subtotal;
     private Long dispatchStatusId;

@@ -39,6 +39,7 @@ class CreateOrderUseCaseImplTest {
     private UserAvalonRepositoryPort userAvalonRepositoryPort;
     private MasterTreeProvider masterTreeProvider;
     private UnitConversionService unitConversionService;
+    private org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository jpaOrderRepository;
 
     private CreateOrderUseCaseImpl createOrderUseCase;
 
@@ -47,6 +48,7 @@ class CreateOrderUseCaseImplTest {
         orderRepositoryPort = mock(OrderRepositoryPort.class);
         masterDataRepositoryPort = mock(MasterDataRepositoryPort.class);
         jpaProductOutletRepository = mock(JpaProductOutletRepository.class);
+        jpaOrderRepository = mock(org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository.class);
         orderMapper = mock(OrderMapper.class);
         orderWebSocketController = mock(OrderWebSocketController.class);
         currentUserProvider = mock(CurrentUserProviderPort.class);
@@ -58,6 +60,7 @@ class CreateOrderUseCaseImplTest {
                 orderRepositoryPort,
                 masterDataRepositoryPort,
                 jpaProductOutletRepository,
+                jpaOrderRepository,
                 orderMapper,
                 orderWebSocketController,
                 currentUserProvider,
@@ -88,7 +91,9 @@ class CreateOrderUseCaseImplTest {
         ProductOutlet productOutlet = new ProductOutlet();
         productOutlet.setId(10L);
         productOutlet.setLocalName("Galletas Integral");
+        productOutlet.setStock(50);
         when(jpaProductOutletRepository.findById(10L)).thenReturn(Optional.of(productOutlet));
+        when(jpaOrderRepository.sumQuantityByProductOutletIdAndStatusIn(eq(10L), anyList())).thenReturn(0);
 
         OrderDomain savedDomain = OrderDomain.builder()
                 .id(1L)
@@ -118,5 +123,29 @@ class CreateOrderUseCaseImplTest {
         assertEquals(1L, result.getOutletId());
         verify(orderRepositoryPort, times(1)).save(any(OrderDomain.class));
         verify(orderWebSocketController, times(1)).broadcastOrderCreated(eq(1L), eq(mockResponse));
+    }
+
+    @Test
+    @DisplayName("Should throw InsufficientStockException when requested quantity exceeds available stock")
+    void shouldThrowInsufficientStockExceptionWhenStockInsufficient() {
+        OrderItemRequest itemReq = new OrderItemRequest();
+        itemReq.setProductOutletId(10L);
+        itemReq.setQuantity(5);
+        itemReq.setUnitPrice(new BigDecimal("25.00"));
+
+        CreateOrderRequest request = new CreateOrderRequest();
+        request.setCustomerId(5L);
+        request.setOutletId(1L);
+        request.setPaymentMethodId(2L);
+        request.setItems(List.of(itemReq));
+
+        ProductOutlet productOutlet = new ProductOutlet();
+        productOutlet.setId(10L);
+        productOutlet.setLocalName("Limon Criollo");
+        productOutlet.setStock(4);
+        when(jpaProductOutletRepository.findById(10L)).thenReturn(Optional.of(productOutlet));
+        when(jpaOrderRepository.sumQuantityByProductOutletIdAndStatusIn(eq(10L), anyList())).thenReturn(0);
+
+        assertThrows(org.frias.avalon.core.exeptions.InsufficientStockException.class, () -> createOrderUseCase.execute(request));
     }
 }

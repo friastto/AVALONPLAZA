@@ -29,14 +29,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProviderPort jwtTokenProvider;
     private final MasterTreeProvider treeProvider;
-
-
     private final CustomUserDetailsService userDetailsService;
+    private final org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort;
 
-    public JwtAuthenticationFilter(JwtTokenProviderPort jwtTokenProvider, MasterTreeProvider treeProvider, CustomUserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtTokenProviderPort jwtTokenProvider, MasterTreeProvider treeProvider, CustomUserDetailsService userDetailsService, org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.treeProvider = treeProvider;
         this.userDetailsService = userDetailsService;
+        this.outletRepositoryPort = outletRepositoryPort;
     }
 
     @Override
@@ -92,25 +92,57 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String companyHeader = request.getHeader("X-Company-Id");
                     String outletHeader = request.getHeader("X-Outlet-Id");
 
-                    boolean hasAdminRole = SecurityUtils.hasRole("ROLE_ADMINTI") || SecurityUtils.hasRole("ROLE_ADMINSYS");
-
-                    if (!hasAdminRole && (companyHeader != null || outletHeader != null)) {
-                        throw new SecurityException("No autorizado para cambiar tenant");
-                    }
+                    boolean hasAdminRole = SecurityUtils.hasRole("ROLE_ADMINTI") || SecurityUtils.hasRole("ROLE_ADMINSYS") || SecurityUtils.hasRole("ROLE_ADMIN");
+                    boolean hasGergenRole = SecurityUtils.hasRole("ROLE_GERGEN");
 
                     if (companyHeader != null && !companyHeader.isBlank()) {
                         try {
-                            companyId = Long.parseLong(companyHeader.trim());
+                            Long requestedCompanyId = Long.parseLong(companyHeader.trim());
+                            if (hasAdminRole || (companyId != null && companyId.equals(requestedCompanyId))) {
+                                companyId = requestedCompanyId;
+                            } else {
+                                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.getWriter().write("{\"status\": 403, \"message\": \"No autorizado para cambiar de empresa\", \"data\": null}");
+                                return;
+                            }
                         } catch (NumberFormatException e) {
-                            throw new SecurityException("X-Company-Id invalido");
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"status\": 400, \"message\": \"X-Company-Id invalido\", \"data\": null}");
+                            return;
                         }
                     }
 
                     if (outletHeader != null && !outletHeader.isBlank()) {
                         try {
-                            outletId = Long.parseLong(outletHeader.trim());
+                            Long requestedOutletId = Long.parseLong(outletHeader.trim());
+                            if (hasAdminRole || (outletIdFromJwt != null && outletIdFromJwt.equals(requestedOutletId))) {
+                                outletId = requestedOutletId;
+                            } else if (hasGergenRole) {
+                                final Long currentCompanyId = companyId;
+                                boolean belongsToCompany = outletRepositoryPort.findById(requestedOutletId)
+                                        .map(o -> o.getCompanyId() != null && o.getCompanyId().equals(currentCompanyId))
+                                        .orElse(false);
+                                if (belongsToCompany) {
+                                    outletId = requestedOutletId;
+                                } else {
+                                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                                    response.setContentType("application/json;charset=UTF-8");
+                                    response.getWriter().write("{\"status\": 403, \"message\": \"No autorizado: La tienda no pertenece a su empresa\", \"data\": null}");
+                                    return;
+                                }
+                            } else {
+                                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.getWriter().write("{\"status\": 403, \"message\": \"No autorizado para cambiar de tienda\", \"data\": null}");
+                                return;
+                            }
                         } catch (NumberFormatException e) {
-                            throw new SecurityException("X-Outlet-Id invalido");
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"status\": 400, \"message\": \"X-Outlet-Id invalido\", \"data\": null}");
+                            return;
                         }
                     }
 
@@ -122,11 +154,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if (outletId != null) {
                         TenantContext.setTenantOutletId(outletId);
                     }
-                    // --- Lógica para clasificar y establecer roles específicos en TenantContext ---
+                    // --- Logica para clasificar y establecer roles especificos en TenantContext ---
                     MasterTree masterTree = treeProvider.getTree();
                     String employeeRoleCode = null;
                     String consumerRoleCode = null;
-                    Long employeeOutletIdForContext = null; // El outletId que realmente se pondrá en TenantContext
+                    Long employeeOutletIdForContext = null; // El outletId que realmente se pondra en TenantContext
 
                     for (String roleCode : rolesFromJwt) {
                         MasterRoot roleMasterRoot = masterTree.getByCode(roleCode);
@@ -137,10 +169,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 if (employeeRoleCode == null) { // Tomamos el primer rol de empleado de outlet que encontremos
                                     employeeRoleCode = roleCode;
                                     // Si este es un rol de empleado de OUTLET y el JWT tiene un outletId, lo asociamos
-                                    if (outletIdFromJwt == null) {
+                                    if (!"GERGEN".equals(roleCode) && outletIdFromJwt == null && outletId == null) {
                                         throw new SecurityException("Employee role detected but no outlet assigned in token");
                                     }
-                                    employeeOutletIdForContext = outletIdFromJwt;
+                                    employeeOutletIdForContext = outletId != null ? outletId : outletIdFromJwt;
                                 }
                             }
                             // Luego, intentamos clasificar como EMPLEADO GLOBAL (descendientes de SISTEM)

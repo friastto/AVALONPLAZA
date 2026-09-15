@@ -63,6 +63,9 @@ public class ClaimOrderFifoUseCaseImpl implements ClaimOrderFifoUseCase {
 
         OrderResponse response = orderMapper.toResponse(updated);
         orderWebSocketController.broadcastOrderStatusChanged(updated.getId(), response);
+        if (updated.getOutletId() != null) {
+            orderWebSocketController.broadcastOrderCreated(updated.getOutletId(), response);
+        }
 
         return response;
     }

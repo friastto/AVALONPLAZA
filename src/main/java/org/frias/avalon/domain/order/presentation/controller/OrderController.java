@@ -24,6 +24,7 @@ public class OrderController {
 
     private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelCreateOrderUseCaseImpl") CreateOrderUseCase createOrderUseCase;
     private final ClaimOrderFifoUseCase claimOrderFifoUseCase;
+    private final ClaimSpecificOrderUseCase claimSpecificOrderUseCase;
     private final UpdateItemDispatchStatusUseCase updateItemDispatchStatusUseCase;
     private final CompleteOrderAndEmitSaleUseCase completeOrderAndEmitSaleUseCase;
     private final OrderRepositoryPort orderRepositoryPort;
@@ -40,6 +41,14 @@ public class OrderController {
             @PathVariable Long outletId,
             @RequestParam Long userId) {
         OrderResponse response = claimOrderFifoUseCase.execute(outletId, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{orderId}/claim")
+    public ResponseEntity<OrderResponse> claimOrder(
+            @PathVariable Long orderId,
+            @RequestParam Long userId) {
+        OrderResponse response = claimSpecificOrderUseCase.execute(orderId, userId);
         return ResponseEntity.ok(response);
     }
 
