@@ -8,6 +8,9 @@ import org.frias.avalon.domain.order.domain.OrderStatusHistoryDomain;
 import org.frias.avalon.domain.order.infrastructure.persistence.entity.OrderEntity;
 import org.frias.avalon.domain.order.infrastructure.persistence.entity.OrderItemEntity;
 import org.frias.avalon.domain.order.infrastructure.persistence.entity.OrderStatusHistoryEntity;
+import org.frias.avalon.domain.product.domain.service.UnitConversionService;
+import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,6 +18,20 @@ import java.util.stream.Collectors;
 
 @Component("omnichannelOrderMapper")
 public class OrderMapper {
+
+    private final UnitConversionService unitConversionService;
+    private final JpaProductOutletRepository jpaProductOutletRepository;
+
+    public OrderMapper() {
+        this.unitConversionService = null;
+        this.jpaProductOutletRepository = null;
+    }
+
+    @Autowired
+    public OrderMapper(UnitConversionService unitConversionService, JpaProductOutletRepository jpaProductOutletRepository) {
+        this.unitConversionService = unitConversionService;
+        this.jpaProductOutletRepository = jpaProductOutletRepository;
+    }
 
     public OrderDomain toDomain(OrderEntity entity, List<OrderItemEntity> itemEntities) {
         if (entity == null) return null;
@@ -61,12 +78,26 @@ public class OrderMapper {
 
     public OrderItemDomain toItemDomain(OrderItemEntity entity) {
         if (entity == null) return null;
+        String displayQuantity = null;
+        if (entity.getQuantity() != null && unitConversionService != null && jpaProductOutletRepository != null) {
+            try {
+                var prodOpt = jpaProductOutletRepository.findById(entity.getProductOutletId());
+                if (prodOpt.isPresent() && prodOpt.get().getUnitMeasureId() != null) {
+                    displayQuantity = unitConversionService.convertFromSmallestUnit(entity.getQuantity(), prodOpt.get().getUnitMeasureId());
+                }
+            } catch (Exception ignored) {}
+        }
+        if (displayQuantity == null && entity.getQuantity() != null) {
+            displayQuantity = String.valueOf(entity.getQuantity());
+        }
+
         return OrderItemDomain.builder()
                 .id(entity.getId())
                 .orderId(entity.getOrderId())
                 .productOutletId(entity.getProductOutletId())
                 .productName(entity.getProductName())
                 .quantity(entity.getQuantity())
+                .displayQuantity(displayQuantity)
                 .unitPrice(entity.getUnitPrice())
                 .subtotal(entity.getSubtotal())
                 .dispatchStatusId(entity.getDispatchStatusId())
@@ -111,6 +142,7 @@ public class OrderMapper {
                 .productOutletId(domain.getProductOutletId())
                 .productName(domain.getProductName())
                 .quantity(domain.getQuantity())
+                .displayQuantity(domain.getDisplayQuantity())
                 .unitPrice(domain.getUnitPrice())
                 .subtotal(domain.getSubtotal())
                 .dispatchStatusId(domain.getDispatchStatusId())

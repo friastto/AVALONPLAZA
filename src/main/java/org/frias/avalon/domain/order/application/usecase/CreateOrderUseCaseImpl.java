@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,15 +92,15 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
             ProductOutlet productOutlet = jpaProductOutletRepository.findById(itemReq.getProductOutletId())
                     .orElseThrow(() -> new ResourceNotFoundException("Producto con ID " + itemReq.getProductOutletId() + " no encontrado"));
             String productName = productOutlet.getLocalName() != null ? productOutlet.getLocalName() : "Producto " + itemReq.getProductOutletId();
-            BigDecimal itemSubtotal = itemReq.getUnitPrice().multiply(BigDecimal.valueOf(itemReq.getQuantity()));
+            BigDecimal itemSubtotal = itemReq.getUnitPrice().multiply(itemReq.getQuantity()).setScale(2, RoundingMode.HALF_UP);
             subtotal = subtotal.add(itemSubtotal);
 
-            Integer baseQuantity = itemReq.getQuantity();
+            Integer baseQuantity = itemReq.getQuantity().intValue();
             if (productOutlet.getUnitMeasureId() != null) {
                 try {
                     MasterRoot unitNode = masterTreeProvider.getTree().getById(productOutlet.getUnitMeasureId());
                     if (unitNode != null && unitNode.getShortName() != null) {
-                        baseQuantity = unitConversionService.convertToSmallestUnit(BigDecimal.valueOf(itemReq.getQuantity()), unitNode.getShortName());
+                        baseQuantity = unitConversionService.convertToSmallestUnit(itemReq.getQuantity(), unitNode.getShortName());
                     }
                 } catch (Exception e) {
                     // Fallback
@@ -117,10 +118,15 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
                 throw new InsufficientStockException("Stock insuficiente para '" + productName + "'. Disponible para compra: " + readableAvailable);
             }
 
+            String displayQuantity = (productOutlet.getUnitMeasureId() != null)
+                    ? unitConversionService.convertFromSmallestUnit(baseQuantity, productOutlet.getUnitMeasureId())
+                    : String.valueOf(baseQuantity);
+
             itemsDomain.add(OrderItemDomain.builder()
                     .productOutletId(itemReq.getProductOutletId())
                     .productName(productName)
                     .quantity(baseQuantity)
+                    .displayQuantity(displayQuantity)
                     .unitPrice(itemReq.getUnitPrice())
                     .subtotal(itemSubtotal)
                     .dispatchStatusId(dispPenStatusId)
