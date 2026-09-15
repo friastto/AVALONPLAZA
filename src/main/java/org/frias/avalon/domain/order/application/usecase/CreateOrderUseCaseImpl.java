@@ -23,9 +23,15 @@ import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
 import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
 import org.frias.avalon.core.exeptions.InsufficientStockException;
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
+import org.frias.avalon.core.tenant.TenantContext;
+import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
+import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,23 +42,78 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service("omnichannelCreateOrderUseCaseImpl")
-@RequiredArgsConstructor
 public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
 
     private final OrderRepositoryPort orderRepositoryPort;
     private final MasterDataRepositoryPort masterDataRepositoryPort;
     private final JpaProductOutletRepository jpaProductOutletRepository;
-    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelJpaOrderRepository") JpaOrderRepository jpaOrderRepository;
-    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
+    private final JpaOrderRepository jpaOrderRepository;
+    private final OrderMapper orderMapper;
     private final OrderWebSocketController orderWebSocketController;
     private final CurrentUserProviderPort currentUserProvider;
     private final UserAvalonRepositoryPort userAvalonRepositoryPort;
     private final MasterTreeProvider masterTreeProvider;
     private final UnitConversionService unitConversionService;
+    private final OutletRepositoryPort outletRepositoryPort;
+    private final TransactionTemplate transactionTemplate;
+
+    public CreateOrderUseCaseImpl(
+            OrderRepositoryPort orderRepositoryPort,
+            MasterDataRepositoryPort masterDataRepositoryPort,
+            JpaProductOutletRepository jpaProductOutletRepository,
+            @Qualifier("omnichannelJpaOrderRepository") JpaOrderRepository jpaOrderRepository,
+            @Qualifier("omnichannelOrderMapper") OrderMapper orderMapper,
+            OrderWebSocketController orderWebSocketController,
+            CurrentUserProviderPort currentUserProvider,
+            UserAvalonRepositoryPort userAvalonRepositoryPort,
+            MasterTreeProvider masterTreeProvider,
+            UnitConversionService unitConversionService,
+            OutletRepositoryPort outletRepositoryPort,
+            PlatformTransactionManager transactionManager) {
+        this.orderRepositoryPort = orderRepositoryPort;
+        this.masterDataRepositoryPort = masterDataRepositoryPort;
+        this.jpaProductOutletRepository = jpaProductOutletRepository;
+        this.jpaOrderRepository = jpaOrderRepository;
+        this.orderMapper = orderMapper;
+        this.orderWebSocketController = orderWebSocketController;
+        this.currentUserProvider = currentUserProvider;
+        this.userAvalonRepositoryPort = userAvalonRepositoryPort;
+        this.masterTreeProvider = masterTreeProvider;
+        this.unitConversionService = unitConversionService;
+        this.outletRepositoryPort = outletRepositoryPort;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    }
 
     @Override
-    @Transactional
     public OrderResponse execute(CreateOrderRequest request) {
+        Long previousOutletId = TenantContext.getTenantOutletId();
+        Long previousTenantId = TenantContext.getTenantId();
+
+        try {
+            if (request.getOutletId() != null) {
+                OutletDomain outlet = outletRepositoryPort.findById(request.getOutletId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Tienda con ID " + request.getOutletId() + " no encontrada"));
+                if (outlet.getCompanyId() != null) {
+                    TenantContext.setTenantId(outlet.getCompanyId());
+                }
+                TenantContext.setTenantOutletId(outlet.getId());
+            }
+
+            OrderResponse response = transactionTemplate.execute(status -> doCreateOrder(request));
+
+            if (response != null) {
+                orderWebSocketController.broadcastOrderCreated(request.getOutletId(), response);
+            }
+
+            return response;
+        } finally {
+            TenantContext.setTenantId(previousTenantId);
+            TenantContext.setTenantOutletId(previousOutletId);
+        }
+    }
+
+    private OrderResponse doCreateOrder(CreateOrderRequest request) {
         Long ordPenStatusId = masterDataRepositoryPort.getIdByCode("ORD_PEN");
         if (ordPenStatusId == null) {
             ordPenStatusId = masterDataRepositoryPort.getIdByCode("PEN");
@@ -168,10 +229,6 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
                 .build();
 
         OrderDomain saved = orderRepositoryPort.save(domain);
-        OrderResponse response = orderMapper.toResponse(saved);
-
-        orderWebSocketController.broadcastOrderCreated(request.getOutletId(), response);
-
-        return response;
+        return orderMapper.toResponse(saved);
     }
 }

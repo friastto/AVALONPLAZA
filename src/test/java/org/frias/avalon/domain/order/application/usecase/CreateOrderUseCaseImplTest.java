@@ -13,6 +13,8 @@ import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketContr
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
 import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
+import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
+import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +41,8 @@ class CreateOrderUseCaseImplTest {
     private UserAvalonRepositoryPort userAvalonRepositoryPort;
     private MasterTreeProvider masterTreeProvider;
     private UnitConversionService unitConversionService;
+    private OutletRepositoryPort outletRepositoryPort;
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
     private org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository jpaOrderRepository;
 
     private CreateOrderUseCaseImpl createOrderUseCase;
@@ -55,6 +59,16 @@ class CreateOrderUseCaseImplTest {
         userAvalonRepositoryPort = mock(UserAvalonRepositoryPort.class);
         masterTreeProvider = mock(MasterTreeProvider.class);
         unitConversionService = mock(UnitConversionService.class);
+        outletRepositoryPort = mock(OutletRepositoryPort.class);
+        transactionManager = mock(org.springframework.transaction.PlatformTransactionManager.class);
+
+        org.springframework.transaction.TransactionStatus transactionStatus = mock(org.springframework.transaction.TransactionStatus.class);
+        when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
+
+        OutletDomain mockOutlet = mock(OutletDomain.class);
+        when(mockOutlet.getId()).thenReturn(1L);
+        when(mockOutlet.getCompanyId()).thenReturn(100L);
+        when(outletRepositoryPort.findById(any())).thenReturn(Optional.of(mockOutlet));
 
         createOrderUseCase = new CreateOrderUseCaseImpl(
                 orderRepositoryPort,
@@ -66,7 +80,9 @@ class CreateOrderUseCaseImplTest {
                 currentUserProvider,
                 userAvalonRepositoryPort,
                 masterTreeProvider,
-                unitConversionService
+                unitConversionService,
+                outletRepositoryPort,
+                transactionManager
         );
     }
 
@@ -147,5 +163,37 @@ class CreateOrderUseCaseImplTest {
         when(jpaOrderRepository.sumQuantityByProductOutletIdAndStatusIn(eq(10L), anyList())).thenReturn(0);
 
         assertThrows(org.frias.avalon.core.exeptions.InsufficientStockException.class, () -> createOrderUseCase.execute(request));
+    }
+
+    @Test
+    @DisplayName("Should switch tenant to order outlet and restore previous tenant after execution")
+    void shouldSwitchAndRestoreTenantContext() {
+        org.frias.avalon.core.tenant.TenantContext.setTenantId(99L);
+        org.frias.avalon.core.tenant.TenantContext.setTenantOutletId(77L);
+
+        OrderItemRequest itemReq = new OrderItemRequest();
+        itemReq.setProductOutletId(10L);
+        itemReq.setQuantity(1);
+        itemReq.setUnitPrice(new BigDecimal("10.00"));
+
+        CreateOrderRequest request = new CreateOrderRequest();
+        request.setOutletId(1L);
+        request.setItems(List.of(itemReq));
+
+        ProductOutlet productOutlet = new ProductOutlet();
+        productOutlet.setId(10L);
+        productOutlet.setStock(10);
+        when(jpaProductOutletRepository.findById(10L)).thenReturn(Optional.of(productOutlet));
+        when(jpaOrderRepository.sumQuantityByProductOutletIdAndStatusIn(eq(10L), anyList())).thenReturn(0);
+        when(orderRepositoryPort.save(any(OrderDomain.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(orderMapper.toResponse(any(OrderDomain.class))).thenReturn(OrderResponse.builder().id(1L).outletId(1L).build());
+
+        OrderResponse result = createOrderUseCase.execute(request);
+
+        assertNotNull(result);
+        assertEquals(99L, org.frias.avalon.core.tenant.TenantContext.getTenantId());
+        assertEquals(77L, org.frias.avalon.core.tenant.TenantContext.getTenantOutletId());
+
+        org.frias.avalon.core.tenant.TenantContext.clear();
     }
 }
