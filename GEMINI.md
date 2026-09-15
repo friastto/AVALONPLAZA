@@ -73,6 +73,15 @@ El español es el único idioma permitido para todas las explicaciones y descrip
    - Si la peticion incluye el parametro `outletId`, la transaccion conmuta directamente al esquema de la tienda correspondiente.
    - Si no se especifica `outletId` (o no se encuentra en el primer intento), el caso de uso ejecuta un recorrido de fallback controlado sobre las tiendas registradas en el sistema hasta localizar el producto en su esquema correspondiente sin provocar errores de recurso estatico (`NoResourceFoundException`).
 
+## Resolucion Multi-Tenant Transaccional en Creacion de Pedidos (CreateOrder)
+1. **Prohibicion de `@Transactional` a Nivel de Metodo con Conmutacion Dinamica:**
+   - En peticiones omnicanal o de consumidores donde el token JWT no fija la tienda, la anotacion declarativa `@Transactional` en la cabecera del metodo solicita la conexion JDBC antes de ejecutar la primera linea del metodo, fijando permanentemente el `search_path` en `public`.
+   - Queda prohibido el uso de `@Transactional` en la cabecera de metodos de creacion de pedidos que requieran conmutar esquemas dinamicamente a partir del payload (`request.getOutletId()`).
+2. **Uso Obligatorio de `TransactionTemplate` con `PROPAGATION_REQUIRES_NEW`:**
+   - El caso de uso (`CreateOrderUseCaseImpl`) debe capturar el contexto previo (`TenantContext.getTenantId()`, `TenantContext.getTenantOutletId()`), conmutar al esquema de la tienda correspondiente (`store_{outletId}` y `company_{companyId}`), y abrir la transaccion explicitamente mediante `transactionTemplate.execute(...)`.
+   - Garantia ACID: Toda excepcion lanzada dentro del lambda provoca el rollback automatico integral de la operacion.
+   - Restauracion en `finally`: El contexto multi-tenant previo del usuario debe restaurarse estrictamente en un bloque `finally` para no alterar peticiones concurrentes o sesiones multi-rol.
+
 ## Politica de Unidades Base (Gramos) y Conversion de Doble Via (Entrada/Salida)
 1. **Almacenamiento Estricto en Unidad Minima Entera (Integer en BD):**
    - En la base de datos PostgreSQL, todo stock de inventario (`product_outlet.stock`) y cantidad transaccional de items (`order_items`, `omnichannel_order_items`, `sales`) para productos pesables (`KG`, `LB`, `L`) se almacena **estrictamente en su unidad minima base como entero (`Integer`)**, es decir, en **gramos (`gr`)** o mililitros (`ml`). Para productos no pesables (`UND`), se almacena en unidades enteras.
