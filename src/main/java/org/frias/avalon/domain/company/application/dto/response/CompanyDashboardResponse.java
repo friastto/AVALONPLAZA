@@ -19,6 +19,10 @@ import java.util.Map;
  * @param averageTicket           Average revenue per sale transaction.
  * @param salesByPaymentMethod    Breakdown of sales grouped by payment method code (e.g. EFE, FIA).
  * @param outletSales             Performance and sales breakdown per linked outlet.
+ * @param consolidatedCash        Total audited and secured cash from CLOSED cash sessions.
+ * @param inFlightCash            Estimated cash currently in transit across OPEN cash sessions.
+ * @param closedSessionsCount     Number of closed and audited cash sessions.
+ * @param openSessionsCount       Number of active / open cash sessions.
  */
 public record CompanyDashboardResponse(
         Long companyId,
@@ -32,6 +36,10 @@ public record CompanyDashboardResponse(
         Long transactionCount,
         BigDecimal averageTicket,
         Map<String, BigDecimal> salesByPaymentMethod,
-        List<OutletSalesPerformanceDto> outletSales
+        List<OutletSalesPerformanceDto> outletSales,
+        BigDecimal consolidatedCash,
+        BigDecimal inFlightCash,
+        int closedSessionsCount,
+        int openSessionsCount
 ) {
 }

@@ -13,6 +13,9 @@ import java.util.Optional;
 public interface JpaOrderRepository extends JpaRepository<OrderEntity, Long> {
     Optional<OrderEntity> findByOrderCode(String orderCode);
 
+    @Query("SELECT o FROM OmnichannelOrderEntity o WHERE UPPER(o.orderCode) = UPPER(:code) OR UPPER(o.orderCode) LIKE CONCAT('%', UPPER(:code)) ORDER BY o.id DESC")
+    List<OrderEntity> findByOrderCodeOrSuffix(@Param("code") String code);
+
     @Query("SELECT o FROM OmnichannelOrderEntity o WHERE o.outletId = :outletId AND o.orderStatusId = :statusId AND o.claimedByUserId IS NULL ORDER BY o.createdAt ASC LIMIT 1")
     Optional<OrderEntity> findNextPendingOrderFifo(@Param("outletId") Long outletId, @Param("statusId") Long statusId);
 

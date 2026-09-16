@@ -8,6 +8,9 @@ import org.frias.avalon.domain.order.domain.OrderStatusHistoryDomain;
 import org.frias.avalon.domain.order.infrastructure.persistence.entity.OrderEntity;
 import org.frias.avalon.domain.order.infrastructure.persistence.entity.OrderItemEntity;
 import org.frias.avalon.domain.order.infrastructure.persistence.entity.OrderStatusHistoryEntity;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,16 +24,21 @@ public class OrderMapper {
 
     private final UnitConversionService unitConversionService;
     private final JpaProductOutletRepository jpaProductOutletRepository;
+    private final MasterTreeProvider masterTreeProvider;
 
     public OrderMapper() {
         this.unitConversionService = null;
         this.jpaProductOutletRepository = null;
+        this.masterTreeProvider = null;
     }
 
     @Autowired
-    public OrderMapper(UnitConversionService unitConversionService, JpaProductOutletRepository jpaProductOutletRepository) {
+    public OrderMapper(UnitConversionService unitConversionService,
+                       JpaProductOutletRepository jpaProductOutletRepository,
+                       @Autowired(required = false) MasterTreeProvider masterTreeProvider) {
         this.unitConversionService = unitConversionService;
         this.jpaProductOutletRepository = jpaProductOutletRepository;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     public OrderDomain toDomain(OrderEntity entity, List<OrderItemEntity> itemEntities) {
@@ -155,13 +163,35 @@ public class OrderMapper {
                 ? domain.getItems().stream().map(this::toItemResponse).collect(Collectors.toList())
                 : List.of();
 
+        String orderStatusCode = null;
+        String paymentStatusCode = null;
+        if (masterTreeProvider != null) {
+            MasterTree tree = masterTreeProvider.getTree();
+            if (tree != null) {
+                if (domain.getOrderStatusId() != null) {
+                    MasterRoot node = tree.getById(domain.getOrderStatusId());
+                    if (node != null && node.getShortName() != null) {
+                        orderStatusCode = node.getShortName().trim();
+                    }
+                }
+                if (domain.getPaymentStatusId() != null) {
+                    MasterRoot node = tree.getById(domain.getPaymentStatusId());
+                    if (node != null && node.getShortName() != null) {
+                        paymentStatusCode = node.getShortName().trim();
+                    }
+                }
+            }
+        }
+
         return OrderResponse.builder()
                 .id(domain.getId())
                 .orderCode(domain.getOrderCode())
                 .customerId(domain.getCustomerId())
                 .outletId(domain.getOutletId())
                 .orderStatusId(domain.getOrderStatusId())
+                .orderStatusCode(orderStatusCode)
                 .paymentStatusId(domain.getPaymentStatusId())
+                .paymentStatusCode(paymentStatusCode)
                 .paymentMethodId(domain.getPaymentMethodId())
                 .subtotal(domain.getSubtotal())
                 .tax(domain.getTax())

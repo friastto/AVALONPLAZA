@@ -54,7 +54,20 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
 
     @Override
     public Optional<OrderDomain> findByOrderCode(String orderCode) {
-        return jpaOrderRepository.findByOrderCode(orderCode).map(entity -> {
+        if (orderCode == null || orderCode.isBlank()) {
+            return Optional.empty();
+        }
+        Optional<OrderEntity> entityOpt = jpaOrderRepository.findByOrderCode(orderCode.trim());
+        if (entityOpt.isEmpty()) {
+            String cleanCode = orderCode.replace("ORD-", "").trim();
+            if (!cleanCode.isEmpty()) {
+                List<OrderEntity> matches = jpaOrderRepository.findByOrderCodeOrSuffix(cleanCode);
+                if (!matches.isEmpty()) {
+                    entityOpt = Optional.of(matches.get(0));
+                }
+            }
+        }
+        return entityOpt.map(entity -> {
             List<OrderItemEntity> items = jpaOrderItemRepository.findAllByOrderId(entity.getId());
             return orderMapper.toDomain(entity, items);
         });
