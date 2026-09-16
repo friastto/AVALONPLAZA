@@ -13,6 +13,8 @@ import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
 import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
+import org.frias.avalon.domain.sale.application.port.SaleRepositoryPort;
+import org.frias.avalon.domain.sale.domain.SaleDomain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,7 @@ class DeliverOrderByQrUseCaseImplTest {
     private OrderRepositoryPort orderRepositoryPort;
     private MasterDataRepositoryPort masterDataRepositoryPort;
     private JpaProductOutletRepository jpaProductOutletRepository;
+    private SaleRepositoryPort saleRepositoryPort;
     private OrderMapper orderMapper;
     private OrderWebSocketController orderWebSocketController;
     private OutletRepositoryPort outletRepositoryPort;
@@ -49,6 +52,7 @@ class DeliverOrderByQrUseCaseImplTest {
         orderRepositoryPort = mock(OrderRepositoryPort.class);
         masterDataRepositoryPort = mock(MasterDataRepositoryPort.class);
         jpaProductOutletRepository = mock(JpaProductOutletRepository.class);
+        saleRepositoryPort = mock(SaleRepositoryPort.class);
         orderMapper = mock(OrderMapper.class);
         orderWebSocketController = mock(OrderWebSocketController.class);
         outletRepositoryPort = mock(OutletRepositoryPort.class);
@@ -66,6 +70,7 @@ class DeliverOrderByQrUseCaseImplTest {
                 orderRepositoryPort,
                 masterDataRepositoryPort,
                 jpaProductOutletRepository,
+                saleRepositoryPort,
                 orderMapper,
                 orderWebSocketController,
                 outletRepositoryPort,
@@ -102,10 +107,13 @@ class DeliverOrderByQrUseCaseImplTest {
         when(orderRepositoryPort.findByOrderCode(orderCode)).thenReturn(Optional.of(order));
         when(masterDataRepositoryPort.getIdByCode("ORD_ENT")).thenReturn(4L);
         when(masterDataRepositoryPort.getIdByCode("PAY_PAD")).thenReturn(2L);
+        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(1L);
+        when(masterDataRepositoryPort.getIdByCode("CASH")).thenReturn(1L);
 
         ProductOutlet productEntity = new ProductOutlet();
         productEntity.setId(50L);
         productEntity.setStock(20);
+        productEntity.setUnitMeasureId(1L);
         when(jpaProductOutletRepository.findById(50L)).thenReturn(Optional.of(productEntity));
 
         when(orderRepositoryPort.save(any(OrderDomain.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -136,6 +144,17 @@ class DeliverOrderByQrUseCaseImplTest {
         assertEquals(previousStatusId, historyCaptor.getValue().getPreviousStatusId());
         assertEquals(4L, historyCaptor.getValue().getNewStatusId());
         assertEquals(userId, historyCaptor.getValue().getChangedByUserId());
+
+        // Sale emission check
+        ArgumentCaptor<SaleDomain> saleCaptor = ArgumentCaptor.forClass(SaleDomain.class);
+        verify(saleRepositoryPort, times(1)).save(saleCaptor.capture());
+        SaleDomain emittedSale = saleCaptor.getValue();
+        assertNotNull(emittedSale);
+        assertEquals(new BigDecimal("30.00"), emittedSale.getTotalAmount());
+        assertEquals(new BigDecimal("30.00"), emittedSale.getAmountReceived());
+        assertEquals(userId, emittedSale.getEmployeeId());
+        assertEquals(1L, emittedSale.getOutletId());
+        assertEquals(1, emittedSale.getItems().size());
 
         // WebSocket checks
         verify(orderWebSocketController, times(1)).broadcastOrderStatusChanged(eq(500L), eq(mockResponse));

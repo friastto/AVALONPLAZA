@@ -28,6 +28,7 @@ public class OrderController {
     private final UpdateItemDispatchStatusUseCase updateItemDispatchStatusUseCase;
     private final CompleteOrderAndEmitSaleUseCase completeOrderAndEmitSaleUseCase;
     private final DeliverOrderByQrUseCase deliverOrderByQrUseCase;
+    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelFindOrderByCodeUseCaseImpl") FindOrderByCodeUseCase findOrderByCodeUseCase;
     private final OrderRepositoryPort orderRepositoryPort;
     private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
 
@@ -89,6 +90,12 @@ public class OrderController {
     public ResponseEntity<List<OrderResponse>> getOrdersByCustomer(@PathVariable Long customerId) {
         List<OrderDomain> orders = orderRepositoryPort.findAllByCustomerId(customerId);
         List<OrderResponse> response = orders.stream().map(orderMapper::toResponse).collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/code/{orderCode}")
+    public ResponseEntity<OrderResponse> getOrderByCode(@PathVariable String orderCode) {
+        OrderResponse response = findOrderByCodeUseCase.execute(orderCode);
         return ResponseEntity.ok(response);
     }
 

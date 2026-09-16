@@ -17,9 +17,17 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
+import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
+import org.frias.avalon.domain.sale.application.port.SaleRepositoryPort;
+import org.frias.avalon.domain.sale.domain.SaleDomain;
+import org.frias.avalon.domain.sale.domain.SaleItemDomain;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
@@ -27,6 +35,7 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
     private final OrderRepositoryPort orderRepositoryPort;
     private final MasterDataRepositoryPort masterDataRepositoryPort;
     private final JpaProductOutletRepository jpaProductOutletRepository;
+    private final SaleRepositoryPort saleRepositoryPort;
     private final OrderMapper orderMapper;
     private final OrderWebSocketController orderWebSocketController;
     private final OutletRepositoryPort outletRepositoryPort;
@@ -36,6 +45,7 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
             OrderRepositoryPort orderRepositoryPort,
             MasterDataRepositoryPort masterDataRepositoryPort,
             JpaProductOutletRepository jpaProductOutletRepository,
+            SaleRepositoryPort saleRepositoryPort,
             @Qualifier("omnichannelOrderMapper") OrderMapper orderMapper,
             OrderWebSocketController orderWebSocketController,
             OutletRepositoryPort outletRepositoryPort,
@@ -43,6 +53,7 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
         this.orderRepositoryPort = orderRepositoryPort;
         this.masterDataRepositoryPort = masterDataRepositoryPort;
         this.jpaProductOutletRepository = jpaProductOutletRepository;
+        this.saleRepositoryPort = saleRepositoryPort;
         this.orderMapper = orderMapper;
         this.orderWebSocketController = orderWebSocketController;
         this.outletRepositoryPort = outletRepositoryPort;
@@ -60,19 +71,35 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
             ordEntStatusId = masterDataRepositoryPort.getIdByCode("ENT");
         }
         if (ordEntStatusId == null) {
+            ordEntStatusId = masterDataRepositoryPort.getIdByCode("ORD_DEL");
+        }
+        if (ordEntStatusId == null) {
             ordEntStatusId = 4L;
         }
 
-        if (ordEntStatusId.equals(order.getOrderStatusId()) || Long.valueOf(103L).equals(order.getOrderStatusId())) {
-            throw new IllegalStateException("El pedido con codigo " + orderCode + " ya fue entregado previamente");
+        Long payPadStatusId = masterDataRepositoryPort.getIdByCode("PAY_PAD");
+        if (payPadStatusId == null) {
+            payPadStatusId = 2L;
         }
 
-        if (Long.valueOf(17L).equals(order.getOrderStatusId()) || Long.valueOf(18L).equals(order.getOrderStatusId())) {
+        Long currentStatus = order.getOrderStatusId();
+        if (ordEntStatusId.equals(currentStatus) 
+                || Long.valueOf(4L).equals(currentStatus) 
+                || Long.valueOf(103L).equals(currentStatus)
+                || (payPadStatusId.equals(order.getPaymentStatusId()) && ordEntStatusId.equals(currentStatus))) {
+            throw new IllegalStateException("El pedido con codigo " + orderCode + " ya fue entregado y cobrado previamente");
+        }
+
+        if (Long.valueOf(17L).equals(currentStatus) || Long.valueOf(18L).equals(currentStatus)) {
             throw new IllegalStateException("El pedido con codigo " + orderCode + " se encuentra cancelado o rechazado");
         }
 
         Long previousOutletId = TenantContext.getTenantOutletId();
         Long previousTenantId = TenantContext.getTenantId();
+
+        if (previousOutletId != null && order.getOutletId() != null && !previousOutletId.equals(order.getOutletId())) {
+            throw new IllegalStateException("Acceso denegado: El pedido pertenece a la tienda #" + order.getOutletId() + " y tu sesion pertenece a la tienda #" + previousOutletId);
+        }
 
         try {
             if (order.getOutletId() != null) {
@@ -137,6 +164,55 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
                 .notes("Pedido entregado y despachado mediante escaneo de codigo QR por el usuario " + userId)
                 .createdAt(LocalDateTime.now())
                 .build());
+
+        // Emision de Venta oficial (Sale) asociada al cobro en efectivo y al cajero
+        if (order.getItems() != null && !order.getItems().isEmpty()) {
+            List<SaleItemDomain> saleItems = new ArrayList<>();
+            for (OrderItemDomain item : order.getItems()) {
+                Long unitMeasureId = 1L;
+                if (item.getProductOutletId() != null) {
+                    Optional<ProductOutlet> poOpt = jpaProductOutletRepository.findById(item.getProductOutletId());
+                    if (poOpt.isPresent() && poOpt.get().getUnitMeasureId() != null) {
+                        unitMeasureId = poOpt.get().getUnitMeasureId();
+                    }
+                }
+                Integer qty = item.getQuantity() != null && item.getQuantity() > 0 ? item.getQuantity() : 1;
+                BigDecimal unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO;
+                BigDecimal subtotal = item.getSubtotal() != null ? item.getSubtotal() : unitPrice.multiply(BigDecimal.valueOf(qty));
+
+                SaleItemDomain saleItem = new SaleItemDomain(
+                        null,
+                        item.getProductOutletId() != null ? item.getProductOutletId() : 1L,
+                        qty,
+                        item.getDisplayQuantity() != null ? item.getDisplayQuantity() : (qty + " UND"),
+                        unitPrice,
+                        subtotal,
+                        unitMeasureId
+                );
+                saleItems.add(saleItem);
+            }
+
+            Long activeSaleStatusId = masterDataRepositoryPort.getIdByCode("ACT");
+            if (activeSaleStatusId == null) {
+                activeSaleStatusId = 1L;
+            }
+
+            Long cashPaymentMethodId = masterDataRepositoryPort.getIdByCode("CASH");
+            if (cashPaymentMethodId == null) {
+                cashPaymentMethodId = 1L;
+            }
+
+            SaleDomain sale = SaleDomain.create(
+                    cashPaymentMethodId,
+                    activeSaleStatusId,
+                    order.getCustomerId() != null && order.getCustomerId() > 0 ? order.getCustomerId() : 1L,
+                    order.getOutletId() != null ? order.getOutletId() : 1L,
+                    userId != null && userId > 0 ? userId : 1L,
+                    saleItems
+            );
+            sale.applyPayment(sale.getTotalAmount(), false);
+            saleRepositoryPort.save(sale);
+        }
 
         return orderMapper.toResponse(updated);
     }
