@@ -7,6 +7,7 @@ import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.sale.infrastructure.entity.SaleEntity;
 import org.frias.avalon.domain.sale.infrastructure.repository.JpaSaleRepository;
+import org.frias.avalon.domain.cashregister.infrastructure.entity.CashSessionEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,9 @@ class GetCompanyDashboardUseCaseImplTest {
 
     @Mock
     private JpaSaleRepository saleRepository;
+
+    @Mock
+    private org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashSessionRepository cashSessionRepository;
 
     @Mock
     private TransactionTemplate transactionTemplate;
@@ -90,10 +94,27 @@ class GetCompanyDashboardUseCaseImplTest {
                 .saleDate(LocalDateTime.now())
                 .build();
 
+        CashSessionEntity closedSession = new CashSessionEntity();
+        closedSession.setId(501L);
+        closedSession.setOutletId(10L);
+        closedSession.setStatus("CLOSED");
+        closedSession.setClosedAt(LocalDateTime.now());
+        closedSession.setActualCash(new BigDecimal("100000.00"));
+
+        CashSessionEntity openSession = new CashSessionEntity();
+        openSession.setId(502L);
+        openSession.setOutletId(20L);
+        openSession.setStatus("OPEN");
+        openSession.setInitialBase(new BigDecimal("20000.00"));
+
         given(companyRepository.findById(companyId)).willReturn(Optional.of(company));
         given(outletRepository.findByCompanyId(companyId)).willReturn(List.of(outlet1, outlet2));
-        given(saleRepository.findByOutletIdInAndSaleDateBetween(anyList(), any(LocalDateTime.class), any(LocalDateTime.class)))
-                .willReturn(List.of(sale1, sale2));
+        given(saleRepository.findByOutletIdInAndSaleDateBetween(eq(List.of(10L)), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .willReturn(List.of(sale1));
+        given(saleRepository.findByOutletIdInAndSaleDateBetween(eq(List.of(20L)), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .willReturn(List.of(sale2));
+        given(cashSessionRepository.findByOutletIdOrderByOpenedAtDesc(10L)).willReturn(List.of(closedSession));
+        given(cashSessionRepository.findByOutletIdOrderByOpenedAtDesc(20L)).willReturn(List.of(openSession));
 
         // Act
         CompanyDashboardResponse result = useCase.execute(companyId, "MES", null);
@@ -112,6 +133,9 @@ class GetCompanyDashboardUseCaseImplTest {
         assertEquals(new BigDecimal("150000.00"), result.averageTicket());
         assertEquals(2, result.outletSales().size());
         assertEquals("EFECTIVO", result.salesByPaymentMethod().keySet().iterator().next());
+        assertEquals(new BigDecimal("100000.00"), result.consolidatedCash());
+        assertEquals(1, result.closedSessionsCount());
+        assertEquals(1, result.openSessionsCount());
     }
 
     @Test
@@ -142,6 +166,7 @@ class GetCompanyDashboardUseCaseImplTest {
         given(outletRepository.findByCompanyId(companyId)).willReturn(List.of(outlet1));
         given(saleRepository.findByOutletIdInAndSaleDateBetween(eq(List.of(10L)), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .willReturn(List.of(sale1));
+        given(cashSessionRepository.findByOutletIdOrderByOpenedAtDesc(10L)).willReturn(List.of());
 
         // Act
         CompanyDashboardResponse result = useCase.execute(companyId, "HOY", outletId);
@@ -152,6 +177,9 @@ class GetCompanyDashboardUseCaseImplTest {
         assertEquals("HOY", result.period());
         assertEquals(new BigDecimal("150000.00"), result.totalSales());
         assertEquals(1L, result.transactionCount());
+        assertEquals(BigDecimal.ZERO, result.consolidatedCash());
+        assertEquals(0, result.closedSessionsCount());
+        assertEquals(0, result.openSessionsCount());
     }
 
     @Test

@@ -9,6 +9,8 @@ import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.sale.infrastructure.entity.SaleEntity;
 import org.frias.avalon.domain.sale.infrastructure.repository.JpaSaleRepository;
+import org.frias.avalon.domain.cashregister.infrastructure.entity.CashSessionEntity;
+import org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashSessionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -23,8 +25,8 @@ import java.util.stream.Collectors;
 
 /**
  * Implementation of GetCompanyDashboardUseCase.
- * Consolidates real sales, payment methods, transaction counts, and store performance
- * across all outlets belonging to a company with dynamic time filters.
+ * Consolidates real sales, payment methods, transaction counts, store performance,
+ * and safe cash audit (consolidated vs in-flight) across all outlets belonging to a company.
  */
 @Service
 public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCase {
@@ -32,17 +34,20 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
     private final JpaCompanyRepository companyRepository;
     private final JpaOutletRepository outletRepository;
     private final JpaSaleRepository saleRepository;
+    private final JpaCashSessionRepository cashSessionRepository;
     private final TransactionTemplate transactionTemplate;
 
     public GetCompanyDashboardUseCaseImpl(
             JpaCompanyRepository companyRepository,
             JpaOutletRepository outletRepository,
             JpaSaleRepository saleRepository,
+            JpaCashSessionRepository cashSessionRepository,
             TransactionTemplate transactionTemplate
     ) {
         this.companyRepository = companyRepository;
         this.outletRepository = outletRepository;
         this.saleRepository = saleRepository;
+        this.cashSessionRepository = cashSessionRepository;
         this.transactionTemplate = transactionTemplate;
     }
 
@@ -77,14 +82,13 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
                     0L,
                     BigDecimal.ZERO,
                     Collections.emptyMap(),
-                    Collections.emptyList()
+                    Collections.emptyList(),
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    0,
+                    0
             );
         }
-
-        List<Long> targetOutletIds = targetOutlets.stream()
-                .map(Outlet::getId)
-                .filter(Objects::nonNull)
-                .toList();
 
         LocalDateTime startDate = null;
         LocalDateTime endDate = null;
@@ -116,29 +120,51 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
         Long previousCompanyId = TenantContext.getTenantId();
         Long previousOutletId = TenantContext.getTenantOutletId();
 
-        List<SaleEntity> sales;
+        List<SaleEntity> sales = new ArrayList<>();
+        List<CashSessionEntity> allClosedSessions = new ArrayList<>();
+        List<CashSessionEntity> allOpenSessions = new ArrayList<>();
+
         try {
             TenantContext.setTenantId(companyId);
-            if (outletId != null) {
-                TenantContext.setTenantOutletId(outletId);
-            } else {
-                TenantContext.setTenantOutletId(null);
-            }
 
-            sales = transactionTemplate.execute(status -> {
-                if (finalStart != null && finalEnd != null) {
-                    return saleRepository.findByOutletIdInAndSaleDateBetween(targetOutletIds, finalStart, finalEnd);
-                } else {
-                    return saleRepository.findByOutletIdIn(targetOutletIds);
+            for (Outlet o : targetOutlets) {
+                if (o.getId() == null) continue;
+                TenantContext.setTenantOutletId(o.getId());
+                try {
+                    transactionTemplate.execute(status -> {
+                        List<SaleEntity> outletSales;
+                        if (finalStart != null && finalEnd != null) {
+                            outletSales = saleRepository.findByOutletIdInAndSaleDateBetween(List.of(o.getId()), finalStart, finalEnd);
+                        } else {
+                            outletSales = saleRepository.findByOutletIdIn(List.of(o.getId()));
+                        }
+                        if (outletSales != null) {
+                            sales.addAll(outletSales);
+                        }
+
+                        List<CashSessionEntity> sessions = cashSessionRepository.findByOutletIdOrderByOpenedAtDesc(o.getId());
+                        if (sessions != null) {
+                            for (CashSessionEntity cs : sessions) {
+                                if ("CLOSED".equalsIgnoreCase(cs.getStatus())) {
+                                    if (finalStart != null && finalEnd != null) {
+                                        LocalDateTime dateToCheck = cs.getClosedAt() != null ? cs.getClosedAt() : cs.getOpenedAt();
+                                        if (dateToCheck != null && (dateToCheck.isBefore(finalStart) || dateToCheck.isAfter(finalEnd))) {
+                                            continue;
+                                        }
+                                    }
+                                    allClosedSessions.add(cs);
+                                } else if ("OPEN".equalsIgnoreCase(cs.getStatus())) {
+                                    allOpenSessions.add(cs);
+                                }
+                            }
+                        }
+                        return null;
+                    });
+                } catch (Exception e) {
+                    org.slf4j.LoggerFactory.getLogger(GetCompanyDashboardUseCaseImpl.class)
+                            .warn("Could not query outlet {} in store_{}: {}", o.getId(), o.getId(), e.getMessage());
                 }
-            });
-            if (sales == null) {
-                sales = Collections.emptyList();
             }
-        } catch (Exception e) {
-            org.slf4j.LoggerFactory.getLogger(GetCompanyDashboardUseCaseImpl.class)
-                    .warn("Could not query sales for company {}: {}", companyId, e.getMessage());
-            sales = Collections.emptyList();
         } finally {
             TenantContext.setTenantId(previousCompanyId);
             TenantContext.setTenantOutletId(previousOutletId);
@@ -163,10 +189,39 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
                 : 0.0;
 
         Map<String, BigDecimal> salesByPaymentMethod = new LinkedHashMap<>();
+        BigDecimal totalCashSales = BigDecimal.ZERO;
+
         for (SaleEntity s : sales) {
             String methodKey = resolvePaymentMethodName(s.getPaymentMethodId());
+            BigDecimal amount = s.getTotalAmount() != null ? s.getTotalAmount() : BigDecimal.ZERO;
             BigDecimal current = salesByPaymentMethod.getOrDefault(methodKey, BigDecimal.ZERO);
-            salesByPaymentMethod.put(methodKey, current.add(s.getTotalAmount() != null ? s.getTotalAmount() : BigDecimal.ZERO));
+            salesByPaymentMethod.put(methodKey, current.add(amount));
+
+            if ("EFECTIVO".equals(methodKey)) {
+                totalCashSales = totalCashSales.add(amount);
+            }
+        }
+
+        // Cash Audit calculation: Consolidated (CLOSED sessions) vs In-Flight (OPEN sessions)
+        BigDecimal consolidatedCash = allClosedSessions.stream()
+                .map(s -> s.getActualCash() != null ? s.getActualCash() : (s.getExpectedCash() != null ? s.getExpectedCash() : BigDecimal.ZERO))
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal openBases = allOpenSessions.stream()
+                .map(s -> s.getInitialBase() != null ? s.getInitialBase() : BigDecimal.ZERO)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal inFlightCash;
+        if (allOpenSessions.isEmpty()) {
+            inFlightCash = BigDecimal.ZERO;
+        } else {
+            BigDecimal unclosedCashSales = totalCashSales.subtract(consolidatedCash);
+            if (unclosedCashSales.compareTo(BigDecimal.ZERO) < 0) {
+                unclosedCashSales = BigDecimal.ZERO;
+            }
+            inFlightCash = openBases.add(unclosedCashSales);
         }
 
         Map<Long, List<SaleEntity>> salesByOutletId = sales.stream()
@@ -207,14 +262,18 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
                 transactionCount,
                 averageTicket,
                 salesByPaymentMethod,
-                outletSalesList
+                outletSalesList,
+                consolidatedCash,
+                inFlightCash,
+                allClosedSessions.size(),
+                allOpenSessions.size()
         );
     }
 
     private String resolvePaymentMethodName(Long paymentMethodId) {
         if (paymentMethodId == null) return "OTRO";
-        if (paymentMethodId == 139L) return "EFECTIVO";
-        if (paymentMethodId == 151L) return "FIADO";
+        if (paymentMethodId == 139L || paymentMethodId == 1L) return "EFECTIVO";
+        if (paymentMethodId == 151L || paymentMethodId == 4L) return "FIADO";
         return "METODO_" + paymentMethodId;
     }
 }
