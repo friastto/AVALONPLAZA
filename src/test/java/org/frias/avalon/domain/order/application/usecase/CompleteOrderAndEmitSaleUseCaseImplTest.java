@@ -1,13 +1,16 @@
 package org.frias.avalon.domain.order.application.usecase;
 
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.order.application.dto.OrderResponse;
 import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.order.domain.OrderDomain;
 import org.frias.avalon.domain.order.domain.OrderStatusHistoryDomain;
 import org.frias.avalon.domain.order.infrastructure.persistence.mapper.OrderMapper;
 import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketController;
+import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,24 +30,24 @@ import static org.mockito.Mockito.*;
 class CompleteOrderAndEmitSaleUseCaseImplTest {
 
     private OrderRepositoryPort orderRepositoryPort;
-    private MasterDataRepositoryPort masterDataRepositoryPort;
+    private MasterTreeProvider masterTreeProvider;
     private OrderMapper orderMapper;
     private OrderWebSocketController orderWebSocketController;
-    private org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository jpaProductOutletRepository;
+    private JpaProductOutletRepository jpaProductOutletRepository;
 
     private CompleteOrderAndEmitSaleUseCaseImpl completeOrderAndEmitSaleUseCase;
 
     @BeforeEach
     void setUp() {
         orderRepositoryPort = mock(OrderRepositoryPort.class);
-        masterDataRepositoryPort = mock(MasterDataRepositoryPort.class);
+        masterTreeProvider = mock(MasterTreeProvider.class);
         orderMapper = mock(OrderMapper.class);
         orderWebSocketController = mock(OrderWebSocketController.class);
-        jpaProductOutletRepository = mock(org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository.class);
+        jpaProductOutletRepository = mock(JpaProductOutletRepository.class);
 
         completeOrderAndEmitSaleUseCase = new CompleteOrderAndEmitSaleUseCaseImpl(
                 orderRepositoryPort,
-                masterDataRepositoryPort,
+                masterTreeProvider,
                 jpaProductOutletRepository,
                 orderMapper,
                 orderWebSocketController
@@ -51,13 +55,16 @@ class CompleteOrderAndEmitSaleUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("Should complete order and update payment status when ORD_DEL and PAY_PAD master data exist")
-    void execute_Success_WhenOrdDelAndPayPadFound() {
+    @DisplayName("Should complete order and set status to ORD_DISP when ORD_DISP master data exists")
+    void execute_Success_WhenOrdDispFound() {
         Long orderId = 100L;
         Long userId = 77L;
         Long previousStatusId = 2L;
-        Long deliveredStatusId = 301L;
-        Long paidStatusId = 302L;
+        Long dispStatusId = 301L;
+
+        MasterRoot dispNode = new MasterRoot(dispStatusId, "ORD_DISP", "DESPACHADO", null, 1L);
+        MasterTree tree = new MasterTree(List.of(dispNode));
+        when(masterTreeProvider.getTree()).thenReturn(tree);
 
         OrderDomain initialOrder = OrderDomain.builder()
                 .id(orderId)
@@ -68,14 +75,12 @@ class CompleteOrderAndEmitSaleUseCaseImplTest {
                 .build();
 
         when(orderRepositoryPort.findById(orderId)).thenReturn(Optional.of(initialOrder));
-        when(masterDataRepositoryPort.getIdByCode("ORD_DEL")).thenReturn(deliveredStatusId);
-        when(masterDataRepositoryPort.getIdByCode("PAY_PAD")).thenReturn(paidStatusId);
 
         OrderDomain savedOrder = OrderDomain.builder()
                 .id(orderId)
                 .orderCode("ORD-2026-888")
-                .orderStatusId(deliveredStatusId)
-                .paymentStatusId(paidStatusId)
+                .orderStatusId(dispStatusId)
+                .paymentStatusId(1L)
                 .total(new BigDecimal("250.00"))
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -85,8 +90,8 @@ class CompleteOrderAndEmitSaleUseCaseImplTest {
         OrderResponse expectedResponse = OrderResponse.builder()
                 .id(orderId)
                 .orderCode("ORD-2026-888")
-                .orderStatusId(deliveredStatusId)
-                .paymentStatusId(paidStatusId)
+                .orderStatusId(dispStatusId)
+                .paymentStatusId(1L)
                 .build();
 
         when(orderMapper.toResponse(savedOrder)).thenReturn(expectedResponse);
@@ -95,14 +100,14 @@ class CompleteOrderAndEmitSaleUseCaseImplTest {
 
         assertNotNull(result);
         assertEquals(orderId, result.getId());
-        assertEquals(deliveredStatusId, result.getOrderStatusId());
-        assertEquals(paidStatusId, result.getPaymentStatusId());
+        assertEquals(dispStatusId, result.getOrderStatusId());
+        assertEquals(1L, result.getPaymentStatusId());
 
         ArgumentCaptor<OrderDomain> orderCaptor = ArgumentCaptor.forClass(OrderDomain.class);
         verify(orderRepositoryPort).save(orderCaptor.capture());
         OrderDomain capturedOrder = orderCaptor.getValue();
-        assertEquals(deliveredStatusId, capturedOrder.getOrderStatusId());
-        assertEquals(paidStatusId, capturedOrder.getPaymentStatusId());
+        assertEquals(dispStatusId, capturedOrder.getOrderStatusId());
+        assertEquals(1L, capturedOrder.getPaymentStatusId());
         assertNotNull(capturedOrder.getUpdatedAt());
 
         ArgumentCaptor<OrderStatusHistoryDomain> historyCaptor = ArgumentCaptor.forClass(OrderStatusHistoryDomain.class);
@@ -110,35 +115,37 @@ class CompleteOrderAndEmitSaleUseCaseImplTest {
         OrderStatusHistoryDomain capturedHistory = historyCaptor.getValue();
         assertEquals(orderId, capturedHistory.getOrderId());
         assertEquals(previousStatusId, capturedHistory.getPreviousStatusId());
-        assertEquals(deliveredStatusId, capturedHistory.getNewStatusId());
+        assertEquals(dispStatusId, capturedHistory.getNewStatusId());
         assertEquals(userId, capturedHistory.getChangedByUserId());
-        assertTrue(capturedHistory.getNotes().contains("usuario 77"));
+        assertTrue(capturedHistory.getNotes().contains("despachado por el usuario 77"));
         assertNotNull(capturedHistory.getCreatedAt());
 
         verify(orderWebSocketController, times(1)).broadcastOrderStatusChanged(eq(orderId), eq(expectedResponse));
     }
 
     @Test
-    @DisplayName("Should complete order using fallback COM code and default PAY_PAD status")
-    void execute_Success_WhenFallbackComAndDefaultPayPad() {
+    @DisplayName("Should complete order using fallback COM code when ORD_DISP does not exist")
+    void execute_Success_WhenFallbackCom() {
         Long orderId = 200L;
         Long userId = 10L;
         Long fallbackDeliveredStatusId = 303L;
 
+        MasterRoot comNode = new MasterRoot(fallbackDeliveredStatusId, "COM", "COMPLETADO", null, 1L);
+        MasterTree tree = new MasterTree(List.of(comNode));
+        when(masterTreeProvider.getTree()).thenReturn(tree);
+
         OrderDomain initialOrder = OrderDomain.builder()
                 .id(orderId)
                 .orderStatusId(2L)
+                .paymentStatusId(1L)
                 .build();
 
         when(orderRepositoryPort.findById(orderId)).thenReturn(Optional.of(initialOrder));
-        when(masterDataRepositoryPort.getIdByCode("ORD_DEL")).thenReturn(null);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(fallbackDeliveredStatusId);
-        when(masterDataRepositoryPort.getIdByCode("PAY_PAD")).thenReturn(null);
 
         OrderDomain savedOrder = OrderDomain.builder()
                 .id(orderId)
                 .orderStatusId(fallbackDeliveredStatusId)
-                .paymentStatusId(2L)
+                .paymentStatusId(1L)
                 .build();
 
         when(orderRepositoryPort.save(any(OrderDomain.class))).thenReturn(savedOrder);
@@ -146,7 +153,7 @@ class CompleteOrderAndEmitSaleUseCaseImplTest {
         OrderResponse expectedResponse = OrderResponse.builder()
                 .id(orderId)
                 .orderStatusId(fallbackDeliveredStatusId)
-                .paymentStatusId(2L)
+                .paymentStatusId(1L)
                 .build();
 
         when(orderMapper.toResponse(savedOrder)).thenReturn(expectedResponse);
@@ -156,14 +163,16 @@ class CompleteOrderAndEmitSaleUseCaseImplTest {
         assertNotNull(result);
         assertEquals(orderId, result.getId());
         assertEquals(fallbackDeliveredStatusId, result.getOrderStatusId());
-        assertEquals(2L, result.getPaymentStatusId());
     }
 
     @Test
-    @DisplayName("Should complete order using default status IDs (3L and 2L) when all master data returns null")
-    void execute_Success_WhenFallbackDefaultStatusIds() {
+    @DisplayName("Should throw IllegalStateException when neither ORD_DISP nor COM exist in MasterTree")
+    void execute_ThrowsIllegalStateException_WhenNoDispOrComInMasterTree() {
         Long orderId = 300L;
         Long userId = 5L;
+
+        MasterTree tree = new MasterTree(List.of());
+        when(masterTreeProvider.getTree()).thenReturn(tree);
 
         OrderDomain initialOrder = OrderDomain.builder()
                 .id(orderId)
@@ -171,31 +180,11 @@ class CompleteOrderAndEmitSaleUseCaseImplTest {
                 .build();
 
         when(orderRepositoryPort.findById(orderId)).thenReturn(Optional.of(initialOrder));
-        when(masterDataRepositoryPort.getIdByCode("ORD_DEL")).thenReturn(null);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(null);
-        when(masterDataRepositoryPort.getIdByCode("PAY_PAD")).thenReturn(null);
 
-        OrderDomain savedOrder = OrderDomain.builder()
-                .id(orderId)
-                .orderStatusId(3L)
-                .paymentStatusId(2L)
-                .build();
-
-        when(orderRepositoryPort.save(any(OrderDomain.class))).thenReturn(savedOrder);
-
-        OrderResponse expectedResponse = OrderResponse.builder()
-                .id(orderId)
-                .orderStatusId(3L)
-                .paymentStatusId(2L)
-                .build();
-
-        when(orderMapper.toResponse(savedOrder)).thenReturn(expectedResponse);
-
-        OrderResponse result = completeOrderAndEmitSaleUseCase.execute(orderId, userId);
-
-        assertNotNull(result);
-        assertEquals(3L, result.getOrderStatusId());
-        assertEquals(2L, result.getPaymentStatusId());
+        assertThrows(
+                IllegalStateException.class,
+                () -> completeOrderAndEmitSaleUseCase.execute(orderId, userId)
+        );
     }
 
     @Test

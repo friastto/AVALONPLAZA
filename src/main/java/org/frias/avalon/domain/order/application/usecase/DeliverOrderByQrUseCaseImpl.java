@@ -2,7 +2,6 @@ package org.frias.avalon.domain.order.application.usecase;
 
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.core.tenant.TenantContext;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.order.application.dto.OrderResponse;
 import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.order.domain.OrderDomain;
@@ -17,6 +16,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
 import org.frias.avalon.domain.sale.application.port.SaleRepositoryPort;
 import org.frias.avalon.domain.sale.domain.SaleDomain;
@@ -33,7 +35,7 @@ import java.util.Optional;
 public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
 
     private final OrderRepositoryPort orderRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
+    private final MasterTreeProvider masterTreeProvider;
     private final JpaProductOutletRepository jpaProductOutletRepository;
     private final SaleRepositoryPort saleRepositoryPort;
     private final OrderMapper orderMapper;
@@ -43,7 +45,7 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
 
     public DeliverOrderByQrUseCaseImpl(
             OrderRepositoryPort orderRepositoryPort,
-            MasterDataRepositoryPort masterDataRepositoryPort,
+            MasterTreeProvider masterTreeProvider,
             JpaProductOutletRepository jpaProductOutletRepository,
             SaleRepositoryPort saleRepositoryPort,
             @Qualifier("omnichannelOrderMapper") OrderMapper orderMapper,
@@ -51,7 +53,7 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
             OutletRepositoryPort outletRepositoryPort,
             PlatformTransactionManager transactionManager) {
         this.orderRepositoryPort = orderRepositoryPort;
-        this.masterDataRepositoryPort = masterDataRepositoryPort;
+        this.masterTreeProvider = masterTreeProvider;
         this.jpaProductOutletRepository = jpaProductOutletRepository;
         this.saleRepositoryPort = saleRepositoryPort;
         this.orderMapper = orderMapper;
@@ -66,31 +68,22 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
         OrderDomain order = orderRepositoryPort.findByOrderCode(orderCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido con codigo " + orderCode + " no encontrado"));
 
-        Long ordEntStatusId = masterDataRepositoryPort.getIdByCode("ORD_ENT");
-        if (ordEntStatusId == null) {
-            ordEntStatusId = masterDataRepositoryPort.getIdByCode("ENT");
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot entNode = tree.getByCode("ORD_DEL");
+        if (entNode == null) {
+            entNode = tree.getByCode("ENT");
         }
-        if (ordEntStatusId == null) {
-            ordEntStatusId = masterDataRepositoryPort.getIdByCode("ORD_DEL");
+        if (entNode == null) {
+            throw new IllegalStateException("Estado maestro ORD_DEL no encontrado en MasterTree");
         }
-        if (ordEntStatusId == null) {
-            ordEntStatusId = 4L;
-        }
+        Long ordEntStatusId = entNode.getId();
 
-        Long payPadStatusId = masterDataRepositoryPort.getIdByCode("PAY_PAD");
-        if (payPadStatusId == null) {
-            payPadStatusId = 2L;
-        }
-
-        Long currentStatus = order.getOrderStatusId();
-        if (ordEntStatusId.equals(currentStatus) 
-                || Long.valueOf(4L).equals(currentStatus) 
-                || Long.valueOf(103L).equals(currentStatus)
-                || (payPadStatusId.equals(order.getPaymentStatusId()) && ordEntStatusId.equals(currentStatus))) {
+        MasterRoot currentNode = tree.getById(order.getOrderStatusId());
+        if (tree.is(currentNode, "ORD_DEL") || tree.is(currentNode, "ENT")) {
             throw new IllegalStateException("El pedido con codigo " + orderCode + " ya fue entregado y cobrado previamente");
         }
 
-        if (Long.valueOf(17L).equals(currentStatus) || Long.valueOf(18L).equals(currentStatus)) {
+        if (tree.is(currentNode, "ORD_CAN") || tree.is(currentNode, "CAN") || tree.is(currentNode, "REC")) {
             throw new IllegalStateException("El pedido con codigo " + orderCode + " se encuentra cancelado o rechazado");
         }
 
@@ -129,10 +122,12 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
     }
 
     private OrderResponse doDeliverOrder(OrderDomain order, Long userId, Long entStatusId) {
-        Long payPadStatusId = masterDataRepositoryPort.getIdByCode("PAY_PAD");
-        if (payPadStatusId == null) {
-            payPadStatusId = 2L;
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot padNode = tree.getByCode("PAY_PAD");
+        if (padNode == null) {
+            throw new IllegalStateException("Estado maestro PAY_PAD no encontrado en MasterTree");
         }
+        Long payPadStatusId = padNode.getId();
 
         Long previousStatusId = order.getOrderStatusId();
         order.setOrderStatusId(entStatusId);
@@ -192,15 +187,17 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
                 saleItems.add(saleItem);
             }
 
-            Long activeSaleStatusId = masterDataRepositoryPort.getIdByCode("ACT");
-            if (activeSaleStatusId == null) {
-                activeSaleStatusId = 1L;
+            MasterRoot actNode = tree.getByCode("ACT");
+            if (actNode == null) {
+                throw new IllegalStateException("Estado maestro ACT no encontrado en MasterTree");
             }
+            Long activeSaleStatusId = actNode.getId();
 
-            Long cashPaymentMethodId = masterDataRepositoryPort.getIdByCode("CASH");
-            if (cashPaymentMethodId == null) {
-                cashPaymentMethodId = 1L;
+            MasterRoot cashNode = tree.getByCode("CASH");
+            if (cashNode == null) {
+                cashNode = tree.getByCode("EFECTIVO");
             }
+            Long cashPaymentMethodId = cashNode != null ? cashNode.getId() : order.getPaymentMethodId();
 
             SaleDomain sale = SaleDomain.create(
                     cashPaymentMethodId,

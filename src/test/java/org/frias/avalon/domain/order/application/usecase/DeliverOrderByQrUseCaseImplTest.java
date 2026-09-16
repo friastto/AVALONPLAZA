@@ -1,7 +1,9 @@
 package org.frias.avalon.domain.order.application.usecase;
 
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.order.application.dto.OrderResponse;
 import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.order.domain.OrderDomain;
@@ -24,7 +26,6 @@ import org.springframework.transaction.TransactionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,7 +38,7 @@ import static org.mockito.Mockito.*;
 class DeliverOrderByQrUseCaseImplTest {
 
     private OrderRepositoryPort orderRepositoryPort;
-    private MasterDataRepositoryPort masterDataRepositoryPort;
+    private MasterTreeProvider masterTreeProvider;
     private JpaProductOutletRepository jpaProductOutletRepository;
     private SaleRepositoryPort saleRepositoryPort;
     private OrderMapper orderMapper;
@@ -46,11 +47,12 @@ class DeliverOrderByQrUseCaseImplTest {
     private PlatformTransactionManager transactionManager;
 
     private DeliverOrderByQrUseCaseImpl deliverOrderByQrUseCase;
+    private MasterTree masterTree;
 
     @BeforeEach
     void setUp() {
         orderRepositoryPort = mock(OrderRepositoryPort.class);
-        masterDataRepositoryPort = mock(MasterDataRepositoryPort.class);
+        masterTreeProvider = mock(MasterTreeProvider.class);
         jpaProductOutletRepository = mock(JpaProductOutletRepository.class);
         saleRepositoryPort = mock(SaleRepositoryPort.class);
         orderMapper = mock(OrderMapper.class);
@@ -66,9 +68,19 @@ class DeliverOrderByQrUseCaseImplTest {
         when(mockOutlet.getCompanyId()).thenReturn(10L);
         when(outletRepositoryPort.findById(any())).thenReturn(Optional.of(mockOutlet));
 
+        MasterRoot ordDelNode = new MasterRoot(104L, "ORD_DEL", "ENTREGADO", null, 1L);
+        MasterRoot ordDispNode = new MasterRoot(16L, "ORD_DISP", "DESPACHADO", null, 1L);
+        MasterRoot ordCanNode = new MasterRoot(17L, "ORD_CAN", "CANCELADO", null, 1L);
+        MasterRoot payPadNode = new MasterRoot(102L, "PAY_PAD", "PAGADO", null, 1L);
+        MasterRoot actNode = new MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
+        MasterRoot cashNode = new MasterRoot(201L, "CASH", "EFECTIVO", null, 1L);
+
+        masterTree = new MasterTree(List.of(ordDelNode, ordDispNode, ordCanNode, payPadNode, actNode, cashNode));
+        when(masterTreeProvider.getTree()).thenReturn(masterTree);
+
         deliverOrderByQrUseCase = new DeliverOrderByQrUseCaseImpl(
                 orderRepositoryPort,
-                masterDataRepositoryPort,
+                masterTreeProvider,
                 jpaProductOutletRepository,
                 saleRepositoryPort,
                 orderMapper,
@@ -105,10 +117,6 @@ class DeliverOrderByQrUseCaseImplTest {
                 .build();
 
         when(orderRepositoryPort.findByOrderCode(orderCode)).thenReturn(Optional.of(order));
-        when(masterDataRepositoryPort.getIdByCode("ORD_ENT")).thenReturn(4L);
-        when(masterDataRepositoryPort.getIdByCode("PAY_PAD")).thenReturn(2L);
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(1L);
-        when(masterDataRepositoryPort.getIdByCode("CASH")).thenReturn(1L);
 
         ProductOutlet productEntity = new ProductOutlet();
         productEntity.setId(50L);
@@ -121,8 +129,8 @@ class DeliverOrderByQrUseCaseImplTest {
         OrderResponse mockResponse = OrderResponse.builder()
                 .id(500L)
                 .orderCode(orderCode)
-                .orderStatusId(4L)
-                .paymentStatusId(2L)
+                .orderStatusId(104L)
+                .paymentStatusId(102L)
                 .total(new BigDecimal("30.00"))
                 .build();
         when(orderMapper.toResponse(any(OrderDomain.class))).thenReturn(mockResponse);
@@ -130,8 +138,8 @@ class DeliverOrderByQrUseCaseImplTest {
         OrderResponse result = deliverOrderByQrUseCase.execute(orderCode, userId);
 
         assertNotNull(result);
-        assertEquals(4L, result.getOrderStatusId());
-        assertEquals(2L, result.getPaymentStatusId());
+        assertEquals(104L, result.getOrderStatusId());
+        assertEquals(102L, result.getPaymentStatusId());
 
         // Stock deduction check: 20 - 3 = 17
         assertEquals(17, productEntity.getStock());
@@ -142,7 +150,7 @@ class DeliverOrderByQrUseCaseImplTest {
         verify(orderRepositoryPort, times(1)).saveStatusHistory(historyCaptor.capture());
         assertEquals(500L, historyCaptor.getValue().getOrderId());
         assertEquals(previousStatusId, historyCaptor.getValue().getPreviousStatusId());
-        assertEquals(4L, historyCaptor.getValue().getNewStatusId());
+        assertEquals(104L, historyCaptor.getValue().getNewStatusId());
         assertEquals(userId, historyCaptor.getValue().getChangedByUserId());
 
         // Sale emission check
@@ -177,11 +185,10 @@ class DeliverOrderByQrUseCaseImplTest {
         OrderDomain order = OrderDomain.builder()
                 .id(501L)
                 .orderCode(orderCode)
-                .orderStatusId(4L) // 4L is delivered
+                .orderStatusId(104L) // 104L is ORD_DEL
                 .build();
 
         when(orderRepositoryPort.findByOrderCode(orderCode)).thenReturn(Optional.of(order));
-        when(masterDataRepositoryPort.getIdByCode("ORD_ENT")).thenReturn(4L);
 
         assertThrows(IllegalStateException.class, () -> deliverOrderByQrUseCase.execute(orderCode, 1L));
     }
@@ -193,11 +200,10 @@ class DeliverOrderByQrUseCaseImplTest {
         OrderDomain order = OrderDomain.builder()
                 .id(502L)
                 .orderCode(orderCode)
-                .orderStatusId(17L) // 17L is cancelled
+                .orderStatusId(17L) // 17L is ORD_CAN
                 .build();
 
         when(orderRepositoryPort.findByOrderCode(orderCode)).thenReturn(Optional.of(order));
-        when(masterDataRepositoryPort.getIdByCode("ORD_ENT")).thenReturn(4L);
 
         assertThrows(IllegalStateException.class, () -> deliverOrderByQrUseCase.execute(orderCode, 1L));
     }

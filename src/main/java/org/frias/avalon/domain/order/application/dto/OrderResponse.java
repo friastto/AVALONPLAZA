@@ -19,7 +19,9 @@ public class OrderResponse {
     private Long customerId;
     private Long outletId;
     private Long orderStatusId;
+    private String orderStatusCode;
     private Long paymentStatusId;
+    private String paymentStatusCode;
     private Long paymentMethodId;
     private BigDecimal subtotal;
     private BigDecimal tax;
