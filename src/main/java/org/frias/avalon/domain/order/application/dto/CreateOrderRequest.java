@@ -20,6 +20,7 @@ public class CreateOrderRequest {
     private Long outletId;
 
     private Long paymentMethodId;
+    private String paymentMethodCode;
 
     @NotEmpty(message = "El pedido debe contener al menos un item")
     private List<OrderItemRequest> items;

@@ -2,7 +2,7 @@ package org.frias.avalon.domain.outlet.application.usecase.create;
 
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.core.tenant.port.TenantSchemaMigrationPort;
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
@@ -73,7 +73,7 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
             tenantSchemaMigrationPort.migrateTenantSchema("store_" + outletSaved.getId());
         }
 
-        StatusResponseDto statusResponse = new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName());
+        MasterRefDto statusResponse = MasterRefDto.from(status);
 
         LocationDto locationDto = locationMapper.domainToDto(outletSaved.getLocation());
 

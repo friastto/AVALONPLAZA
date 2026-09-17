@@ -48,11 +48,20 @@ class GetCompanyDashboardUseCaseImplTest {
     @Mock
     private TransactionTemplate transactionTemplate;
 
+    @Mock
+    private org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider masterTreeProvider;
+
     @InjectMocks
     private GetCompanyDashboardUseCaseImpl useCase;
 
     @BeforeEach
     void setUp() {
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot efeNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(139L, "EFE", "EFECTIVO", null, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot fiaNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(151L, "FIA", "FIADO", null, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot trfNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(297L, "TRF", "TRANSFERENCIA", null, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterTree masterTree = new org.frias.avalon.domain.masterdata.domain.model.MasterTree(List.of(efeNode, fiaNode, trfNode));
+        lenient().when(masterTreeProvider.getTree()).thenReturn(masterTree);
+
         lenient().when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
             TransactionCallback<?> callback = invocation.getArgument(0);
             return callback.doInTransaction(null);

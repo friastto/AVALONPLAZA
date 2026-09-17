@@ -59,7 +59,7 @@ public class OrderController {
             @PathVariable Long orderId,
             @PathVariable Long itemId,
             @Valid @RequestBody UpdateDispatchStatusRequest request) {
-        OrderResponse response = updateItemDispatchStatusUseCase.execute(orderId, itemId, request.getStatusId());
+        OrderResponse response = updateItemDispatchStatusUseCase.execute(orderId, itemId, request.getStatusId(), request.getStatusCode());
         return ResponseEntity.ok(response);
     }
 

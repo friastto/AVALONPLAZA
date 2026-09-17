@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.outlet.application.usecase.find;
 
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
@@ -57,7 +57,7 @@ public class FindOutletNearbyByRadiusUseCaseImpl implements FindOutletNearbyByRa
                             outletDomain.getPhone(),
                             outletDomain.getNit(),
                             currentLocation,
-                            new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName()),
+                            MasterRefDto.from(status),
                             outletDomain.getCompanyId(),
                             outletDomain.getDeliveryEnabled(),
                             outletDomain.getDeliveryFee()

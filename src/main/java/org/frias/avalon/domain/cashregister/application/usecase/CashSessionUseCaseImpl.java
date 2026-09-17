@@ -40,6 +40,9 @@ import java.util.TreeMap;
 
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
 import org.frias.avalon.domain.company.domain.model.CompanyDomain;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +55,38 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
     private final PersonRepositoryPort personRepositoryPort;
     private final UserAvalonRepositoryPort userAvalonRepositoryPort;
     private final CompanyRepositoryPort companyRepositoryPort;
+    private final MasterTreeProvider masterTreeProvider;
+
+    private String resolvePaymentCategory(Long paymentMethodId, MasterTree tree) {
+        if (paymentMethodId == null || tree == null) return "MPG_CASH";
+        MasterRoot node = tree.getById(paymentMethodId);
+        if (node == null) return "MPG_CASH";
+
+        if (tree.is(node, "MPG_CASH") || tree.is(node, "MPG_CARD") || tree.is(node, "MPG_DIGITAL") || tree.is(node, "MPG_CREDIT")) {
+            return node.getShortName().trim();
+        }
+
+        if (node.getParentId() != null) {
+            MasterRoot parent = tree.getById(node.getParentId());
+            if (parent != null && parent.getShortName() != null) {
+                String parentCode = parent.getShortName().trim();
+                if (parentCode.equals("MPG_CASH") || parentCode.equals("MPG_CARD") || parentCode.equals("MPG_DIGITAL") || parentCode.equals("MPG_CREDIT")) {
+                    return parentCode;
+                }
+            }
+        }
+
+        if (tree.is(node, "EFE") || tree.is(node, "COD")) return "MPG_CASH";
+        if (tree.is(node, "TDEB") || tree.is(node, "TCRE") || tree.is(node, "POSCARD")) return "MPG_CARD";
+        if (tree.is(node, "WAL") || tree.is(node, "TRF") || tree.is(node, "CRYPTO")) return "MPG_DIGITAL";
+        if (tree.is(node, "CREINT") || tree.is(node, "FIA")) return "MPG_CREDIT";
+
+        return "MPG_CASH";
+    }
+
+    private boolean isCashPayment(Long paymentMethodId, MasterTree tree) {
+        return "MPG_CASH".equals(resolvePaymentCategory(paymentMethodId, tree));
+    }
 
     @Override
     @Transactional
@@ -139,17 +174,16 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
         BigDecimal digitalSales = BigDecimal.ZERO;
         BigDecimal creditSales = BigDecimal.ZERO;
 
+        MasterTree tree = masterTreeProvider.getTree();
         for (SaleDomain sale : sessionSales) {
             Long method = sale.getPaymentMethodId();
             BigDecimal amount = sale.getTotalAmount() != null ? sale.getTotalAmount() : BigDecimal.ZERO;
-            if (method != null) {
-                if (method == 1L) cashSales = cashSales.add(amount);
-                else if (method == 2L) cardSales = cardSales.add(amount);
-                else if (method == 3L) digitalSales = digitalSales.add(amount);
-                else if (method == 4L) creditSales = creditSales.add(amount);
-                else cashSales = cashSales.add(amount);
-            } else {
-                cashSales = cashSales.add(amount);
+            switch (resolvePaymentCategory(method, tree)) {
+                case "MPG_CASH" -> cashSales = cashSales.add(amount);
+                case "MPG_CARD" -> cardSales = cardSales.add(amount);
+                case "MPG_DIGITAL" -> digitalSales = digitalSales.add(amount);
+                case "MPG_CREDIT" -> creditSales = creditSales.add(amount);
+                default -> cashSales = cashSales.add(amount);
             }
         }
 
@@ -228,18 +262,16 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
         BigDecimal totalCard = BigDecimal.ZERO;
         BigDecimal totalCredit = BigDecimal.ZERO;
 
+        MasterTree tree = masterTreeProvider.getTree();
         for (SaleDomain sale : todaySales) {
             Long method = sale.getPaymentMethodId();
             BigDecimal amount = sale.getTotalAmount() != null ? sale.getTotalAmount() : BigDecimal.ZERO;
-
-            if (method != null) {
-                if (method == 1L) totalCash = totalCash.add(amount);
-                else if (method == 2L) totalCard = totalCard.add(amount);
-                else if (method == 3L) totalDigital = totalDigital.add(amount);
-                else if (method == 4L) totalCredit = totalCredit.add(amount);
-                else totalCash = totalCash.add(amount);
-            } else {
-                totalCash = totalCash.add(amount);
+            switch (resolvePaymentCategory(method, tree)) {
+                case "MPG_CASH" -> totalCash = totalCash.add(amount);
+                case "MPG_CARD" -> totalCard = totalCard.add(amount);
+                case "MPG_DIGITAL" -> totalDigital = totalDigital.add(amount);
+                case "MPG_CREDIT" -> totalCredit = totalCredit.add(amount);
+                default -> totalCash = totalCash.add(amount);
             }
         }
 
@@ -367,9 +399,10 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
                 endDate
         );
 
+        MasterTree tree = masterTreeProvider.getTree();
         BigDecimal totalSalesCash = BigDecimal.ZERO;
         for (SaleDomain sale : sales) {
-            if (sale.getPaymentMethodId() != null && sale.getPaymentMethodId() == 1L) {
+            if (isCashPayment(sale.getPaymentMethodId(), tree)) {
                 totalSalesCash = totalSalesCash.add(sale.getTotalAmount());
             }
         }
@@ -427,9 +460,10 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
                 endDate
         );
 
+        MasterTree tree = masterTreeProvider.getTree();
         BigDecimal totalSalesCash = BigDecimal.ZERO;
         for (SaleDomain sale : sales) {
-            if (sale.getPaymentMethodId() != null && sale.getPaymentMethodId() == 1L) {
+            if (isCashPayment(sale.getPaymentMethodId(), tree)) {
                 totalSalesCash = totalSalesCash.add(sale.getTotalAmount());
             }
         }
@@ -453,17 +487,19 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
 
     @Override
     public List<CashierHistorySummaryResponse> getOutletCashiersHistory(Long outletId) {
+        MasterTree tree = masterTreeProvider.getTree();
+        Long defaultStatusId = tree.getByCodeOrThrow("ACT").getId();
         List<Long> userIds = cashSessionRepositoryPort.findDistinctEmployeeIdsByOutletId(outletId);
         List<CashierHistorySummaryResponse> result = new ArrayList<>();
         for (Long userId : userIds) {
             Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findById(userId);
             String fullName = "Empleado #" + userId;
             String numberId = "N/A";
-            Long statusId = 1L;
+            Long statusId = defaultStatusId;
 
             if (userOpt.isPresent()) {
                 UserAvalonDomain user = userOpt.get();
-                statusId = user.getStatusId() != null ? user.getStatusId() : 1L;
+                statusId = user.getStatusId() != null ? user.getStatusId() : defaultStatusId;
 
                 if (user.getPersonId() != null) {
                     Optional<PersonDomain> personOpt = personRepositoryPort.findById(user.getPersonId());
@@ -537,17 +573,16 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
             BigDecimal totalCard = BigDecimal.ZERO;
             BigDecimal totalCredit = BigDecimal.ZERO;
 
+            MasterTree tree = masterTreeProvider.getTree();
             for (SaleDomain sale : sales) {
                 Long method = sale.getPaymentMethodId();
                 BigDecimal amount = sale.getTotalAmount() != null ? sale.getTotalAmount() : BigDecimal.ZERO;
-                if (method != null) {
-                    if (method == 1L) totalCash = totalCash.add(amount);
-                    else if (method == 2L) totalCard = totalCard.add(amount);
-                    else if (method == 3L) totalDigital = totalDigital.add(amount);
-                    else if (method == 4L) totalCredit = totalCredit.add(amount);
-                    else totalCash = totalCash.add(amount);
-                } else {
-                    totalCash = totalCash.add(amount);
+                switch (resolvePaymentCategory(method, tree)) {
+                    case "MPG_CASH" -> totalCash = totalCash.add(amount);
+                    case "MPG_CARD" -> totalCard = totalCard.add(amount);
+                    case "MPG_DIGITAL" -> totalDigital = totalDigital.add(amount);
+                    case "MPG_CREDIT" -> totalCredit = totalCredit.add(amount);
+                    default -> totalCash = totalCash.add(amount);
                 }
             }
 
@@ -578,19 +613,21 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
 
     @Override
     public PageResponseDto<DiscrepancyHistoryResponse> getDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, int page, int size) {
+        MasterTree tree = masterTreeProvider.getTree();
+        Long defaultStatusId = tree.getByCodeOrThrow("ACT").getId();
         Pageable pageable = PageRequest.of(page, size);
         Page<CashSessionDomain> domainPage = cashSessionRepositoryPort.findDiscrepanciesHistory(outletId, employeeId, discrepancyType, year, month, day, pageable);
 
         List<DiscrepancyHistoryResponse> content = domainPage.getContent().stream().map(session -> {
             String name = "Empleado #" + session.getEmployeeId();
             String numberId = "N/A";
-            Long statusId = 1L;
+            Long statusId = defaultStatusId;
 
             if (session.getEmployeeId() != null) {
                 Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findById(session.getEmployeeId());
                 if (userOpt.isPresent()) {
                     UserAvalonDomain user = userOpt.get();
-                    statusId = user.getStatusId() != null ? user.getStatusId() : 1L;
+                    statusId = user.getStatusId() != null ? user.getStatusId() : defaultStatusId;
                     if (user.getPersonId() != null) {
                         Optional<PersonDomain> personOpt = personRepositoryPort.findById(user.getPersonId());
                         if (personOpt.isPresent()) {

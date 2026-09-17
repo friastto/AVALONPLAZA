@@ -3,7 +3,6 @@ package org.frias.avalon.domain.outlet.application.usecase.create;
 import org.frias.avalon.core.exeptions.DomainValidationException;
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.core.tenant.port.TenantSchemaMigrationPort;
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;

@@ -2,6 +2,8 @@ package org.frias.avalon.domain.company.application.usecase.find;
 
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.domain.company.application.dto.response.CompanyManagerResponse;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
@@ -16,28 +18,32 @@ import java.time.LocalDateTime;
 @Service
 public class GetCompanyManagerUseCaseImpl implements GetCompanyManagerUseCase {
 
-    private static final Long GERGEN_ROLE_ID = 87L;
-    private static final Long STATUS_ACTIVE_ID = 1L;
-
     private final RoleAssignmentRepositoryPort roleAssignmentRepository;
     private final UserAvalonRepositoryPort userRepository;
     private final PersonRepositoryPort personRepository;
+    private final MasterTreeProvider masterTreeProvider;
 
     public GetCompanyManagerUseCaseImpl(
             RoleAssignmentRepositoryPort roleAssignmentRepository,
             UserAvalonRepositoryPort userRepository,
-            PersonRepositoryPort personRepository
+            PersonRepositoryPort personRepository,
+            MasterTreeProvider masterTreeProvider
     ) {
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.userRepository = userRepository;
         this.personRepository = personRepository;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     @Override
     @Transactional(readOnly = true)
     public CompanyManagerResponse execute(Long companyId) {
-        RoleAssignmentDomain assignment = roleAssignmentRepository.findByCompanyIdAndRoleId(companyId, GERGEN_ROLE_ID)
-                .filter(a -> STATUS_ACTIVE_ID.equals(a.getStatus()))
+        MasterTree tree = masterTreeProvider.getTree();
+        Long gergenRoleId = tree.getByCodeOrThrow("GERGEN").getId();
+        Long activeStatusId = tree.getByCodeOrThrow("ACT").getId();
+
+        RoleAssignmentDomain assignment = roleAssignmentRepository.findByCompanyIdAndRoleId(companyId, gergenRoleId)
+                .filter(a -> activeStatusId.equals(a.getStatus()))
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro un gerente activo para la compania con id: " + companyId));
 
         UserAvalonDomain user = userRepository.findById(assignment.getUserId())
@@ -59,7 +65,7 @@ public class GetCompanyManagerUseCaseImpl implements GetCompanyManagerUseCase {
                 person.getEmail(),
                 phoneStr,
                 user.getUserName(),
-                GERGEN_ROLE_ID,
+                gergenRoleId,
                 "GERGEN",
                 assignment.getStatus(),
                 LocalDateTime.now()

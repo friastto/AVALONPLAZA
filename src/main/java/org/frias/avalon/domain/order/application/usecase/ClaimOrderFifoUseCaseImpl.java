@@ -12,6 +12,13 @@ import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketContr
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 
 @Service
@@ -19,31 +26,34 @@ import java.time.LocalDateTime;
 public class ClaimOrderFifoUseCaseImpl implements ClaimOrderFifoUseCase {
 
     private final OrderRepositoryPort orderRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
-    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
+    private final MasterTreeProvider masterTreeProvider;
+    private final @Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
     private final OrderWebSocketController orderWebSocketController;
 
     @Override
     @Transactional
     public OrderResponse execute(Long outletId, Long userId) {
-        Long ordPenStatusId = masterDataRepositoryPort.getIdByCode("ORD_PEN");
-        if (ordPenStatusId == null) {
-            ordPenStatusId = masterDataRepositoryPort.getIdByCode("PEN");
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot penNode = tree.getByCode("PEN");
+        if (penNode == null) {
+            penNode = tree.getByCode("ORD_PEN");
         }
-        if (ordPenStatusId == null) {
-            ordPenStatusId = 1L;
+        if (penNode == null) {
+            throw new IllegalStateException("Estado maestro PEN u ORD_PEN no encontrado en MasterTree");
         }
+        Long ordPenStatusId = penNode.getId();
 
         OrderDomain pendingOrder = orderRepositoryPort.findNextPendingOrderFifo(outletId, ordPenStatusId)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay pedidos pendientes en cola FIFO para el outlet " + outletId));
 
-        Long ordRecStatusId = masterDataRepositoryPort.getIdByCode("ORD_REC");
-        if (ordRecStatusId == null) {
-            ordRecStatusId = masterDataRepositoryPort.getIdByCode("PRO");
+        MasterRoot proNode = tree.getByCode("PRO");
+        if (proNode == null) {
+            proNode = tree.getByCode("ORD_REC");
         }
-        if (ordRecStatusId == null) {
-            ordRecStatusId = 2L;
+        if (proNode == null) {
+            throw new IllegalStateException("Estado maestro PRO u ORD_REC no encontrado en MasterTree");
         }
+        Long ordRecStatusId = proNode.getId();
 
         Long previousStatusId = pendingOrder.getOrderStatusId();
         pendingOrder.setOrderStatusId(ordRecStatusId);

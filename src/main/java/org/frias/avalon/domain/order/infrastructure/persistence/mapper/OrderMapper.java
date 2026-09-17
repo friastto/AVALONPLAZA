@@ -8,6 +8,7 @@ import org.frias.avalon.domain.order.domain.OrderStatusHistoryDomain;
 import org.frias.avalon.domain.order.infrastructure.persistence.entity.OrderEntity;
 import org.frias.avalon.domain.order.infrastructure.persistence.entity.OrderItemEntity;
 import org.frias.avalon.domain.order.infrastructure.persistence.entity.OrderStatusHistoryEntity;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
@@ -145,6 +146,13 @@ public class OrderMapper {
 
     public OrderItemResponse toItemResponse(OrderItemDomain domain) {
         if (domain == null) return null;
+        MasterRefDto dispatchStatus = null;
+        if (masterTreeProvider != null && domain.getDispatchStatusId() != null) {
+            MasterTree tree = masterTreeProvider.getTree();
+            if (tree != null) {
+                dispatchStatus = MasterRefDto.from(tree.getById(domain.getDispatchStatusId()));
+            }
+        }
         return OrderItemResponse.builder()
                 .id(domain.getId())
                 .productOutletId(domain.getProductOutletId())
@@ -154,6 +162,7 @@ public class OrderMapper {
                 .unitPrice(domain.getUnitPrice())
                 .subtotal(domain.getSubtotal())
                 .dispatchStatusId(domain.getDispatchStatusId())
+                .dispatchStatus(dispatchStatus)
                 .build();
     }
 
@@ -165,19 +174,35 @@ public class OrderMapper {
 
         String orderStatusCode = null;
         String paymentStatusCode = null;
+        MasterRefDto orderStatus = null;
+        MasterRefDto paymentStatus = null;
+        MasterRefDto paymentMethod = null;
+
         if (masterTreeProvider != null) {
             MasterTree tree = masterTreeProvider.getTree();
             if (tree != null) {
                 if (domain.getOrderStatusId() != null) {
                     MasterRoot node = tree.getById(domain.getOrderStatusId());
-                    if (node != null && node.getShortName() != null) {
-                        orderStatusCode = node.getShortName().trim();
+                    if (node != null) {
+                        orderStatus = MasterRefDto.from(node);
+                        if (node.getShortName() != null) {
+                            orderStatusCode = node.getShortName().trim();
+                        }
                     }
                 }
                 if (domain.getPaymentStatusId() != null) {
                     MasterRoot node = tree.getById(domain.getPaymentStatusId());
-                    if (node != null && node.getShortName() != null) {
-                        paymentStatusCode = node.getShortName().trim();
+                    if (node != null) {
+                        paymentStatus = MasterRefDto.from(node);
+                        if (node.getShortName() != null) {
+                            paymentStatusCode = node.getShortName().trim();
+                        }
+                    }
+                }
+                if (domain.getPaymentMethodId() != null) {
+                    MasterRoot node = tree.getById(domain.getPaymentMethodId());
+                    if (node != null) {
+                        paymentMethod = MasterRefDto.from(node);
                     }
                 }
             }
@@ -190,9 +215,12 @@ public class OrderMapper {
                 .outletId(domain.getOutletId())
                 .orderStatusId(domain.getOrderStatusId())
                 .orderStatusCode(orderStatusCode)
+                .orderStatus(orderStatus)
                 .paymentStatusId(domain.getPaymentStatusId())
                 .paymentStatusCode(paymentStatusCode)
+                .paymentStatus(paymentStatus)
                 .paymentMethodId(domain.getPaymentMethodId())
+                .paymentMethod(paymentMethod)
                 .subtotal(domain.getSubtotal())
                 .tax(domain.getTax())
                 .total(domain.getTotal())

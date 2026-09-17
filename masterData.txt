@@ -46,6 +46,7 @@ MASTER DATA - ESTRUCTURA REFACTORIZADA (JSON PARA API)
 			{"fullName": "PENDIENTE", "shortName": "PEN", "parentShortName": "STSLOGIS", "statusId": "ACT"},
 			{"fullName": "EN_PROCESO", "shortName": "PRO", "parentShortName": "STSLOGIS", "statusId": "ACT"},
 			{"fullName": "COMPLETADO", "shortName": "COM", "parentShortName": "STSLOGIS", "statusId": "ACT"},
+			{"fullName": "ENTREGADO", "shortName": "ENT", "parentShortName": "STSLOGIS", "statusId": "ACT"},
 			{"fullName": "CANCELADO", "shortName": "CAN", "parentShortName": "STSLOGIS", "statusId": "ACT"},
 			{"fullName": "RECHAZADO", "shortName": "REC", "parentShortName": "STSLOGIS", "statusId": "ACT"},
 
@@ -286,16 +287,23 @@ MASTER DATA - ESTRUCTURA REFACTORIZADA (JSON PARA API)
 	// 8. METODOS DE PAGO Y STAFF
 	// ==========================================
 	{"fullName": "TYPE_METODO_DE_PAGO", "shortName": "MPG", "parentShortName": null, "statusId": "ACT"},
-		{"fullName": "EFECTIVO", "shortName": "EFE", "parentShortName": "MPG", "statusId": "ACT"},
-		{"fullName": "TARJETA_DEBITO", "shortName": "TDEB", "parentShortName": "MPG", "statusId": "ACT"},
-		{"fullName": "TARJETA_CREDITO", "shortName": "TCRE", "parentShortName": "MPG", "statusId": "ACT"},
-		{"fullName": "TRANSFERENCIA_BANCARIA", "shortName": "TRF", "parentShortName": "MPG", "statusId": "ACT"},
-		{"fullName": "BILLETERA_DIGITAL", "shortName": "WAL", "parentShortName": "MPG", "statusId": "ACT"},
-		{"fullName": "CREDITO_DIRECTO", "shortName": "CREINT", "parentShortName": "MPG", "statusId": "ACT"},
-		{"fullName": "BONO_O_GIFT_CARD", "shortName": "VOUCH", "parentShortName": "MPG", "statusId": "ACT"},
-		{"fullName": "PAGO_CONTRAENTREGA", "shortName": "COD", "parentShortName": "MPG", "statusId": "ACT"},
-		{"fullName": "DATAFONO", "shortName": "POSCARD", "parentShortName": "MPG", "statusId": "ACT"},
-		{"fullName": "CRIPTOMONEDA", "shortName": "CRYPTO", "parentShortName": "MPG", "statusId": "ACT"},
+		{"fullName": "PAGOS_EN_EFECTIVO", "shortName": "MPG_CASH", "parentShortName": "MPG", "statusId": "ACT"},
+			{"fullName": "EFECTIVO", "shortName": "EFE", "parentShortName": "MPG_CASH", "statusId": "ACT"},
+			{"fullName": "PAGO_CONTRAENTREGA", "shortName": "COD", "parentShortName": "MPG_CASH", "statusId": "ACT"},
+
+		{"fullName": "PAGOS_CON_TARJETA", "shortName": "MPG_CARD", "parentShortName": "MPG", "statusId": "ACT"},
+			{"fullName": "TARJETA_DEBITO", "shortName": "TDEB", "parentShortName": "MPG_CARD", "statusId": "ACT"},
+			{"fullName": "TARJETA_CREDITO", "shortName": "TCRE", "parentShortName": "MPG_CARD", "statusId": "ACT"},
+			{"fullName": "DATAFONO", "shortName": "POSCARD", "parentShortName": "MPG_CARD", "statusId": "ACT"},
+
+		{"fullName": "PAGOS_DIGITALES", "shortName": "MPG_DIGITAL", "parentShortName": "MPG", "statusId": "ACT"},
+			{"fullName": "TRANSFERENCIA_BANCARIA", "shortName": "TRF", "parentShortName": "MPG_DIGITAL", "statusId": "ACT"},
+			{"fullName": "BILLETERA_DIGITAL", "shortName": "WAL", "parentShortName": "MPG_DIGITAL", "statusId": "ACT"},
+			{"fullName": "CRIPTOMONEDA", "shortName": "CRYPTO", "parentShortName": "MPG_DIGITAL", "statusId": "ACT"},
+
+		{"fullName": "PAGOS_A_CREDITO", "shortName": "MPG_CREDIT", "parentShortName": "MPG", "statusId": "ACT"},
+			{"fullName": "CREDITO_DIRECTO", "shortName": "CREINT", "parentShortName": "MPG_CREDIT", "statusId": "ACT"},
+			{"fullName": "BONO_O_GIFT_CARD", "shortName": "VOUCH", "parentShortName": "MPG", "statusId": "ACT"},
 
 	{"fullName": "TYPE_STAFF", "shortName": "STAFF", "parentShortName": null, "statusId": "ACT"},
 		{"fullName": "CONSUMER", "shortName": "CONSMR", "parentShortName": "STAFF", "statusId": "ACT"},

@@ -48,17 +48,15 @@ public class AssignCompanyManagerUseCaseImpl implements AssignCompanyManagerUseC
     @Transactional
     public CompanyManagerResponse execute(Long companyId, AssignCompanyManagerRequest request) {
         MasterTree tree = masterTreeProvider.getTree();
-        MasterRoot gergenRole = tree.getByCode("GERGEN");
-        if (gergenRole == null) {
-            throw new ResourceNotFoundException("Rol GERGEN no configurado en MasterTree");
-        }
+        MasterRoot gergenRole = tree.getByCodeOrThrow("GERGEN");
         Long gergenRoleId = gergenRole.getId();
 
-        MasterRoot activeStatus = tree.getByCode("ACT");
-        Long activeStatusId = activeStatus != null ? activeStatus.getId() : 1L;
-
-        MasterRoot inactiveStatus = tree.getByCode("INACT");
-        Long inactiveStatusId = inactiveStatus != null ? inactiveStatus.getId() : 4L;
+        Long activeStatusId = tree.getByCodeOrThrow("ACT").getId();
+        MasterRoot inaNode = tree.getByCode("INA");
+        if (inaNode == null) {
+            inaNode = tree.getByCode("INACT");
+        }
+        Long inactiveStatusId = (inaNode != null) ? inaNode.getId() : activeStatusId;
 
         // 1. Validar que la compania exista
         CompanyDomain company = companyRepository.findById(companyId)
@@ -81,13 +79,28 @@ public class AssignCompanyManagerUseCaseImpl implements AssignCompanyManagerUseC
                     } catch (NumberFormatException ignored) {}
                 }
 
+                Long sexId = request.sexId();
+                if (sexId == null) {
+                    MasterRoot defaultSex = tree.getByCode("SINDET");
+                    if (defaultSex == null) {
+                        defaultSex = tree.getByCode("M");
+                    }
+                    sexId = defaultSex != null ? defaultSex.getId() : null;
+                }
+
+                Long typeId = request.identificationTypeId();
+                if (typeId == null) {
+                    MasterRoot defaultTypeId = tree.getByCode("CC");
+                    typeId = defaultTypeId != null ? defaultTypeId.getId() : null;
+                }
+
                 PersonDomain newPerson = PersonDomain.createBasic(
-                        request.identificationTypeId(),
+                        typeId,
                         request.identificationNumber(),
                         request.firstName(),
                         request.firstLastName(),
                         request.address(),
-                        request.sexId() != null ? request.sexId() : 1L,
+                        sexId,
                         phoneNum,
                         request.email(),
                         activeStatusId

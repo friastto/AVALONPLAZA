@@ -1,7 +1,7 @@
 package org.frias.avalon.domain.user.application.usecase.find;
 
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
@@ -64,8 +64,7 @@ public class FindOutletStaffUseCaseImpl implements FindOutletStaffUseCase {
                 MasterRoot statusRoot = tree.getById(assignment.getStatus());
 
                 MasterDataResponseDto roleDto = roleRoot != null ? masterMapper.toResponse(roleRoot) : null;
-                StatusResponseDto statusDto = statusRoot != null ? 
-                        new StatusResponseDto(statusRoot.getId(), statusRoot.getShortName(), statusRoot.getFullName()) : null;
+                MasterRefDto statusDto = statusRoot != null ? MasterRefDto.from(statusRoot) : null;
 
                 staffList.add(new StaffMemberResponse(
                         user.getId(),

@@ -1,7 +1,7 @@
 package org.frias.avalon.domain.user.application.dtos.response;
 
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 
 public record StaffMemberResponse(
         Long userId,
@@ -16,6 +16,6 @@ public record StaffMemberResponse(
         Long sexId,
         Long typeIdentificationId,
         MasterDataResponseDto role,
-        StatusResponseDto status
+        MasterRefDto status
 ) {
 }

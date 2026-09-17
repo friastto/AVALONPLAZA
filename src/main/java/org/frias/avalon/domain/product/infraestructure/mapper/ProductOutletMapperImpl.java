@@ -97,16 +97,19 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
         Integer reservedGlobalUnits = 0;
         Integer reservedUserUnits = 0;
         try {
+            org.frias.avalon.domain.masterdata.domain.model.MasterTree tree = masterTreeProvider.getTree();
             List<Long> activeStatusIds = new ArrayList<>();
-            Long penId = masterDataRepositoryPort.getIdByCode("PEN");
-            if (penId != null) activeStatusIds.add(penId);
-            Long proId = masterDataRepositoryPort.getIdByCode("PRO");
-            if (proId != null) activeStatusIds.add(proId);
-            Long comId = masterDataRepositoryPort.getIdByCode("COM");
-            if (comId != null) activeStatusIds.add(comId);
-            if (activeStatusIds.isEmpty()) {
-                activeStatusIds = List.of(14L, 15L, 16L);
-            }
+            org.frias.avalon.domain.masterdata.domain.model.MasterRoot penNode = tree.getByCode("PEN");
+            if (penNode == null) penNode = tree.getByCode("ORD_PEN");
+            if (penNode != null) activeStatusIds.add(penNode.getId());
+
+            org.frias.avalon.domain.masterdata.domain.model.MasterRoot proNode = tree.getByCode("PRO");
+            if (proNode == null) proNode = tree.getByCode("ORD_REC");
+            if (proNode != null) activeStatusIds.add(proNode.getId());
+
+            org.frias.avalon.domain.masterdata.domain.model.MasterRoot comNode = tree.getByCode("COM");
+            if (comNode == null) comNode = tree.getByCode("ORD_DISP");
+            if (comNode != null) activeStatusIds.add(comNode.getId());
 
             reservedGlobalUnits = jpaOrderRepository.sumQuantityByProductOutletIdAndStatusIn(domain.getId(), activeStatusIds);
             if (reservedGlobalUnits == null) reservedGlobalUnits = 0;

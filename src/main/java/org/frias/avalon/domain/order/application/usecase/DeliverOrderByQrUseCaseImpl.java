@@ -69,12 +69,12 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido con codigo " + orderCode + " no encontrado"));
 
         MasterTree tree = masterTreeProvider.getTree();
-        MasterRoot entNode = tree.getByCode("ORD_DEL");
+        MasterRoot entNode = tree.getByCode("ENT");
         if (entNode == null) {
-            entNode = tree.getByCode("ENT");
+            entNode = tree.getByCode("ORD_DEL");
         }
         if (entNode == null) {
-            throw new IllegalStateException("Estado maestro ORD_DEL no encontrado en MasterTree");
+            throw new IllegalStateException("Estado maestro ENT no encontrado en MasterTree");
         }
         Long ordEntStatusId = entNode.getId();
 

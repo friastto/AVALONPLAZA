@@ -14,6 +14,9 @@ import org.frias.avalon.domain.cashregister.domain.CashSessionDomain;
 import org.frias.avalon.domain.cashregister.domain.OutletCashSummaryDomain;
 import org.frias.avalon.domain.company.domain.model.CompanyDomain;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
@@ -26,19 +29,20 @@ import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @DisplayName("Unit Tests for CashSessionUseCaseImpl in Cash Register Domain")
@@ -50,6 +54,7 @@ class CashSessionUseCaseImplTest {
     private PersonRepositoryPort personRepositoryPort;
     private UserAvalonRepositoryPort userAvalonRepositoryPort;
     private CompanyRepositoryPort companyRepositoryPort;
+    private MasterTreeProvider masterTreeProvider;
 
     private CashSessionUseCaseImpl cashSessionUseCase;
 
@@ -61,6 +66,15 @@ class CashSessionUseCaseImplTest {
         personRepositoryPort = mock(PersonRepositoryPort.class);
         userAvalonRepositoryPort = mock(UserAvalonRepositoryPort.class);
         companyRepositoryPort = mock(CompanyRepositoryPort.class);
+        masterTreeProvider = mock(MasterTreeProvider.class);
+
+        MasterRoot actNode = new MasterRoot(10L, "ACT", "ACTIVO", null, 1L);
+        MasterRoot efeNode = new MasterRoot(139L, "EFE", "EFECTIVO", null, 1L);
+        MasterRoot tdebNode = new MasterRoot(291L, "TDEB", "TARJETA_DEBITO", null, 1L);
+        MasterRoot trfNode = new MasterRoot(293L, "TRF", "TRANSFERENCIA_BANCARIA", null, 1L);
+        MasterRoot creNode = new MasterRoot(295L, "CREINT", "CREDITO_DIRECTO", null, 1L);
+        MasterTree tree = new MasterTree(List.of(actNode, efeNode, tdebNode, trfNode, creNode));
+        when(masterTreeProvider.getTree()).thenReturn(tree);
 
         cashSessionUseCase = new CashSessionUseCaseImpl(
                 cashSessionRepositoryPort,
@@ -68,7 +82,8 @@ class CashSessionUseCaseImplTest {
                 outletRepositoryPort,
                 personRepositoryPort,
                 userAvalonRepositoryPort,
-                companyRepositoryPort
+                companyRepositoryPort,
+                masterTreeProvider
         );
     }
 
@@ -199,10 +214,10 @@ class CashSessionUseCaseImplTest {
         PersonDomain person = PersonDomain.createFromEntity(20L, "12345678", "CARLOS", "GOMEZ", "CALLE 1", 1L, 1L, 555L, "carlos@email.com", 1L, LocalDateTime.now(), LocalDateTime.now());
         when(personRepositoryPort.findById(20L)).thenReturn(Optional.of(person));
 
-        SaleDomain sale1 = SaleDomain.fromPersistence(1L, UUID.randomUUID(), new BigDecimal("10000"), new BigDecimal("10000"), BigDecimal.ZERO, 1L, 1L, 20L, 1L, 20L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of());
-        SaleDomain sale2 = SaleDomain.fromPersistence(2L, UUID.randomUUID(), new BigDecimal("20000"), new BigDecimal("20000"), BigDecimal.ZERO, 2L, 1L, 20L, 1L, 20L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of());
-        SaleDomain sale3 = SaleDomain.fromPersistence(3L, UUID.randomUUID(), new BigDecimal("30000"), new BigDecimal("30000"), BigDecimal.ZERO, 3L, 1L, 20L, 1L, 20L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of());
-        SaleDomain sale4 = SaleDomain.fromPersistence(4L, UUID.randomUUID(), new BigDecimal("40000"), new BigDecimal("40000"), BigDecimal.ZERO, 4L, 1L, 20L, 1L, 20L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of());
+        SaleDomain sale1 = SaleDomain.fromPersistence(1L, UUID.randomUUID(), new BigDecimal("10000"), new BigDecimal("10000"), BigDecimal.ZERO, 139L, 1L, 20L, 1L, 20L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of());
+        SaleDomain sale2 = SaleDomain.fromPersistence(2L, UUID.randomUUID(), new BigDecimal("20000"), new BigDecimal("20000"), BigDecimal.ZERO, 291L, 1L, 20L, 1L, 20L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of());
+        SaleDomain sale3 = SaleDomain.fromPersistence(3L, UUID.randomUUID(), new BigDecimal("30000"), new BigDecimal("30000"), BigDecimal.ZERO, 293L, 1L, 20L, 1L, 20L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of());
+        SaleDomain sale4 = SaleDomain.fromPersistence(4L, UUID.randomUUID(), new BigDecimal("40000"), new BigDecimal("40000"), BigDecimal.ZERO, 295L, 1L, 20L, 1L, 20L, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), List.of());
 
         when(saleRepositoryPort.findByOutletAndEmployeeAndDateBetween(eq(1L), eq(20L), any(), any()))
                 .thenReturn(List.of(sale1, sale2, sale3, sale4));

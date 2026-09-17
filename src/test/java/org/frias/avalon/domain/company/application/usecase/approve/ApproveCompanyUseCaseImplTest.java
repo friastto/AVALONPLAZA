@@ -31,6 +31,9 @@ class ApproveCompanyUseCaseImplTest {
     @Mock
     private TenantSchemaMigrationPort tenantSchemaMigrationPort;
 
+    @Mock
+    private org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider masterTreeProvider;
+
     @InjectMocks
     private ApproveCompanyUseCaseImpl approveCompanyUseCase;
 
@@ -65,6 +68,10 @@ class ApproveCompanyUseCaseImplTest {
 
         given(companyPort.findById(companyId)).willReturn(Optional.of(existingCompany));
         given(companyPort.save(any(CompanyDomain.class))).willReturn(approvedCompany);
+
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot actNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterTree masterTree = new org.frias.avalon.domain.masterdata.domain.model.MasterTree(java.util.List.of(actNode));
+        given(masterTreeProvider.getTree()).willReturn(masterTree);
 
         // Act
         CompanyResponse response = approveCompanyUseCase.execute(companyId);

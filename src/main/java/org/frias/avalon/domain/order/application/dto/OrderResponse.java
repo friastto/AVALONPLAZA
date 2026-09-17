@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,9 +22,12 @@ public class OrderResponse {
     private Long outletId;
     private Long orderStatusId;
     private String orderStatusCode;
+    private MasterRefDto orderStatus;
     private Long paymentStatusId;
     private String paymentStatusCode;
+    private MasterRefDto paymentStatus;
     private Long paymentMethodId;
+    private MasterRefDto paymentMethod;
     private BigDecimal subtotal;
     private BigDecimal tax;
     private BigDecimal total;

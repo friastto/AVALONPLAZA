@@ -12,6 +12,13 @@ import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketContr
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 
 @Service
@@ -19,8 +26,8 @@ import java.time.LocalDateTime;
 public class ClaimSpecificOrderUseCaseImpl implements ClaimSpecificOrderUseCase {
 
     private final OrderRepositoryPort orderRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
-    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
+    private final MasterTreeProvider masterTreeProvider;
+    private final @Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
     private final OrderWebSocketController orderWebSocketController;
 
     @Override
@@ -29,13 +36,15 @@ public class ClaimSpecificOrderUseCaseImpl implements ClaimSpecificOrderUseCase 
         OrderDomain order = orderRepositoryPort.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido con ID " + orderId + " no encontrado"));
 
-        Long ordRecStatusId = masterDataRepositoryPort.getIdByCode("ORD_REC");
-        if (ordRecStatusId == null) {
-            ordRecStatusId = masterDataRepositoryPort.getIdByCode("PRO");
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot proNode = tree.getByCode("PRO");
+        if (proNode == null) {
+            proNode = tree.getByCode("ORD_REC");
         }
-        if (ordRecStatusId == null) {
-            ordRecStatusId = 2L;
+        if (proNode == null) {
+            throw new IllegalStateException("Estado maestro PRO u ORD_REC no encontrado en MasterTree");
         }
+        Long ordRecStatusId = proNode.getId();
 
         Long previousStatusId = order.getOrderStatusId();
         order.setOrderStatusId(ordRecStatusId);

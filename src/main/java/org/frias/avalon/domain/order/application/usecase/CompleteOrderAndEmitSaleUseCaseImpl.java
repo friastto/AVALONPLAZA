@@ -12,6 +12,11 @@ import org.frias.avalon.domain.order.infrastructure.persistence.mapper.OrderMapp
 import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketController;
 import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
 import org.springframework.stereotype.Service;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -23,7 +28,7 @@ public class CompleteOrderAndEmitSaleUseCaseImpl implements CompleteOrderAndEmit
     private final OrderRepositoryPort orderRepositoryPort;
     private final MasterTreeProvider masterTreeProvider;
     private final JpaProductOutletRepository jpaProductOutletRepository;
-    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
+    private final @Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
     private final OrderWebSocketController orderWebSocketController;
 
     @Override
@@ -32,13 +37,13 @@ public class CompleteOrderAndEmitSaleUseCaseImpl implements CompleteOrderAndEmit
         OrderDomain order = orderRepositoryPort.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido con ID " + orderId + " no encontrado"));
 
-        org.frias.avalon.domain.masterdata.domain.model.MasterTree tree = masterTreeProvider.getTree();
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot dispNode = tree.getByCode("ORD_DISP");
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot dispNode = tree.getByCode("COM");
         if (dispNode == null) {
-            dispNode = tree.getByCode("COM");
+            dispNode = tree.getByCode("ORD_DISP");
         }
         if (dispNode == null) {
-            throw new IllegalStateException("Estado maestro ORD_DISP o COM no encontrado en MasterTree");
+            throw new IllegalStateException("Estado maestro COM u ORD_DISP no encontrado en MasterTree");
         }
         Long ordDispStatusId = dispNode.getId();
 
