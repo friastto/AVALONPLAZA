@@ -4,4 +4,5 @@ import org.frias.avalon.domain.order.application.dto.OrderResponse;
 
 public interface UpdateItemDispatchStatusUseCase {
     OrderResponse execute(Long orderId, Long itemId, Long statusId);
+    OrderResponse execute(Long orderId, Long itemId, Long statusId, String statusCode);
 }

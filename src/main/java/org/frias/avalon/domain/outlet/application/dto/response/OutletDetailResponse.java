@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.outlet.application.dto.response;
 
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.outlet.application.dto.LocationDto;
 import org.frias.avalon.domain.product.application.dto.response.ProductResponse;
 
@@ -19,7 +19,7 @@ public record OutletDetailResponse(
         String phone,
         String nit,
         LocationDto location,
-        StatusResponseDto statusResponseDto,
+        MasterRefDto statusResponseDto,
         Boolean deliveryEnabled,
         BigDecimal deliveryFee,
         List<ProductResponse> catalog

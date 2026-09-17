@@ -7,7 +7,9 @@ import org.frias.avalon.domain.claim.application.dto.response.ClaimResponse;
 import org.frias.avalon.domain.claim.application.port.ClaimRepositoryPort;
 import org.frias.avalon.domain.claim.domain.OrderClaimDomain;
 import org.frias.avalon.domain.claim.infrastructure.persistence.mapper.ClaimMapper;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.order.domain.OrderDomain;
 import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketController;
@@ -28,7 +30,7 @@ class CreateOrderClaimUseCaseImplTest {
 
     private ClaimRepositoryPort claimRepositoryPort;
     private OrderRepositoryPort orderRepositoryPort;
-    private MasterDataRepositoryPort masterDataRepositoryPort;
+    private MasterTreeProvider masterTreeProvider;
     private ClaimMapper claimMapper;
     private OrderWebSocketController orderWebSocketController;
 
@@ -38,14 +40,18 @@ class CreateOrderClaimUseCaseImplTest {
     void setUp() {
         claimRepositoryPort = mock(ClaimRepositoryPort.class);
         orderRepositoryPort = mock(OrderRepositoryPort.class);
-        masterDataRepositoryPort = mock(MasterDataRepositoryPort.class);
+        masterTreeProvider = mock(MasterTreeProvider.class);
         claimMapper = mock(ClaimMapper.class);
         orderWebSocketController = mock(OrderWebSocketController.class);
+
+        MasterRoot clmPenNode = new MasterRoot(201L, "CLM_PEN", "RECLAMO PENDIENTE", null, 1L);
+        MasterTree tree = new MasterTree(List.of(clmPenNode));
+        when(masterTreeProvider.getTree()).thenReturn(tree);
 
         createOrderClaimUseCase = new CreateOrderClaimUseCaseImpl(
                 claimRepositoryPort,
                 orderRepositoryPort,
-                masterDataRepositoryPort,
+                masterTreeProvider,
                 claimMapper,
                 orderWebSocketController
         );
@@ -80,7 +86,6 @@ class CreateOrderClaimUseCaseImplTest {
 
         OrderDomain order = OrderDomain.builder().id(50L).build();
         when(orderRepositoryPort.findById(50L)).thenReturn(Optional.of(order));
-        when(masterDataRepositoryPort.getIdByCode("CLM_PEN")).thenReturn(201L);
 
         OrderClaimDomain savedDomain = OrderClaimDomain.builder()
                 .id(1L)

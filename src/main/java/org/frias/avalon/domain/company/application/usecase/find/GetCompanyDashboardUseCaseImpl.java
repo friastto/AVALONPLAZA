@@ -11,6 +11,9 @@ import org.frias.avalon.domain.sale.infrastructure.entity.SaleEntity;
 import org.frias.avalon.domain.sale.infrastructure.repository.JpaSaleRepository;
 import org.frias.avalon.domain.cashregister.infrastructure.entity.CashSessionEntity;
 import org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashSessionRepository;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -36,19 +39,22 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
     private final JpaSaleRepository saleRepository;
     private final JpaCashSessionRepository cashSessionRepository;
     private final TransactionTemplate transactionTemplate;
+    private final MasterTreeProvider masterTreeProvider;
 
     public GetCompanyDashboardUseCaseImpl(
             JpaCompanyRepository companyRepository,
             JpaOutletRepository outletRepository,
             JpaSaleRepository saleRepository,
             JpaCashSessionRepository cashSessionRepository,
-            TransactionTemplate transactionTemplate
+            TransactionTemplate transactionTemplate,
+            MasterTreeProvider masterTreeProvider
     ) {
         this.companyRepository = companyRepository;
         this.outletRepository = outletRepository;
         this.saleRepository = saleRepository;
         this.cashSessionRepository = cashSessionRepository;
         this.transactionTemplate = transactionTemplate;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     @Override
@@ -272,8 +278,14 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
 
     private String resolvePaymentMethodName(Long paymentMethodId) {
         if (paymentMethodId == null) return "OTRO";
-        if (paymentMethodId == 139L || paymentMethodId == 1L) return "EFECTIVO";
-        if (paymentMethodId == 151L || paymentMethodId == 4L) return "FIADO";
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot node = tree.getById(paymentMethodId);
+        if (node != null) {
+            if (tree.is(node, "EFE")) return "EFECTIVO";
+            if (tree.is(node, "FIA") || tree.is(node, "CREINT")) return "FIADO";
+            if (node.getFullName() != null) return node.getFullName().toUpperCase();
+            if (node.getShortName() != null) return node.getShortName().toUpperCase();
+        }
         return "METODO_" + paymentMethodId;
     }
 }

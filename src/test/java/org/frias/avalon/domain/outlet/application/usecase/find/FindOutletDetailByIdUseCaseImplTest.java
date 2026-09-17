@@ -2,7 +2,7 @@ package org.frias.avalon.domain.outlet.application.usecase.find;
 
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.core.tenant.TenantContext;
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.outlet.application.dto.LocationDto;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletDetailResponse;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
@@ -86,7 +86,7 @@ class FindOutletDetailByIdUseCaseImplTest {
         Long companyId = 50L;
         LocationDomain locationDomain = new LocationDomain(4.60971, -74.08175);
         LocationDto locationDto = new LocationDto(4.60971, -74.08175);
-        StatusResponseDto statusResponseDto = new StatusResponseDto(1L, "ACT", "Activo");
+        MasterRefDto statusResponseDto = new MasterRefDto(1L, "ACT", "Activo");
 
         OutletDomain outletDomain = OutletDomain.fromPersistence(
                 outletId, "OUT-001", "Tienda Principal", "Calle 100", "3001234567",

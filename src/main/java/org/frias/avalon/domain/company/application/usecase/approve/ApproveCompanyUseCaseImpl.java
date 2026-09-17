@@ -4,6 +4,9 @@ import org.frias.avalon.core.tenant.port.TenantSchemaMigrationPort;
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
 import org.frias.avalon.domain.company.domain.model.CompanyDomain;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +19,16 @@ public class ApproveCompanyUseCaseImpl implements ApproveCompanyUseCase {
 
     private final CompanyRepositoryPort companyPort;
     private final TenantSchemaMigrationPort tenantSchemaMigrationPort;
+    private final MasterTreeProvider masterTreeProvider;
 
-    public ApproveCompanyUseCaseImpl(CompanyRepositoryPort companyPort, TenantSchemaMigrationPort tenantSchemaMigrationPort) {
+    public ApproveCompanyUseCaseImpl(
+            CompanyRepositoryPort companyPort,
+            TenantSchemaMigrationPort tenantSchemaMigrationPort,
+            MasterTreeProvider masterTreeProvider
+    ) {
         this.companyPort = companyPort;
         this.tenantSchemaMigrationPort = tenantSchemaMigrationPort;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     @Transactional
@@ -28,12 +37,19 @@ public class ApproveCompanyUseCaseImpl implements ApproveCompanyUseCase {
         CompanyDomain company = companyPort.findById(companyId)
                 .orElseThrow(() -> new IllegalArgumentException("Company with ID " + companyId + " not found"));
 
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot actNode = tree.getByCode("ACT");
+        if (actNode == null) {
+            actNode = tree.getByCode("APR");
+        }
+        Long approvedStatusId = (actNode != null) ? actNode.getId() : tree.getByCodeOrThrow("ACT").getId();
+
         CompanyDomain approvedDomain = new CompanyDomain(
                 company.id(),
                 company.nit(),
                 company.name(),
                 company.email(),
-                1L, // statusId: 1L (Approved)
+                approvedStatusId,
                 company.defaultCashThresholdAmount(),
                 company.createdAt(),
                 company.updatedAt()

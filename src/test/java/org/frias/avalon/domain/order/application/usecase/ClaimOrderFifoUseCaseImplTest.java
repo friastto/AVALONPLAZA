@@ -1,7 +1,9 @@
 package org.frias.avalon.domain.order.application.usecase;
 
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.order.application.dto.OrderResponse;
 import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.order.domain.OrderDomain;
@@ -15,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +29,7 @@ import static org.mockito.Mockito.*;
 class ClaimOrderFifoUseCaseImplTest {
 
     private OrderRepositoryPort orderRepositoryPort;
-    private MasterDataRepositoryPort masterDataRepositoryPort;
+    private MasterTreeProvider masterTreeProvider;
     private OrderMapper orderMapper;
     private OrderWebSocketController orderWebSocketController;
 
@@ -35,29 +38,31 @@ class ClaimOrderFifoUseCaseImplTest {
     @BeforeEach
     void setUp() {
         orderRepositoryPort = mock(OrderRepositoryPort.class);
-        masterDataRepositoryPort = mock(MasterDataRepositoryPort.class);
+        masterTreeProvider = mock(MasterTreeProvider.class);
         orderMapper = mock(OrderMapper.class);
         orderWebSocketController = mock(OrderWebSocketController.class);
 
         claimOrderFifoUseCase = new ClaimOrderFifoUseCaseImpl(
                 orderRepositoryPort,
-                masterDataRepositoryPort,
+                masterTreeProvider,
                 orderMapper,
                 orderWebSocketController
         );
     }
 
     @Test
-    @DisplayName("Should successfully claim next FIFO pending order when master status codes ORD_PEN and ORD_REC are found")
-    void execute_Success_WhenOrdPenAndOrdRecFoundInMasterData() {
+    @DisplayName("Should successfully claim next FIFO pending order when master status codes PEN and PRO are found")
+    void execute_Success_WhenPenAndProFoundInMasterData() {
         Long outletId = 10L;
         Long userId = 42L;
-        Long pendingStatusId = 101L;
-        Long receivedStatusId = 102L;
+        Long pendingStatusId = 14L;
+        Long receivedStatusId = 15L;
         Long orderId = 500L;
 
-        when(masterDataRepositoryPort.getIdByCode("ORD_PEN")).thenReturn(pendingStatusId);
-        when(masterDataRepositoryPort.getIdByCode("ORD_REC")).thenReturn(receivedStatusId);
+        MasterRoot penNode = new MasterRoot(pendingStatusId, "PEN", "PENDIENTE", null, 1L);
+        MasterRoot proNode = new MasterRoot(receivedStatusId, "PRO", "EN PROCESO", null, 1L);
+        MasterTree tree = new MasterTree(List.of(penNode, proNode));
+        when(masterTreeProvider.getTree()).thenReturn(tree);
 
         OrderDomain initialPendingOrder = OrderDomain.builder()
                 .id(orderId)
@@ -123,19 +128,18 @@ class ClaimOrderFifoUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("Should claim order using fallback codes PEN and PRO when ORD_PEN and ORD_REC are missing")
-    void execute_Success_WhenFallbackPenAndProFoundInMasterData() {
+    @DisplayName("Should claim order using fallback codes ORD_PEN and ORD_REC when PEN and PRO are missing")
+    void execute_Success_WhenFallbackOrdPenAndOrdRecFoundInMasterData() {
         Long outletId = 5L;
         Long userId = 15L;
         Long fallbackPenStatusId = 201L;
         Long fallbackProStatusId = 202L;
         Long orderId = 300L;
 
-        when(masterDataRepositoryPort.getIdByCode("ORD_PEN")).thenReturn(null);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(fallbackPenStatusId);
-
-        when(masterDataRepositoryPort.getIdByCode("ORD_REC")).thenReturn(null);
-        when(masterDataRepositoryPort.getIdByCode("PRO")).thenReturn(fallbackProStatusId);
+        MasterRoot ordPenNode = new MasterRoot(fallbackPenStatusId, "ORD_PEN", "PEDIDO PENDIENTE", null, 1L);
+        MasterRoot ordRecNode = new MasterRoot(fallbackProStatusId, "ORD_REC", "PEDIDO RECIBIDO", null, 1L);
+        MasterTree tree = new MasterTree(List.of(ordPenNode, ordRecNode));
+        when(masterTreeProvider.getTree()).thenReturn(tree);
 
         OrderDomain initialPendingOrder = OrderDomain.builder()
                 .id(orderId)
@@ -173,50 +177,15 @@ class ClaimOrderFifoUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("Should claim order using default status IDs 1L and 2L when all master data codes return null")
-    void execute_Success_WhenFallbackToDefaultIds() {
+    @DisplayName("Should throw IllegalStateException when status codes are not found in MasterTree")
+    void execute_ThrowsException_WhenStatusCodesNotFound() {
         Long outletId = 1L;
         Long userId = 99L;
-        Long defaultPendingStatusId = 1L;
-        Long defaultReceivedStatusId = 2L;
-        Long orderId = 100L;
 
-        when(masterDataRepositoryPort.getIdByCode("ORD_PEN")).thenReturn(null);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(null);
+        MasterTree emptyTree = new MasterTree(List.of());
+        when(masterTreeProvider.getTree()).thenReturn(emptyTree);
 
-        when(masterDataRepositoryPort.getIdByCode("ORD_REC")).thenReturn(null);
-        when(masterDataRepositoryPort.getIdByCode("PRO")).thenReturn(null);
-
-        OrderDomain initialPendingOrder = OrderDomain.builder()
-                .id(orderId)
-                .outletId(outletId)
-                .orderStatusId(defaultPendingStatusId)
-                .build();
-
-        when(orderRepositoryPort.findNextPendingOrderFifo(outletId, defaultPendingStatusId))
-                .thenReturn(Optional.of(initialPendingOrder));
-
-        OrderDomain savedOrder = OrderDomain.builder()
-                .id(orderId)
-                .outletId(outletId)
-                .orderStatusId(defaultReceivedStatusId)
-                .claimedByUserId(userId)
-                .build();
-
-        when(orderRepositoryPort.save(any(OrderDomain.class))).thenReturn(savedOrder);
-
-        OrderResponse expectedResponse = OrderResponse.builder()
-                .id(orderId)
-                .orderStatusId(defaultReceivedStatusId)
-                .build();
-
-        when(orderMapper.toResponse(savedOrder)).thenReturn(expectedResponse);
-
-        OrderResponse result = claimOrderFifoUseCase.execute(outletId, userId);
-
-        assertNotNull(result);
-        assertEquals(orderId, result.getId());
-        verify(orderRepositoryPort).findNextPendingOrderFifo(outletId, 1L);
+        assertThrows(IllegalStateException.class, () -> claimOrderFifoUseCase.execute(outletId, userId));
     }
 
     @Test
@@ -225,8 +194,11 @@ class ClaimOrderFifoUseCaseImplTest {
         Long outletId = 999L;
         Long userId = 1L;
 
-        when(masterDataRepositoryPort.getIdByCode("ORD_PEN")).thenReturn(101L);
-        when(orderRepositoryPort.findNextPendingOrderFifo(outletId, 101L)).thenReturn(Optional.empty());
+        MasterRoot penNode = new MasterRoot(14L, "PEN", "PENDIENTE", null, 1L);
+        MasterTree tree = new MasterTree(List.of(penNode));
+        when(masterTreeProvider.getTree()).thenReturn(tree);
+
+        when(orderRepositoryPort.findNextPendingOrderFifo(outletId, 14L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,

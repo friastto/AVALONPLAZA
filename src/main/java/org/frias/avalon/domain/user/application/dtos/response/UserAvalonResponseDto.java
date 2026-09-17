@@ -1,12 +1,12 @@
 package org.frias.avalon.domain.user.application.dtos.response;
 
 
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 
 public record UserAvalonResponseDto(
         Long id,
         Long personId,
         String userName,
-        StatusResponseDto status
+        MasterRefDto status
 ) {
 }

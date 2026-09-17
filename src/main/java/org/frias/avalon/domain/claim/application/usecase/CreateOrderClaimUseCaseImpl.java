@@ -25,7 +25,7 @@ public class CreateOrderClaimUseCaseImpl implements CreateOrderClaimUseCase {
 
     private final ClaimRepositoryPort claimRepositoryPort;
     private final OrderRepositoryPort orderRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
+    private final org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider masterTreeProvider;
     private final ClaimMapper claimMapper;
     private final OrderWebSocketController orderWebSocketController;
 
@@ -35,13 +35,15 @@ public class CreateOrderClaimUseCaseImpl implements CreateOrderClaimUseCase {
         orderRepositoryPort.findById(request.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido con ID " + request.getOrderId() + " no encontrado"));
 
-        Long clmPenStatusId = masterDataRepositoryPort.getIdByCode("CLM_PEN");
-        if (clmPenStatusId == null) {
-            clmPenStatusId = masterDataRepositoryPort.getIdByCode("PEN");
+        org.frias.avalon.domain.masterdata.domain.model.MasterTree tree = masterTreeProvider.getTree();
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot clmPenNode = tree.getByCode("CLM_PEN");
+        if (clmPenNode == null) {
+            clmPenNode = tree.getByCode("PEN");
         }
-        if (clmPenStatusId == null) {
-            clmPenStatusId = 1L;
+        if (clmPenNode == null) {
+            throw new IllegalStateException("Estado maestro CLM_PEN o PEN no encontrado en MasterTree");
         }
+        Long clmPenStatusId = clmPenNode.getId();
 
         LocalDateTime now = LocalDateTime.now();
 

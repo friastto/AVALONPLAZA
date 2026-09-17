@@ -17,6 +17,7 @@ import org.frias.avalon.core.permissions.UserContext;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
@@ -114,23 +115,22 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
     }
 
     private OrderResponse doCreateOrder(CreateOrderRequest request) {
-        Long ordPenStatusId = masterDataRepositoryPort.getIdByCode("ORD_PEN");
-        if (ordPenStatusId == null) {
-            ordPenStatusId = masterDataRepositoryPort.getIdByCode("PEN");
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot ordPenNode = tree.getByCode("PEN");
+        if (ordPenNode == null) {
+            ordPenNode = tree.getByCode("ORD_PEN");
         }
-        if (ordPenStatusId == null) {
-            ordPenStatusId = 1L;
+        if (ordPenNode == null) {
+            throw new IllegalStateException("Estado maestro PEN no encontrado en MasterTree");
         }
+        Long ordPenStatusId = ordPenNode.getId();
 
-        Long payPenStatusId = masterDataRepositoryPort.getIdByCode("PAY_PEN");
-        if (payPenStatusId == null) {
-            payPenStatusId = 1L;
+        MasterRoot payPenNode = tree.getByCode("PAY_PEN");
+        if (payPenNode == null) {
+            throw new IllegalStateException("Estado maestro PAY_PEN no encontrado en MasterTree");
         }
-
-        Long dispPenStatusId = masterDataRepositoryPort.getIdByCode("PEN");
-        if (dispPenStatusId == null) {
-            dispPenStatusId = 1L;
-        }
+        Long payPenStatusId = payPenNode.getId();
+        Long dispPenStatusId = ordPenStatusId;
 
         String orderCode = "ORD-" + UUID.randomUUID().toString().toUpperCase();
         LocalDateTime now = LocalDateTime.now();
@@ -139,14 +139,14 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
         List<OrderItemDomain> itemsDomain = new ArrayList<>();
 
         List<Long> activeStatusIds = new ArrayList<>();
-        Long penId = masterDataRepositoryPort.getIdByCode("PEN");
-        if (penId != null) activeStatusIds.add(penId);
-        Long proId = masterDataRepositoryPort.getIdByCode("PRO");
-        if (proId != null) activeStatusIds.add(proId);
-        Long comId = masterDataRepositoryPort.getIdByCode("COM");
-        if (comId != null) activeStatusIds.add(comId);
+        MasterRoot penNode = tree.getByCode("PEN");
+        if (penNode != null) activeStatusIds.add(penNode.getId());
+        MasterRoot proNode = tree.getByCode("PRO");
+        if (proNode != null) activeStatusIds.add(proNode.getId());
+        MasterRoot comNode = tree.getByCode("COM");
+        if (comNode != null) activeStatusIds.add(comNode.getId());
         if (activeStatusIds.isEmpty()) {
-            activeStatusIds = List.of(14L, 15L, 16L);
+            throw new IllegalStateException("Estados logisticos (PEN, PRO, COM) no encontrados en MasterTree");
         }
 
         for (var itemReq : request.getItems()) {
@@ -213,13 +213,30 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
             }
         }
 
+        Long paymentMethodId = request.getPaymentMethodId();
+        if (paymentMethodId == null && request.getPaymentMethodCode() != null) {
+            MasterRoot pmNode = tree.getByCode(request.getPaymentMethodCode().trim());
+            if (pmNode != null) {
+                paymentMethodId = pmNode.getId();
+            }
+        }
+        if (paymentMethodId == null) {
+            MasterRoot defaultCashNode = tree.getByCode("EFE");
+            if (defaultCashNode == null) {
+                defaultCashNode = tree.getByCode("MPG_CASH");
+            }
+            if (defaultCashNode != null) {
+                paymentMethodId = defaultCashNode.getId();
+            }
+        }
+
         OrderDomain domain = OrderDomain.builder()
                 .orderCode(orderCode)
                 .customerId(customerId)
                 .outletId(request.getOutletId())
                 .orderStatusId(ordPenStatusId)
                 .paymentStatusId(payPenStatusId)
-                .paymentMethodId(request.getPaymentMethodId())
+                .paymentMethodId(paymentMethodId)
                 .subtotal(subtotal)
                 .tax(tax)
                 .total(total)

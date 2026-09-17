@@ -52,8 +52,8 @@ public class AssignCompanyEmployeeUseCaseImpl implements AssignCompanyEmployeeUs
     @Transactional
     public CompanyEmployeeResponse execute(Long companyId, AssignCompanyEmployeeRequest request) {
         MasterTree tree = masterTreeProvider.getTree();
-        MasterRoot activeStatus = tree.getByCode("ACT");
-        Long activeStatusId = activeStatus != null ? activeStatus.getId() : 1L;
+        MasterRoot activeStatus = tree.getByCodeOrThrow("ACT");
+        Long activeStatusId = activeStatus.getId();
 
         MasterRoot roleRoot = tree.getByIdOrThrow(request.roleId());
 

@@ -1,7 +1,7 @@
 package org.frias.avalon.domain.user.infraestructure.persistence.mapper;
 
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
 import org.frias.avalon.domain.user.application.dtos.response.AssignmentRoleResponse;
@@ -61,7 +61,7 @@ public class RoleAssignmentMapperImpl implements RoleAssignmentMapper {
                 userDto,
                 rolevalid,
                 outletId,
-                new StatusResponseDto(statusActive.getId(), statusActive.getShortName(), statusActive.getFullName())
+                MasterRefDto.from(statusActive)
         );
     }
 }

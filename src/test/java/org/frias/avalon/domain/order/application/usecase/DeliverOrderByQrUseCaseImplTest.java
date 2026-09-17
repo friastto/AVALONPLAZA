@@ -49,8 +49,15 @@ class DeliverOrderByQrUseCaseImplTest {
     private DeliverOrderByQrUseCaseImpl deliverOrderByQrUseCase;
     private MasterTree masterTree;
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        org.frias.avalon.core.tenant.TenantContext.clear();
+    }
+
     @BeforeEach
     void setUp() {
+        org.frias.avalon.core.tenant.TenantContext.clear();
+        org.frias.avalon.core.tenant.TenantContext.setTenantOutletId(1L);
         orderRepositoryPort = mock(OrderRepositoryPort.class);
         masterTreeProvider = mock(MasterTreeProvider.class);
         jpaProductOutletRepository = mock(JpaProductOutletRepository.class);
@@ -68,14 +75,14 @@ class DeliverOrderByQrUseCaseImplTest {
         when(mockOutlet.getCompanyId()).thenReturn(10L);
         when(outletRepositoryPort.findById(any())).thenReturn(Optional.of(mockOutlet));
 
-        MasterRoot ordDelNode = new MasterRoot(104L, "ORD_DEL", "ENTREGADO", null, 1L);
+        MasterRoot entNode = new MasterRoot(104L, "ENT", "ENTREGADO", null, 1L);
         MasterRoot ordDispNode = new MasterRoot(16L, "ORD_DISP", "DESPACHADO", null, 1L);
         MasterRoot ordCanNode = new MasterRoot(17L, "ORD_CAN", "CANCELADO", null, 1L);
         MasterRoot payPadNode = new MasterRoot(102L, "PAY_PAD", "PAGADO", null, 1L);
         MasterRoot actNode = new MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
         MasterRoot cashNode = new MasterRoot(201L, "CASH", "EFECTIVO", null, 1L);
 
-        masterTree = new MasterTree(List.of(ordDelNode, ordDispNode, ordCanNode, payPadNode, actNode, cashNode));
+        masterTree = new MasterTree(List.of(entNode, ordDispNode, ordCanNode, payPadNode, actNode, cashNode));
         when(masterTreeProvider.getTree()).thenReturn(masterTree);
 
         deliverOrderByQrUseCase = new DeliverOrderByQrUseCaseImpl(

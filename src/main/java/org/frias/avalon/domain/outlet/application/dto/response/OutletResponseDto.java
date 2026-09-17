@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.outlet.application.dto.response;
 
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.outlet.application.dto.LocationDto;
 
 import java.math.BigDecimal;
@@ -13,7 +13,7 @@ public record OutletResponseDto(
         String phone,
         String nit,
         LocationDto location,
-        StatusResponseDto statusResponseDto,
+        MasterRefDto statusResponseDto,
         Long companyId,
         Boolean deliveryEnabled,
         BigDecimal deliveryFee

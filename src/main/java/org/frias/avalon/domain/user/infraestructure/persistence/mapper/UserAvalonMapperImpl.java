@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.user.infraestructure.persistence.mapper;
 
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
@@ -55,11 +55,7 @@ public class UserAvalonMapperImpl implements UserAvalonMapper {
 
     @Override
     public UserAvalonResponseDto toResponse(UserAvalonDomain domain, MasterRoot statusRoot) {
-        StatusResponseDto status = new StatusResponseDto(
-                statusRoot.getId(),
-                statusRoot.getShortName(),
-                statusRoot.getFullName()
-        );
+        MasterRefDto status = MasterRefDto.from(statusRoot);
         return new UserAvalonResponseDto(
                 domain.getId(),
                 domain.getPersonId(),

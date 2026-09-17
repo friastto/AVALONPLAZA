@@ -41,24 +41,36 @@ class AssignPersonToUserUseCaseImpl implements AssignPersonToUserUseCase {
             throw new BusinessException("El usuario ya tiene una persona vinculada");
         }
 
-        // 3. Validar que el typeIdentificationId es válido ANTES de usarlo
-        if (tree.getById(data.typeIdentificationId()) == null) {
-            throw new BusinessException("El tipo de identificación proporcionado no es válido.");
+        // 3. Validar y resolver que typeIdentificationId y sexId sean nodos semánticamente válidos
+        Long typeId = data.typeIdentificationId();
+        MasterRoot typeNode = (typeId != null) ? tree.getById(typeId) : null;
+        if (typeNode == null || !tree.isChildOf(typeNode, "IDENT")) {
+            MasterRoot ccNode = tree.getByCode("CC");
+            typeId = ccNode != null ? ccNode.getId() : null;
         }
 
-        MasterRoot status = masterDataRepositoryPort.getActiveStatus().orElseThrow(() -> new BusinessException("no se puede activar esta persona para el usuario actual"));
+        Long sexId = data.sexId();
+        MasterRoot sexNode = (sexId != null) ? tree.getById(sexId) : null;
+        if (sexNode == null || !tree.isChildOf(sexNode, "GEN")) {
+            MasterRoot defaultSex = tree.getByCode("SINDET");
+            if (defaultSex == null) defaultSex = tree.getByCode("M");
+            sexId = defaultSex != null ? defaultSex.getId() : null;
+        }
+
+        MasterRoot statusNode = tree.getByCode("ACT");
+        Long statusId = statusNode != null ? statusNode.getId() : 1L;
 
         // 4. Crear el objeto de dominio de la nueva Persona (incluyendo la dirección)
         PersonDomain newPerson = PersonDomain.createBasic(
-                data.typeIdentificationId(),
+                typeId,
                 data.numberid(),
                 data.name(),
                 data.lastName(),
                 data.address(),
-                data.sexId(),
+                sexId,
                 data.phoneNumber(),
                 data.email(),
-                status.getId()
+                statusId
         );
 
         // 5. Guardar la persona en la base de datos a través de su puerto

@@ -4,6 +4,9 @@ import org.frias.avalon.domain.company.application.dto.request.CreateCompanyRequ
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
 import org.frias.avalon.domain.company.domain.model.CompanyDomain;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,9 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class CreateCompanyUseCaseImpl implements CreateCompanyUseCase {
 
     private final CompanyRepositoryPort companyPort;
+    private final MasterTreeProvider masterTreeProvider;
 
-    public CreateCompanyUseCaseImpl(CompanyRepositoryPort companyPort) {
+    public CreateCompanyUseCaseImpl(
+            CompanyRepositoryPort companyPort,
+            MasterTreeProvider masterTreeProvider
+    ) {
         this.companyPort = companyPort;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     @Transactional
@@ -29,12 +37,19 @@ public class CreateCompanyUseCaseImpl implements CreateCompanyUseCase {
             throw new IllegalStateException("Company with NIT " + request.nit() + " already exists");
         });
 
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot rvwNode = tree.getByCode("RVW");
+        if (rvwNode == null) {
+            rvwNode = tree.getByCode("ACT");
+        }
+        Long statusId = (rvwNode != null) ? rvwNode.getId() : tree.getByCodeOrThrow("ACT").getId();
+
         CompanyDomain toSave = new CompanyDomain(
                 null,
                 request.nit(),
                 request.name(),
                 request.email(),
-                1L,   // statusId (Long)
+                statusId,
                 request.defaultCashThresholdAmount(),
                 null,
                 null

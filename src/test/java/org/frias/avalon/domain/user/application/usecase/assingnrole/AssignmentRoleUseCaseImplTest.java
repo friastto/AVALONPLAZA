@@ -2,7 +2,7 @@ package org.frias.avalon.domain.user.application.usecase.assingnrole;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
@@ -101,7 +101,7 @@ class AssignmentRoleUseCaseImplTest {
         when(outletRepositoryPort.findById(1L)).thenReturn(Optional.of(outlet));
         when(tree.getById(1L)).thenReturn(activeStatus);
 
-        StatusResponseDto statusDto = new StatusResponseDto(1L, "ACT", "Activo");
+        MasterRefDto statusDto = new MasterRefDto(1L, "ACT", "Activo");
         UserAvalonResponseDto userDto = new UserAvalonResponseDto(10L, 100L, "operator1", statusDto);
         MasterDataResponseDto roleDto = new MasterDataResponseDto(5L, "CJTURNO", "Cajero de Turno", null, null);
 

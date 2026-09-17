@@ -61,6 +61,14 @@ public class MasterTree {
         return byCode.get(code.toUpperCase());
     }
 
+    public MasterRoot getByCodeOrThrow(String code) {
+        MasterRoot node = getByCode(code);
+        if (node == null) {
+            throw new IllegalStateException("Nodo maestro no encontrado para codigo: " + code);
+        }
+        return node;
+    }
+
     public boolean isAny(MasterRoot node, String... codes) {
         if (node == null || codes == null) return false;
 

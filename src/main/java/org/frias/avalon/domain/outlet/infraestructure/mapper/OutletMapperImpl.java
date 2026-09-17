@@ -1,6 +1,6 @@
 package org.frias.avalon.domain.outlet.infraestructure.mapper;
 
-import org.frias.avalon.domain.masterdata.application.dto.response.StatusResponseDto;
+import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.outlet.application.dto.LocationDto;
@@ -14,12 +14,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class OutletMapperImpl implements OutletMapper {
 
-    private final LocationMapper locationMapper;
     private final MasterTreeProvider masterTreeProvider;
+    private final LocationMapper locationMapper;
 
-    public OutletMapperImpl(LocationMapper locationMapper, MasterTreeProvider masterTreeProvider) {
-        this.locationMapper = locationMapper;
+    public OutletMapperImpl(MasterTreeProvider masterTreeProvider, LocationMapper locationMapper) {
         this.masterTreeProvider = masterTreeProvider;
+        this.locationMapper = locationMapper;
     }
 
     @Override
@@ -76,9 +76,7 @@ public class OutletMapperImpl implements OutletMapper {
 
         MasterRoot status = masterTreeProvider.getTree().getById(od.getStatusId());
         LocationDto locationDto = locationMapper.domainToDto(od.getLocation());
-        StatusResponseDto statusResponseDto = status != null 
-                ? new StatusResponseDto(status.getId(), status.getShortName(), status.getFullName())
-                : null;
+        MasterRefDto statusResponseDto = MasterRefDto.from(status);
 
         return new OutletResponseDto(
                 od.getId(),

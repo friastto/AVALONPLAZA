@@ -70,6 +70,12 @@ class CreateOrderUseCaseImplTest {
         when(mockOutlet.getCompanyId()).thenReturn(100L);
         when(outletRepositoryPort.findById(any())).thenReturn(Optional.of(mockOutlet));
 
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot penNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(14L, "PEN", "PENDIENTE", null, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot payPenNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(650L, "PAY_PEN", "PAGO PENDIENTE", null, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterRoot actNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
+        org.frias.avalon.domain.masterdata.domain.model.MasterTree masterTree = new org.frias.avalon.domain.masterdata.domain.model.MasterTree(List.of(penNode, payPenNode, actNode));
+        when(masterTreeProvider.getTree()).thenReturn(masterTree);
+
         createOrderUseCase = new CreateOrderUseCaseImpl(
                 orderRepositoryPort,
                 masterDataRepositoryPort,
