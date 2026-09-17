@@ -7,6 +7,7 @@ import org.frias.avalon.domain.order.domain.OrderDomain;
 import org.frias.avalon.domain.order.domain.OrderItemDomain;
 import org.frias.avalon.domain.order.infrastructure.persistence.mapper.OrderMapper;
 import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketController;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ class UpdateItemDispatchStatusUseCaseImplTest {
     private OrderRepositoryPort orderRepositoryPort;
     private OrderMapper orderMapper;
     private OrderWebSocketController orderWebSocketController;
+    private MasterTreeProvider masterTreeProvider;
     private UpdateItemDispatchStatusUseCaseImpl updateItemDispatchStatusUseCase;
 
     @BeforeEach
@@ -32,11 +34,13 @@ class UpdateItemDispatchStatusUseCaseImplTest {
         orderRepositoryPort = mock(OrderRepositoryPort.class);
         orderMapper = mock(OrderMapper.class);
         orderWebSocketController = mock(OrderWebSocketController.class);
+        masterTreeProvider = mock(MasterTreeProvider.class);
 
         updateItemDispatchStatusUseCase = new UpdateItemDispatchStatusUseCaseImpl(
                 orderRepositoryPort,
                 orderMapper,
-                orderWebSocketController
+                orderWebSocketController,
+                masterTreeProvider
         );
     }
 
