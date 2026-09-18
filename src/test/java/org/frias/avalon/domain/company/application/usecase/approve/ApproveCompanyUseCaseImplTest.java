@@ -4,6 +4,8 @@ import org.frias.avalon.core.tenant.port.TenantSchemaMigrationPort;
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
 import org.frias.avalon.domain.company.domain.model.CompanyDomain;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,8 +72,8 @@ class ApproveCompanyUseCaseImplTest {
         given(companyPort.findById(companyId)).willReturn(Optional.of(existingCompany));
         given(companyPort.save(any(CompanyDomain.class))).willReturn(approvedCompany);
 
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot actNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterTree masterTree = new org.frias.avalon.domain.masterdata.domain.model.MasterTree(java.util.List.of(actNode));
+        MasterRoot actNode = new MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
+        MasterTree masterTree = new MasterTree(List.of(actNode));
         given(masterTreeProvider.getTree()).willReturn(masterTree);
 
         // Act

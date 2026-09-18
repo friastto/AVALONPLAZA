@@ -26,7 +26,13 @@ public class ProductSuggestionController {
     @PostMapping
     public ResponseEntity<ApiResponse<ProductCompanyEntity>> createSuggestion(@RequestBody ProductCompanyEntity productCompany) {
         Long rvwStatusId = masterDataRepositoryPort.getIdByCode("RVW"); // EN_REVISION
-        productCompany.setStatusId(rvwStatusId != null ? rvwStatusId : 1L);
+        if (rvwStatusId == null) {
+            rvwStatusId = masterDataRepositoryPort.getIdByCode("ACT");
+        }
+        if (rvwStatusId == null) {
+            throw new IllegalStateException("Estado maestro RVW o ACT no encontrado");
+        }
+        productCompany.setStatusId(rvwStatusId);
         ProductCompanyEntity saved = productCompanyRepository.save(productCompany);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(HttpStatus.CREATED.value(), "Sugerencia registrada en el catalogo corporativo exitosamente", saved));

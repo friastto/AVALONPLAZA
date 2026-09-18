@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 import org.frias.avalon.domain.sale.application.usecase.sale.find.SearchSalesUseCase;
+import org.frias.avalon.core.idempotency.Idempotent;
+
 import java.util.List;
 
 @RestController
@@ -29,7 +31,7 @@ public class SaleController {
     private final FindAllSalesUseCase findAllSalesUseCase;
     private final SearchSalesUseCase searchSalesUseCase;
 
-    @org.frias.avalon.core.idempotency.Idempotent
+    @Idempotent
     @PostMapping
     public ResponseEntity<ApiResponse<SaleResponse>> createSale(
             @Valid @RequestBody CreateSaleRequest request

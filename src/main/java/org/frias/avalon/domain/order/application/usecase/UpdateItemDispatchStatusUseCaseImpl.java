@@ -8,6 +8,7 @@ import org.frias.avalon.domain.order.domain.OrderDomain;
 import org.frias.avalon.domain.order.domain.OrderItemDomain;
 import org.frias.avalon.domain.order.infrastructure.persistence.mapper.OrderMapper;
 import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketController;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,7 @@ import java.time.LocalDateTime;
 public class UpdateItemDispatchStatusUseCaseImpl implements UpdateItemDispatchStatusUseCase {
 
     private final OrderRepositoryPort orderRepositoryPort;
-    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
+    private final @Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
     private final OrderWebSocketController orderWebSocketController;
     private final MasterTreeProvider masterTreeProvider;
 

@@ -58,7 +58,13 @@ class AssignPersonToUserUseCaseImpl implements AssignPersonToUserUseCase {
         }
 
         MasterRoot statusNode = tree.getByCode("ACT");
-        Long statusId = statusNode != null ? statusNode.getId() : 1L;
+        if (statusNode == null) {
+            statusNode = tree.getByCode("ACTIVO");
+        }
+        if (statusNode == null) {
+            throw new IllegalStateException("Estado ACTIVO (ACT) no encontrado en MasterTree");
+        }
+        Long statusId = statusNode.getId();
 
         // 4. Crear el objeto de dominio de la nueva Persona (incluyendo la dirección)
         PersonDomain newPerson = PersonDomain.createBasic(

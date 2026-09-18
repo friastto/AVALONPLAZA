@@ -8,6 +8,9 @@ import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletReposi
 import org.frias.avalon.domain.sale.infrastructure.entity.SaleEntity;
 import org.frias.avalon.domain.sale.infrastructure.repository.JpaSaleRepository;
 import org.frias.avalon.domain.cashregister.infrastructure.entity.CashSessionEntity;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,17 +52,17 @@ class GetCompanyDashboardUseCaseImplTest {
     private TransactionTemplate transactionTemplate;
 
     @Mock
-    private org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider masterTreeProvider;
+    private MasterTreeProvider masterTreeProvider;
 
     @InjectMocks
     private GetCompanyDashboardUseCaseImpl useCase;
 
     @BeforeEach
     void setUp() {
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot efeNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(139L, "EFE", "EFECTIVO", null, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot fiaNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(151L, "FIA", "FIADO", null, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot trfNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(297L, "TRF", "TRANSFERENCIA", null, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterTree masterTree = new org.frias.avalon.domain.masterdata.domain.model.MasterTree(List.of(efeNode, fiaNode, trfNode));
+        MasterRoot efeNode = new MasterRoot(139L, "EFE", "EFECTIVO", null, 1L);
+        MasterRoot fiaNode = new MasterRoot(151L, "FIA", "FIADO", null, 1L);
+        MasterRoot trfNode = new MasterRoot(297L, "TRF", "TRANSFERENCIA", null, 1L);
+        MasterTree masterTree = new MasterTree(List.of(efeNode, fiaNode, trfNode));
         lenient().when(masterTreeProvider.getTree()).thenReturn(masterTree);
 
         lenient().when(transactionTemplate.execute(any())).thenAnswer(invocation -> {

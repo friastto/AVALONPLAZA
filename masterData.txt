@@ -303,6 +303,7 @@ MASTER DATA - ESTRUCTURA REFACTORIZADA (JSON PARA API)
 
 		{"fullName": "PAGOS_A_CREDITO", "shortName": "MPG_CREDIT", "parentShortName": "MPG", "statusId": "ACT"},
 			{"fullName": "CREDITO_DIRECTO", "shortName": "CREINT", "parentShortName": "MPG_CREDIT", "statusId": "ACT"},
+			{"fullName": "FIADO", "shortName": "FIA", "parentShortName": "MPG_CREDIT", "statusId": "ACT"},
 			{"fullName": "BONO_O_GIFT_CARD", "shortName": "VOUCH", "parentShortName": "MPG", "statusId": "ACT"},
 
 	{"fullName": "TYPE_STAFF", "shortName": "STAFF", "parentShortName": null, "statusId": "ACT"},

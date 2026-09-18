@@ -17,6 +17,8 @@ import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
 import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
 import org.frias.avalon.domain.sale.application.port.SaleRepositoryPort;
 import org.frias.avalon.domain.sale.domain.SaleDomain;
+import org.frias.avalon.core.tenant.TenantContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,15 +51,15 @@ class DeliverOrderByQrUseCaseImplTest {
     private DeliverOrderByQrUseCaseImpl deliverOrderByQrUseCase;
     private MasterTree masterTree;
 
-    @org.junit.jupiter.api.AfterEach
+    @AfterEach
     void tearDown() {
-        org.frias.avalon.core.tenant.TenantContext.clear();
+        TenantContext.clear();
     }
 
     @BeforeEach
     void setUp() {
-        org.frias.avalon.core.tenant.TenantContext.clear();
-        org.frias.avalon.core.tenant.TenantContext.setTenantOutletId(1L);
+        TenantContext.clear();
+        TenantContext.setTenantOutletId(1L);
         orderRepositoryPort = mock(OrderRepositoryPort.class);
         masterTreeProvider = mock(MasterTreeProvider.class);
         jpaProductOutletRepository = mock(JpaProductOutletRepository.class);
@@ -81,8 +83,10 @@ class DeliverOrderByQrUseCaseImplTest {
         MasterRoot payPadNode = new MasterRoot(102L, "PAY_PAD", "PAGADO", null, 1L);
         MasterRoot actNode = new MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
         MasterRoot cashNode = new MasterRoot(201L, "CASH", "EFECTIVO", null, 1L);
+        MasterRoot undNode = new MasterRoot(20L, "UND", "UNIDAD", null, 1L);
+        MasterRoot efeNode = new MasterRoot(140L, "EFE", "EFECTIVO", null, 1L);
 
-        masterTree = new MasterTree(List.of(entNode, ordDispNode, ordCanNode, payPadNode, actNode, cashNode));
+        masterTree = new MasterTree(List.of(entNode, ordDispNode, ordCanNode, payPadNode, actNode, cashNode, undNode, efeNode));
         when(masterTreeProvider.getTree()).thenReturn(masterTree);
 
         deliverOrderByQrUseCase = new DeliverOrderByQrUseCaseImpl(

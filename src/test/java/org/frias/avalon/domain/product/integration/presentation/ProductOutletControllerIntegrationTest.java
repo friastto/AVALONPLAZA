@@ -1,7 +1,10 @@
 package org.frias.avalon.domain.product.integration.presentation;
 
+import org.frias.avalon.core.jwt.service.JwtTokenProviderPort;
+import org.frias.avalon.core.tenant.FlywayMultiTenantService;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.product.application.dto.request.ProductNewDataRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +35,12 @@ class ProductOutletControllerIntegrationTest {
     private MasterDataRepositoryPort masterDataRepositoryPort;
 
     @Autowired
-    private org.frias.avalon.core.jwt.service.JwtTokenProviderPort jwtTokenProvider;
+    private JwtTokenProviderPort jwtTokenProvider;
 
     @Autowired
-    private org.frias.avalon.core.tenant.FlywayMultiTenantService flywayMultiTenantService;
+    private FlywayMultiTenantService flywayMultiTenantService;
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void setUp() {
         flywayMultiTenantService.migrateTenantSchema("store_4");
     }

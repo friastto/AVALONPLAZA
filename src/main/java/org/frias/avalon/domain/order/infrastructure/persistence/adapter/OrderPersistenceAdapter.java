@@ -12,6 +12,7 @@ import org.frias.avalon.domain.order.infrastructure.persistence.mapper.OrderMapp
 import org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderItemRepository;
 import org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository;
 import org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderStatusHistoryRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
     private final JpaOrderRepository jpaOrderRepository;
     private final JpaOrderItemRepository jpaOrderItemRepository;
     private final JpaOrderStatusHistoryRepository jpaOrderStatusHistoryRepository;
-    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
+    private final @Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
 
     @Override
     public OrderDomain save(OrderDomain order) {

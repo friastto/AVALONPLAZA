@@ -13,12 +13,16 @@ import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketContr
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
 import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -60,9 +64,9 @@ class CreateOrderUseCaseImplTest {
         masterTreeProvider = mock(MasterTreeProvider.class);
         unitConversionService = mock(UnitConversionService.class);
         outletRepositoryPort = mock(OutletRepositoryPort.class);
-        transactionManager = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        transactionManager = mock(PlatformTransactionManager.class);
 
-        org.springframework.transaction.TransactionStatus transactionStatus = mock(org.springframework.transaction.TransactionStatus.class);
+        TransactionStatus transactionStatus = mock(TransactionStatus.class);
         when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
 
         OutletDomain mockOutlet = mock(OutletDomain.class);
@@ -70,10 +74,10 @@ class CreateOrderUseCaseImplTest {
         when(mockOutlet.getCompanyId()).thenReturn(100L);
         when(outletRepositoryPort.findById(any())).thenReturn(Optional.of(mockOutlet));
 
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot penNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(14L, "PEN", "PENDIENTE", null, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot payPenNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(650L, "PAY_PEN", "PAGO PENDIENTE", null, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot actNode = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterTree masterTree = new org.frias.avalon.domain.masterdata.domain.model.MasterTree(List.of(penNode, payPenNode, actNode));
+        MasterRoot penNode = new MasterRoot(14L, "PEN", "PENDIENTE", null, 1L);
+        MasterRoot payPenNode = new MasterRoot(650L, "PAY_PEN", "PAGO PENDIENTE", null, 1L);
+        MasterRoot actNode = new MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
+        MasterTree masterTree = new MasterTree(List.of(penNode, payPenNode, actNode));
         when(masterTreeProvider.getTree()).thenReturn(masterTree);
 
         createOrderUseCase = new CreateOrderUseCaseImpl(

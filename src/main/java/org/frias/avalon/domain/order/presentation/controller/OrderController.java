@@ -10,6 +10,7 @@ import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.order.application.usecase.*;
 import org.frias.avalon.domain.order.domain.OrderDomain;
 import org.frias.avalon.domain.order.infrastructure.persistence.mapper.OrderMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,15 +23,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelCreateOrderUseCaseImpl") CreateOrderUseCase createOrderUseCase;
+    private final @Qualifier("omnichannelCreateOrderUseCaseImpl") CreateOrderUseCase createOrderUseCase;
     private final ClaimOrderFifoUseCase claimOrderFifoUseCase;
     private final ClaimSpecificOrderUseCase claimSpecificOrderUseCase;
     private final UpdateItemDispatchStatusUseCase updateItemDispatchStatusUseCase;
     private final CompleteOrderAndEmitSaleUseCase completeOrderAndEmitSaleUseCase;
     private final DeliverOrderByQrUseCase deliverOrderByQrUseCase;
-    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelFindOrderByCodeUseCaseImpl") FindOrderByCodeUseCase findOrderByCodeUseCase;
+    private final @Qualifier("omnichannelFindOrderByCodeUseCaseImpl") FindOrderByCodeUseCase findOrderByCodeUseCase;
     private final OrderRepositoryPort orderRepositoryPort;
-    private final @org.springframework.beans.factory.annotation.Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
+    private final @Qualifier("omnichannelOrderMapper") OrderMapper orderMapper;
 
     @PostMapping
     public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {

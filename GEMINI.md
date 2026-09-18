@@ -57,6 +57,15 @@ El español es el único idioma permitido para todas las explicaciones y descrip
    - Los codigos (`shortName` / `code`, ej. `GERGEN`, `ADMOULT`, `CJTURNO`, `ACT`, `INACT`) son unicos, estables e inmutables en la jerarquia maestra (`masterData.txt`).
    - Toda condicion de negocio o asignacion debe evaluarse contra el codigo semantico (`tree.getByCode("...")`, `tree.is(node, "...")`), quedando terminantemente prohibido el uso de numeros o IDs literales (`87L`, `1L`, `4L`, etc.) en el codigo fuente.
 
+4. **Entrada Flexible de Peticiones (ID numerico o Codigo Semantico):**
+   - La API (`ApiAvalon`) debe aceptar peticiones entrantes especificando indistintamente el ID numerico o el codigo textual semantico (ej. `statusId` / `statusCode`, `paymentMethodId` / `paymentMethodCode`).
+   - Si se suministra el codigo textual semantico, el caso de uso lo resuelve inmediatamente en memoria mediante `MasterTree` (`tree.getByCode(code.trim())`). Queda prohibido forzar a los clientes (app movil o web) a conocer o quemar IDs numericos dinamicos de base de datos.
+
+5. **Salida Estandar Universal con `MasterRefDto` (Enriquecimiento O(1)):**
+   - La API **siempre responde** las referencias maestras (`status`, `orderStatus`, `paymentStatus`, `paymentMethod`, `dispatchStatus`, `role`, etc.) encapsuladas en el record inmutable **`MasterRefDto` (`{ id, code, name }`)**.
+   - Queda estrictamente prohibido responder unicamente IDs numericos planos o codigos sueltos en las respuestas principales hacia los clientes.
+   - Todo DTO de salida se enriquece de forma instantanea mediante `MasterRefDto.from(tree.getById(...))` sin incurrir en JOINs de base de datos.
+
 ## Politica de Stock Apartado Dinamico y Validacion Anti-Sobreventa
 1. **Calculo Agregado de Stock Apartado:**
    - El stock apartado se calcula dinamicamente sumando las cantidades de los pedidos en curso que posean estados transaccionales activos: `PEN` (Pendiente / id 14), `PRO` (En Preparacion / id 15) y `COM` (Completado/Por Despachar / id 16).
@@ -325,6 +334,7 @@ Todas las soluciones generadas deben seguir estrictamente:
   - Manejadores de Excepciones (Exception Handlers)
 
 ## Estándares de Código
+- **Prohibicion Estricta de FQCNs Inline (Uso Obligatorio de Imports en Cabecera):** Queda terminantemente prohibido declarar tipos, variables o anotaciones con nombres completos de paquete inline (Fully Qualified Class Names, ej. `private org.frias...`, `@org.springframework.beans.factory.annotation.Qualifier`, etc.). Toda clase, interfaz, record o anotacion debe importarse explicitamente en la seccion `import` en la cabecera del archivo.
 - Utiliza las características de Java 21/25 cuando sea apropiado.
 - Prioriza el uso de objetos inmutables.
 - Utiliza inyección por constructor.

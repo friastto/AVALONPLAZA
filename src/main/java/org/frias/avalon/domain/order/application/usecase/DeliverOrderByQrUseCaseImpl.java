@@ -1,5 +1,6 @@
 package org.frias.avalon.domain.order.application.usecase;
 
+import org.frias.avalon.core.exeptions.DomainValidationException;
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.order.application.dto.OrderResponse;
@@ -162,22 +163,32 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
 
         // Emision de Venta oficial (Sale) asociada al cobro en efectivo y al cajero
         if (order.getItems() != null && !order.getItems().isEmpty()) {
+            MasterRoot undNode = tree.getByCode("UND");
+            Long fallbackUnitMeasureId = undNode != null ? undNode.getId() : null;
+
             List<SaleItemDomain> saleItems = new ArrayList<>();
             for (OrderItemDomain item : order.getItems()) {
-                Long unitMeasureId = 1L;
+                Long unitMeasureId = fallbackUnitMeasureId;
                 if (item.getProductOutletId() != null) {
                     Optional<ProductOutlet> poOpt = jpaProductOutletRepository.findById(item.getProductOutletId());
                     if (poOpt.isPresent() && poOpt.get().getUnitMeasureId() != null) {
                         unitMeasureId = poOpt.get().getUnitMeasureId();
                     }
                 }
+                if (unitMeasureId == null) {
+                    throw new DomainValidationException("No se pudo determinar la unidad de medida para el item del pedido");
+                }
+                if (item.getProductOutletId() == null) {
+                    throw new DomainValidationException("El item del pedido no tiene un producto valido asignado");
+                }
+
                 Integer qty = item.getQuantity() != null && item.getQuantity() > 0 ? item.getQuantity() : 1;
                 BigDecimal unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO;
                 BigDecimal subtotal = item.getSubtotal() != null ? item.getSubtotal() : unitPrice.multiply(BigDecimal.valueOf(qty));
 
                 SaleItemDomain saleItem = new SaleItemDomain(
                         null,
-                        item.getProductOutletId() != null ? item.getProductOutletId() : 1L,
+                        item.getProductOutletId(),
                         qty,
                         item.getDisplayQuantity() != null ? item.getDisplayQuantity() : (qty + " UND"),
                         unitPrice,
@@ -193,18 +204,37 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
             }
             Long activeSaleStatusId = actNode.getId();
 
-            MasterRoot cashNode = tree.getByCode("CASH");
+            MasterRoot cashNode = tree.getByCode("EFE");
+            if (cashNode == null) {
+                cashNode = tree.getByCode("MPG_CASH");
+            }
+            if (cashNode == null) {
+                cashNode = tree.getByCode("CASH");
+            }
             if (cashNode == null) {
                 cashNode = tree.getByCode("EFECTIVO");
             }
             Long cashPaymentMethodId = cashNode != null ? cashNode.getId() : order.getPaymentMethodId();
 
+            Long customerId = order.getCustomerId();
+            if (customerId == null || customerId <= 0) {
+                throw new DomainValidationException("El pedido debe tener un cliente valido para emitir la venta");
+            }
+            Long outletId = order.getOutletId();
+            if (outletId == null || outletId <= 0) {
+                throw new DomainValidationException("El pedido debe tener una tienda valida para emitir la venta");
+            }
+            Long cashierUserId = userId;
+            if (cashierUserId == null || cashierUserId <= 0) {
+                throw new DomainValidationException("Se requiere un usuario cajero valido para entregar el pedido");
+            }
+
             SaleDomain sale = SaleDomain.create(
                     cashPaymentMethodId,
                     activeSaleStatusId,
-                    order.getCustomerId() != null && order.getCustomerId() > 0 ? order.getCustomerId() : 1L,
-                    order.getOutletId() != null ? order.getOutletId() : 1L,
-                    userId != null && userId > 0 ? userId : 1L,
+                    customerId,
+                    outletId,
+                    cashierUserId,
                     saleItems
             );
             sale.applyPayment(sale.getTotalAmount(), false);

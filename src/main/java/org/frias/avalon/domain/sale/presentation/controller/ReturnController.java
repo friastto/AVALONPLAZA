@@ -22,6 +22,8 @@ import java.util.UUID;
  * GET  /avalon/returns/{returnCode} → Consultar devolución por código
  * GET  /avalon/returns?outletId=X   → Listar devoluciones de una tienda
  */
+import org.frias.avalon.core.exeptions.ResourceNotFoundException;
+import org.frias.avalon.core.idempotency.Idempotent;
 import org.frias.avalon.domain.sale.application.dto.request.CreateExchangeRequest;
 import org.frias.avalon.domain.sale.application.dto.response.ExchangeResponse;
 import org.frias.avalon.domain.sale.application.usecase.sale.returns.CreateExchangeUseCase;
@@ -35,7 +37,7 @@ public class ReturnController {
     private final CreateExchangeUseCase createExchangeUseCase;
     private final FindReturnsUseCase findReturnsUseCase;
 
-    @org.frias.avalon.core.idempotency.Idempotent
+    @Idempotent
     @PostMapping
     public ResponseEntity<ApiResponse<ReturnResponse>> createReturn(
             @Valid @RequestBody CreateReturnRequest request
@@ -45,7 +47,7 @@ public class ReturnController {
                 .body(new ApiResponse<>(201, "Devolución procesada con éxito", response));
     }
 
-    @org.frias.avalon.core.idempotency.Idempotent
+    @Idempotent
     @PostMapping("/exchange")
     public ResponseEntity<ApiResponse<ExchangeResponse>> createExchange(
             @Valid @RequestBody CreateExchangeRequest request
@@ -60,7 +62,7 @@ public class ReturnController {
             @PathVariable UUID returnCode
     ) {
         ReturnResponse response = findReturnsUseCase.findByCode(returnCode)
-                .orElseThrow(() -> new org.frias.avalon.core.exeptions.ResourceNotFoundException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Devolución no encontrada: " + returnCode));
         return ResponseEntity.ok(new ApiResponse<>(200, "Devolución encontrada", response));
     }

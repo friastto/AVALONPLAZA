@@ -23,6 +23,7 @@ import org.frias.avalon.domain.outlet.application.usecase.update.UpdateDeliveryS
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -145,7 +146,7 @@ public class OutletController {
                 .body(new ApiResponse<>(
                                 outlets.isEmpty() ? 404 : 200,
                                 outlets.isEmpty() ? "No se encontraron tiendas registradas" : "Se encontraron tiendas registradas",
-                                new org.springframework.data.web.PagedModel<>(outlets)
+                                new PagedModel<>(outlets)
                         )
                 );
     }

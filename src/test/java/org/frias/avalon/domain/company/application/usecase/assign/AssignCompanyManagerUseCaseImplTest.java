@@ -5,6 +5,8 @@ import org.frias.avalon.domain.company.application.dto.request.AssignCompanyMana
 import org.frias.avalon.domain.company.application.dto.response.CompanyManagerResponse;
 import org.frias.avalon.domain.company.domain.model.CompanyDomain;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
@@ -22,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,13 +59,13 @@ class AssignCompanyManagerUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot rootRole = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(80L, "ROL", "TYPE_ROL", null, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot gerRole = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(86L, "GERENTE", "TYPE_GERENTES", 80L, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot gergenRole = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(87L, "GERGEN", "GERENTE_GENERAL", 86L, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot actStatus = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot inactStatus = new org.frias.avalon.domain.masterdata.domain.model.MasterRoot(4L, "INACT", "INACTIVO", null, 1L);
+        MasterRoot rootRole = new MasterRoot(80L, "ROL", "TYPE_ROL", null, 1L);
+        MasterRoot gerRole = new MasterRoot(86L, "GERENTE", "TYPE_GERENTES", 80L, 1L);
+        MasterRoot gergenRole = new MasterRoot(87L, "GERGEN", "GERENTE_GENERAL", 86L, 1L);
+        MasterRoot actStatus = new MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
+        MasterRoot inactStatus = new MasterRoot(4L, "INACT", "INACTIVO", null, 1L);
 
-        org.frias.avalon.domain.masterdata.domain.model.MasterTree tree = new org.frias.avalon.domain.masterdata.domain.model.MasterTree(java.util.List.of(rootRole, gerRole, gergenRole, actStatus, inactStatus));
+        MasterTree tree = new MasterTree(List.of(rootRole, gerRole, gergenRole, actStatus, inactStatus));
         lenient().when(masterTreeProvider.getTree()).thenReturn(tree);
 
         testCompany = new CompanyDomain(1L, "900123456", "Empresa Test SAS", "test@empresa.com", 1L, BigDecimal.valueOf(500000), LocalDateTime.now(), LocalDateTime.now());
