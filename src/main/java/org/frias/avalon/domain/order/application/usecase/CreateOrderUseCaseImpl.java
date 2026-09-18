@@ -1,7 +1,6 @@
 package org.frias.avalon.domain.order.application.usecase;
 
-import lombok.RequiredArgsConstructor;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+
 import org.frias.avalon.domain.order.application.dto.CreateOrderRequest;
 import org.frias.avalon.domain.order.application.dto.OrderResponse;
 
@@ -46,7 +45,6 @@ import java.util.UUID;
 public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
 
     private final OrderRepositoryPort orderRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
     private final JpaProductOutletRepository jpaProductOutletRepository;
     private final JpaOrderRepository jpaOrderRepository;
     private final OrderMapper orderMapper;
@@ -60,7 +58,6 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
 
     public CreateOrderUseCaseImpl(
             OrderRepositoryPort orderRepositoryPort,
-            MasterDataRepositoryPort masterDataRepositoryPort,
             JpaProductOutletRepository jpaProductOutletRepository,
             @Qualifier("omnichannelJpaOrderRepository") JpaOrderRepository jpaOrderRepository,
             @Qualifier("omnichannelOrderMapper") OrderMapper orderMapper,
@@ -72,7 +69,6 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
             OutletRepositoryPort outletRepositoryPort,
             PlatformTransactionManager transactionManager) {
         this.orderRepositoryPort = orderRepositoryPort;
-        this.masterDataRepositoryPort = masterDataRepositoryPort;
         this.jpaProductOutletRepository = jpaProductOutletRepository;
         this.jpaOrderRepository = jpaOrderRepository;
         this.orderMapper = orderMapper;

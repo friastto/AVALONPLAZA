@@ -7,7 +7,6 @@ import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.core.permissions.UserContext;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
@@ -49,7 +48,6 @@ class InvoiceOrderUseCaseImplTest {
     @Mock private ProductOutletRepositoryPort productOutletRepositoryPort;
     @Mock private PersonRepositoryPort personRepositoryPort;
     @Mock private UserAvalonRepositoryPort userAvalonRepositoryPort;
-    @Mock private MasterDataRepositoryPort masterDataRepositoryPort;
     @Mock private MasterTreeProvider masterTreeProvider;
     @Mock private CurrentUserProviderPort currentUserProvider;
 
@@ -63,6 +61,8 @@ class InvoiceOrderUseCaseImplTest {
     void setUp() {
         userContext = new UserContext("employee_user", List.of("ROLE_CAJTUR"), 4L);
         masterTree = mock(MasterTree.class);
+        lenient().when(masterTree.getByCode("ACT")).thenReturn(new MasterRoot(10L, "ACT", "Activo", null, 1L));
+        lenient().when(masterTree.getByCode("COM")).thenReturn(new MasterRoot(101L, "COM", "Completado", null, 1L));
     }
 
     @Test
@@ -94,8 +94,7 @@ class InvoiceOrderUseCaseImplTest {
         );
         when(personRepositoryPort.findByNumberid("123456")).thenReturn(Optional.of(client));
 
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(10L);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(101L);
+
 
         ProductDomain product = ProductDomain.fromPersistence(
                 50L, "Arroz", "desc", 100, 11L, "img",
@@ -159,8 +158,7 @@ class InvoiceOrderUseCaseImplTest {
         );
         when(personRepositoryPort.findByNumberid("123456")).thenReturn(Optional.of(client));
 
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(10L);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(101L);
+
 
         ProductDomain product = ProductDomain.fromPersistence(
                 50L, "Arroz", "desc", 50, 11L, "img",
@@ -221,8 +219,7 @@ class InvoiceOrderUseCaseImplTest {
         );
         when(personRepositoryPort.findByNumberid("123456")).thenReturn(Optional.of(client));
 
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(10L);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(101L);
+
 
         ProductDomain product1 = ProductDomain.fromPersistence(
                 50L, "Producto A", "desc A", 100, 11L, "imgA",
@@ -283,8 +280,7 @@ class InvoiceOrderUseCaseImplTest {
         );
         when(personRepositoryPort.findByNumberid("123456")).thenReturn(Optional.of(client));
 
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(10L);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(101L);
+
 
         ProductDomain product = ProductDomain.fromPersistence(
                 50L, "Arroz", "desc", 100, 11L, "img",
@@ -338,8 +334,7 @@ class InvoiceOrderUseCaseImplTest {
         );
         when(personRepositoryPort.findByNumberid("123456")).thenReturn(Optional.of(client));
 
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(10L);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(101L);
+
 
         ProductDomain product = ProductDomain.fromPersistence(
                 50L, "Arroz", "desc", 100, 11L, "img",
@@ -587,8 +582,7 @@ class InvoiceOrderUseCaseImplTest {
         );
         when(personRepositoryPort.findByNumberid("123456")).thenReturn(Optional.of(client));
 
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(null);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(101L);
+        when(masterTree.getByCode("ACT")).thenReturn(null);
 
         IllegalStateException ex = assertThrows(
                 IllegalStateException.class,
@@ -625,8 +619,8 @@ class InvoiceOrderUseCaseImplTest {
         );
         when(personRepositoryPort.findByNumberid("123456")).thenReturn(Optional.of(client));
 
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(10L);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(null);
+        when(masterTree.getByCode("COM")).thenReturn(null);
+        when(masterTree.getByCode("ORD_DISP")).thenReturn(null);
 
         IllegalStateException ex = assertThrows(
                 IllegalStateException.class,
@@ -665,8 +659,7 @@ class InvoiceOrderUseCaseImplTest {
         );
         when(personRepositoryPort.findByNumberid("123456")).thenReturn(Optional.of(client));
 
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(10L);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(101L);
+
 
         when(productOutletRepositoryPort.findById(999L)).thenReturn(Optional.empty());
 
@@ -706,9 +699,6 @@ class InvoiceOrderUseCaseImplTest {
                 1L, 1L, 123456L, "juan@email.com", 1L, LocalDateTime.now(), LocalDateTime.now()
         );
         when(personRepositoryPort.findByNumberid("123456")).thenReturn(Optional.of(client));
-
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(10L);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(101L);
 
         ProductDomain productWithLowStock = ProductDomain.fromPersistence(
                 50L, "Arroz", "desc", 2, 11L, "img",
@@ -752,9 +742,6 @@ class InvoiceOrderUseCaseImplTest {
                 1L, 1L, 123456L, "juan@email.com", 1L, LocalDateTime.now(), LocalDateTime.now()
         );
         when(personRepositoryPort.findByNumberid("123456")).thenReturn(Optional.of(client));
-
-        when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(10L);
-        when(masterDataRepositoryPort.getIdByCode("COM")).thenReturn(101L);
 
         ProductDomain product = ProductDomain.fromPersistence(
                 50L, "Arroz", "desc", 100, 11L, "img",

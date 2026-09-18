@@ -4,6 +4,7 @@ import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataRes
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,12 +34,17 @@ public class ReparentMasterDataUseCaseImpl implements ReparentMasterDataUseCase 
     public MasterDataResponseDto execute(Long id, Long newParentId) {
         MasterRoot updatedDomainObject = masterDataRepositoryPort.updateParentId(id, newParentId);
         masterTreeProvider.refresh();
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot statusNode = tree != null && updatedDomainObject.getStatusId() != null
+                ? tree.getById(updatedDomainObject.getStatusId())
+                : null;
+        String statusCode = statusNode != null && statusNode.getShortName() != null ? statusNode.getShortName() : "ACT";
         return new MasterDataResponseDto(
                 updatedDomainObject.getId(),
                 updatedDomainObject.getShortName(),
                 updatedDomainObject.getFullName(),
                 updatedDomainObject.getParentId(),
-                "ACTIVO"
+                statusCode
         );
     }
 }

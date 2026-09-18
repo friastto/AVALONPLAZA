@@ -47,6 +47,10 @@ public class AssignCompanyManagerUseCaseImpl implements AssignCompanyManagerUseC
     @Override
     @Transactional
     public CompanyManagerResponse execute(Long companyId, AssignCompanyManagerRequest request) {
+        // 1. Validar que la compania exista
+        CompanyDomain company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Compania no encontrada con id: " + companyId));
+
         MasterTree tree = masterTreeProvider.getTree();
         MasterRoot gergenRole = tree.getByCodeOrThrow("GERGEN");
         Long gergenRoleId = gergenRole.getId();
@@ -56,11 +60,7 @@ public class AssignCompanyManagerUseCaseImpl implements AssignCompanyManagerUseC
         if (inaNode == null) {
             inaNode = tree.getByCode("INACT");
         }
-        Long inactiveStatusId = (inaNode != null) ? inaNode.getId() : activeStatusId;
-
-        // 1. Validar que la compania exista
-        CompanyDomain company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Compania no encontrada con id: " + companyId));
+        Long inactiveStatusId = (inaNode != null) ? inaNode.getId() : tree.getByCodeOrThrow("INA").getId();
 
         // 2. Resolver o Crear la Persona
         PersonDomain person;

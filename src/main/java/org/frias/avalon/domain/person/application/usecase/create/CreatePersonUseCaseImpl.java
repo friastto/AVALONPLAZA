@@ -1,5 +1,6 @@
 package org.frias.avalon.domain.person.application.usecase.create;
 
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.application.dto.request.CreatePersonRequest;
 import org.frias.avalon.domain.person.application.dto.response.PersonResponse;
@@ -14,7 +15,7 @@ public class CreatePersonUseCaseImpl implements CreatePersonUseCase {
 
     private final PersonRepositoryPort personRepositoryPort;
     private final PersonMapper personMapper;
-    private final MasterTreeProvider masterTreeProvider; // Para validar statusId, typeIdentificationId, sexId
+    private final MasterTreeProvider masterTreeProvider;
 
     public CreatePersonUseCaseImpl(PersonRepositoryPort personRepositoryPort, PersonMapper personMapper, MasterTreeProvider masterTreeProvider) {
         this.personRepositoryPort = personRepositoryPort;
@@ -25,28 +26,59 @@ public class CreatePersonUseCaseImpl implements CreatePersonUseCase {
     @Transactional
     @Override
     public PersonResponse execute(CreatePersonRequest request) {
-        // Validaciones de existencia de MasterData (statusId, typeIdentificationId, sexId)
-        // Esto asegura que los IDs proporcionados existan en el sistema de MasterData
-        masterTreeProvider.getTree().getByIdOrThrow(request.statusId());
-        masterTreeProvider.getTree().getByIdOrThrow(request.typeIdentificationId());
-        if (request.sexId() != null) {
-            masterTreeProvider.getTree().getByIdOrThrow(request.sexId());
+        var tree = masterTreeProvider.getTree();
+
+        Long statusId = request.statusId();
+        if (statusId == null && request.statusCode() != null && !request.statusCode().isBlank()) {
+            MasterRoot statusNode = tree.getByCode(request.statusCode().trim().toUpperCase());
+            if (statusNode == null) {
+                throw new IllegalArgumentException("Estado no encontrado: " + request.statusCode());
+            }
+            statusId = statusNode.getId();
+        }
+        if (statusId == null) {
+            statusId = tree.getByCodeOrThrow("ACT").getId();
+        }
+        tree.getByIdOrThrow(statusId);
+
+        Long typeId = request.typeIdentificationId();
+        if (typeId == null && request.typeIdentificationCode() != null && !request.typeIdentificationCode().isBlank()) {
+            MasterRoot typeNode = tree.getByCode(request.typeIdentificationCode().trim().toUpperCase());
+            if (typeNode == null) {
+                throw new IllegalArgumentException("Tipo de identificacion no encontrado: " + request.typeIdentificationCode());
+            }
+            typeId = typeNode.getId();
+        }
+        if (typeId == null) {
+            throw new IllegalArgumentException("El tipo de identificacion es requerido (id o codigo)");
+        }
+        tree.getByIdOrThrow(typeId);
+
+        Long sexId = request.sexId();
+        if (sexId == null && request.sexCode() != null && !request.sexCode().isBlank()) {
+            MasterRoot sexNode = tree.getByCode(request.sexCode().trim().toUpperCase());
+            if (sexNode != null) {
+                sexId = sexNode.getId();
+            }
+        }
+        if (sexId != null) {
+            tree.getByIdOrThrow(sexId);
         }
 
-        // Crear el objeto de dominio PersonDomain usando el Factory Method (incluyendo la dirección)
+        // Crear el objeto de dominio PersonDomain usando el Factory Method (incluyendo la direccion)
         PersonDomain person = PersonDomain.createBasic(
-                request.typeIdentificationId(),
+                typeId,
                 request.numberid(),
                 request.name(),
                 request.lastName(),
                 request.address(),
-                request.sexId(),
+                sexId,
                 request.phoneNumber(),
                 request.email(),
-                request.statusId()
+                statusId
         );
 
-        // Guardar la persona a través del puerto de repositorio
+        // Guardar la persona a traves del puerto de repositorio
         PersonDomain savedPerson = personRepositoryPort.save(person);
 
         // Convertir el objeto de dominio guardado a un DTO de respuesta

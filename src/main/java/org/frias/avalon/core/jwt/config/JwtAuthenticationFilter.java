@@ -11,6 +11,7 @@ import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,9 +31,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProviderPort jwtTokenProvider;
     private final MasterTreeProvider treeProvider;
     private final CustomUserDetailsService userDetailsService;
-    private final org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort;
+    private final OutletRepositoryPort outletRepositoryPort;
 
-    public JwtAuthenticationFilter(JwtTokenProviderPort jwtTokenProvider, MasterTreeProvider treeProvider, CustomUserDetailsService userDetailsService, org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort) {
+    public JwtAuthenticationFilter(JwtTokenProviderPort jwtTokenProvider, MasterTreeProvider treeProvider, CustomUserDetailsService userDetailsService, OutletRepositoryPort outletRepositoryPort) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.treeProvider = treeProvider;
         this.userDetailsService = userDetailsService;

@@ -28,16 +28,24 @@ public class CreateMasterDataUseCaseImpl implements CreateMasterDataUseCase {
             throw new RuntimeException("fullName requerido");
         }
 
-        Long parentId = masterDataRepositoryPort.getIdByCode(request.parentShortName());
+        Long parentId = null;
+        if (request.parentShortName() != null && !request.parentShortName().isBlank()) {
+            MasterRoot parentNode = masterTreeProvider.getTree() != null
+                    ? masterTreeProvider.getTree().getByCode(request.parentShortName().trim().toUpperCase())
+                    : null;
+            parentId = parentNode != null ? parentNode.getId() : masterDataRepositoryPort.getIdByCode(request.parentShortName().trim().toUpperCase());
+        }
 
-        Long statusId = masterDataRepositoryPort.getIdByCode("ACT");
+        MasterRoot statusNode = masterTreeProvider.getTree() != null
+                ? masterTreeProvider.getTree().getByCode("ACT")
+                : null;
+        Long statusId = statusNode != null ? statusNode.getId() : masterDataRepositoryPort.getIdByCode("ACT");
 
         MasterRoot domain = MasterRoot.create(request.shortName(), request.fullName(), parentId, statusId);
 
+        MasterRoot saved = masterDataRepositoryPort.save(domain);
         masterTreeProvider.refresh();
 
-        return masterDataRepositoryPort.save(domain).getId();
-
-
+        return saved.getId();
     }
 }

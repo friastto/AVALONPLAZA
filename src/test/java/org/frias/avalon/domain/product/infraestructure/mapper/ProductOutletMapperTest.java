@@ -4,7 +4,6 @@ import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
 import org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository;
@@ -32,7 +31,6 @@ class ProductOutletMapperTest {
     private JpaOrderRepository jpaOrderRepository;
     private CurrentUserProviderPort currentUserProvider;
     private UserAvalonRepositoryPort userAvalonRepositoryPort;
-    private MasterDataRepositoryPort masterDataRepositoryPort;
 
     private ProductOutletMapperImpl productOutletMapper;
 
@@ -44,7 +42,6 @@ class ProductOutletMapperTest {
         jpaOrderRepository = mock(JpaOrderRepository.class);
         currentUserProvider = mock(CurrentUserProviderPort.class);
         userAvalonRepositoryPort = mock(UserAvalonRepositoryPort.class);
-        masterDataRepositoryPort = mock(MasterDataRepositoryPort.class);
 
         productOutletMapper = new ProductOutletMapperImpl(
                 masterTreeProvider,
@@ -52,8 +49,7 @@ class ProductOutletMapperTest {
                 unitConversionService,
                 jpaOrderRepository,
                 currentUserProvider,
-                userAvalonRepositoryPort,
-                masterDataRepositoryPort
+                userAvalonRepositoryPort
         );
     }
 

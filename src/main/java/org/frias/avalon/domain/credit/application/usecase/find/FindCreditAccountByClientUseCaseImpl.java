@@ -6,7 +6,9 @@ import org.frias.avalon.domain.credit.application.dto.response.CreditAccountResp
 import org.frias.avalon.domain.credit.application.dto.response.CreditTransactionResponse;
 import org.frias.avalon.domain.credit.application.port.CreditRepositoryPort;
 import org.frias.avalon.domain.credit.domain.model.CreditAccountDomain;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,7 @@ public class FindCreditAccountByClientUseCaseImpl implements FindCreditAccountBy
 
     private final CreditRepositoryPort creditRepositoryPort;
     private final PersonRepositoryPort personRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
+    private final MasterTreeProvider masterTreeProvider;
 
     private static final BigDecimal DEFAULT_CREDIT_LIMIT = new BigDecimal("150000");
 
@@ -36,12 +38,14 @@ public class FindCreditAccountByClientUseCaseImpl implements FindCreditAccountBy
     @Transactional
     public CreditAccountResponse findOrCreate(String clientNumberid, Long outletId) {
         PersonDomain client = personRepositoryPort.findByNumberid(clientNumberid)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con identificación: " + clientNumberid));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con identificacion: " + clientNumberid));
 
-        Long activeStatusId = masterDataRepositoryPort.getIdByCode("ACT");
-        if (activeStatusId == null) {
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot activeNode = tree != null ? tree.getByCode("ACT") : null;
+        if (activeNode == null) {
             throw new IllegalStateException("Estado Activo ('ACT') no encontrado en MasterData");
         }
+        Long activeStatusId = activeNode.getId();
 
         CreditAccountDomain account = creditRepositoryPort.findByClientIdAndOutletId(client.getId(), outletId)
                 .orElseGet(() -> {
@@ -112,6 +116,10 @@ public class FindCreditAccountByClientUseCaseImpl implements FindCreditAccountBy
     }
 
     private CreditAccountResponse mapToResponse(CreditAccountDomain account, PersonDomain client) {
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot statusNode = (tree != null && account.getStatusId() != null) ? tree.getById(account.getStatusId()) : null;
+        String statusLabel = (statusNode != null && statusNode.getFullName() != null) ? statusNode.getFullName() : "ACTIVO";
+
         return new CreditAccountResponse(
                 account.getId(),
                 account.getClientId(),
@@ -120,7 +128,7 @@ public class FindCreditAccountByClientUseCaseImpl implements FindCreditAccountBy
                 account.getOutletId(),
                 account.getCreditLimit(),
                 account.getCurrentDebt(),
-                "ACTIVO",
+                statusLabel,
                 account.getCreatedAt(),
                 account.getUpdatedAt()
         );

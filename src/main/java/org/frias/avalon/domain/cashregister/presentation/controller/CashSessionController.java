@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.frias.avalon.core.idempotency.Idempotent;
 import org.frias.avalon.domain.cashregister.application.port.CashSessionUseCasePort;
 import org.frias.avalon.domain.cashregister.domain.CashExpenseDomain;
+import org.frias.avalon.domain.cashregister.domain.CashPickupDomain;
 import org.frias.avalon.domain.cashregister.domain.CashSessionDomain;
 import org.frias.avalon.domain.cashregister.domain.OutletCashSummaryDomain;
 import org.frias.avalon.domain.cashregister.application.dto.*;
@@ -17,7 +18,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/cash-sessions")
+@RequestMapping({"/avalon/cash-sessions", "/api/v1/cash-sessions"})
 @RequiredArgsConstructor
 public class CashSessionController {
 
@@ -105,10 +106,7 @@ public class CashSessionController {
     @GetMapping("/thresholds")
     @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'CJPRINCIPAL', 'CJTURNO')")
     public ResponseEntity<ThresholdConfigurationResponse> getThresholds(@RequestParam(required = false) Long outletId) {
-        return ResponseEntity.ok(ThresholdConfigurationResponse.builder()
-                .warningThreshold(new BigDecimal("500000"))
-                .blockThreshold(new BigDecimal("1000000"))
-                .build());
+        return ResponseEntity.ok(cashSessionUseCasePort.getThresholds(outletId));
     }
 
     @PutMapping("/outlets/{outletId}/threshold")
@@ -128,7 +126,7 @@ public class CashSessionController {
             @PathVariable Long sessionId,
             @Valid @RequestBody RegisterCashPickupRequest request
     ) {
-        org.frias.avalon.domain.cashregister.domain.CashPickupDomain pickup = cashSessionUseCasePort.registerPickup(
+        CashPickupDomain pickup = cashSessionUseCasePort.registerPickup(
                 sessionId,
                 request.getAmount(),
                 request.getReason(),
@@ -190,7 +188,7 @@ public class CashSessionController {
 
     @GetMapping("/outlets/{outletId}/cashiers-history")
     @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
-    public ResponseEntity<List<org.frias.avalon.domain.cashregister.application.dto.CashierHistorySummaryResponse>> getOutletCashiersHistory(
+    public ResponseEntity<List<CashierHistorySummaryResponse>> getOutletCashiersHistory(
             @PathVariable Long outletId
     ) {
         return ResponseEntity.ok(cashSessionUseCasePort.getOutletCashiersHistory(outletId));
@@ -198,7 +196,7 @@ public class CashSessionController {
 
     @GetMapping("/consolidated-history/{outletId}")
     @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
-    public ResponseEntity<org.frias.avalon.domain.cashregister.application.dto.PageResponseDto<org.frias.avalon.domain.cashregister.application.dto.ConsolidatedHistoryResponse>> getConsolidatedHistory(
+    public ResponseEntity<PageResponseDto<ConsolidatedHistoryResponse>> getConsolidatedHistory(
             @PathVariable Long outletId,
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) Integer year,
@@ -212,7 +210,7 @@ public class CashSessionController {
 
     @GetMapping("/discrepancies-history/{outletId}")
     @PreAuthorize("hasAnyRole('ADMINTI', 'ADMIN', 'GERGEN', 'ADMOULT')")
-    public ResponseEntity<org.frias.avalon.domain.cashregister.application.dto.PageResponseDto<org.frias.avalon.domain.cashregister.application.dto.DiscrepancyHistoryResponse>> getDiscrepanciesHistory(
+    public ResponseEntity<PageResponseDto<DiscrepancyHistoryResponse>> getDiscrepanciesHistory(
             @PathVariable Long outletId,
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) String discrepancyType,

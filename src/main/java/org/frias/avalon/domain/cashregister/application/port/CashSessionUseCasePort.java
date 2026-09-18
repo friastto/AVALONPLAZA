@@ -1,10 +1,19 @@
 package org.frias.avalon.domain.cashregister.application.port;
 
+import org.frias.avalon.domain.cashregister.application.dto.CashSessionResponse;
+import org.frias.avalon.domain.cashregister.application.dto.CashierHistorySummaryResponse;
+import org.frias.avalon.domain.cashregister.application.dto.ConsolidatedHistoryResponse;
+import org.frias.avalon.domain.cashregister.application.dto.DiscrepancyHistoryResponse;
+import org.frias.avalon.domain.cashregister.application.dto.OutletCashSummaryResponse;
+import org.frias.avalon.domain.cashregister.application.dto.PageResponseDto;
+import org.frias.avalon.domain.cashregister.application.dto.ThresholdConfigurationResponse;
 import org.frias.avalon.domain.cashregister.domain.CashExpenseDomain;
+import org.frias.avalon.domain.cashregister.domain.CashPickupDomain;
 import org.frias.avalon.domain.cashregister.domain.CashSessionDomain;
 import org.frias.avalon.domain.cashregister.domain.OutletCashSummaryDomain;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface CashSessionUseCasePort {
 
@@ -20,7 +29,9 @@ public interface CashSessionUseCasePort {
 
     void configureThreshold(Long outletId, BigDecimal thresholdAmount);
 
-    org.frias.avalon.domain.cashregister.domain.CashPickupDomain registerPickup(Long sessionId, BigDecimal amount, String reason, Long registeredBy);
+    ThresholdConfigurationResponse getThresholds(Long outletId);
+
+    CashPickupDomain registerPickup(Long sessionId, BigDecimal amount, String reason, Long registeredBy);
 
     void submitBlindCountStep1(Long sessionId, Long employeeId, BigDecimal actualCash);
 
@@ -28,13 +39,13 @@ public interface CashSessionUseCasePort {
 
     CashSessionDomain submitThreeStepAudit(Long sessionId, BigDecimal baseCash, BigDecimal remainingCash, String notes);
 
-    org.frias.avalon.domain.cashregister.application.dto.CashSessionResponse getActiveSessionResponse(Long outletId, Long employeeId);
+    CashSessionResponse getActiveSessionResponse(Long outletId, Long employeeId);
 
-    org.frias.avalon.domain.cashregister.application.dto.OutletCashSummaryResponse getOutletConsolidatedSummaryResponse(Long outletId);
+    OutletCashSummaryResponse getOutletConsolidatedSummaryResponse(Long outletId);
 
-    java.util.List<org.frias.avalon.domain.cashregister.application.dto.CashierHistorySummaryResponse> getOutletCashiersHistory(Long outletId);
+    List<CashierHistorySummaryResponse> getOutletCashiersHistory(Long outletId);
 
-    org.frias.avalon.domain.cashregister.application.dto.PageResponseDto<org.frias.avalon.domain.cashregister.application.dto.ConsolidatedHistoryResponse> getConsolidatedHistory(Long outletId, Long employeeId, Integer year, Integer month, Integer day, int page, int size);
+    PageResponseDto<ConsolidatedHistoryResponse> getConsolidatedHistory(Long outletId, Long employeeId, Integer year, Integer month, Integer day, int page, int size);
 
-    org.frias.avalon.domain.cashregister.application.dto.PageResponseDto<org.frias.avalon.domain.cashregister.application.dto.DiscrepancyHistoryResponse> getDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, int page, int size);
+    PageResponseDto<DiscrepancyHistoryResponse> getDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, int page, int size);
 }

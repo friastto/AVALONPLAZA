@@ -26,6 +26,8 @@ class StockAdjustmentUseCaseImplTest {
     private JpaProductOutletRepository productOutletRepository;
     private JpaStockMovementRepository stockMovementRepository;
     private ApplicationEventPublisher eventPublisher;
+    private org.frias.avalon.domain.product.domain.service.UnitConversionService unitConversionService;
+    private org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider masterTreeProvider;
 
     private StockAdjustmentUseCaseImpl stockAdjustmentUseCase;
 
@@ -34,11 +36,15 @@ class StockAdjustmentUseCaseImplTest {
         productOutletRepository = mock(JpaProductOutletRepository.class);
         stockMovementRepository = mock(JpaStockMovementRepository.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
+        unitConversionService = mock(org.frias.avalon.domain.product.domain.service.UnitConversionService.class);
+        masterTreeProvider = mock(org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider.class);
 
         stockAdjustmentUseCase = new StockAdjustmentUseCaseImpl(
                 productOutletRepository,
                 stockMovementRepository,
-                eventPublisher
+                eventPublisher,
+                unitConversionService,
+                masterTreeProvider
         );
     }
 
@@ -56,6 +62,8 @@ class StockAdjustmentUseCaseImplTest {
     @DisplayName("Should execute stock adjustment surplus and publish notification event")
     void shouldExecuteStockAdjustmentSurplusSuccessfully() {
         StockAdjustmentRequest request = new StockAdjustmentRequest(10L, 1L, 15, "Ajuste de inventario fisico", 5L);
+
+        when(unitConversionService.convertToSmallestUnit(any(), any())).thenReturn(15);
 
         ProductOutlet productOutlet = new ProductOutlet();
         productOutlet.setId(10L);

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Ticket de Venta - Avalon</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; background-color: #f4f4f4; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #ddd; padding: 25px; border-radius: 8px;">
+        <h2 style="color: #00FF7F; text-align: center; margin-top: 0;">Gracias por tu compra en Avalon</h2>
+        <p>Estimado/a cliente,</p>
+        <p>Hemos registrado tu compra con exito. En el archivo adjunto encontraras el <b>Ticket de Venta</b> digital en formato PDF con todos los detalles de tu compra.</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;"><b>Codigo de Venta:</b></td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">{{ sale.saleCode }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;"><b>Total a Pagar:</b></td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; color: #FFD700;">${{ sale.totalAmount }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;"><b>Metodo de Pago:</b></td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">{{ sale.paymentMethod.fullName }}</td>
+            </tr>
+        </table>
+        <p style="font-size: 12px; color: #777;">Por favor conserva este ticket digital para cualquier cambio o reclamacion en tu tienda local.</p>
+        <br/>
+        <p style="text-align: center; font-weight: bold; color: #00FF7F;">El equipo de Avalon</p>
+    </div>
+</body>
+</html>

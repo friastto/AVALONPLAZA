@@ -10,7 +10,6 @@ import org.frias.avalon.domain.credit.domain.model.CreditAccountDomain;
 import org.frias.avalon.domain.credit.domain.model.CreditTransactionDomain;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.notification.application.event.SaleCreatedEvent;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
@@ -57,7 +56,6 @@ class CreateSaleUseCaseImplTest {
     @Mock private ProductOutletRepositoryPort productOutletRepositoryPort;
     @Mock private PersonRepositoryPort personRepositoryPort;
     @Mock private UserAvalonRepositoryPort userAvalonRepositoryPort;
-    @Mock private MasterDataRepositoryPort masterDataRepositoryPort;
     @Mock private MasterTreeProvider masterTreeProvider;
     @Mock private SaleWeightConversionService weightConversionService;
     @Mock private CurrentUserProviderPort currentUserProvider;
@@ -79,6 +77,8 @@ class CreateSaleUseCaseImplTest {
     @BeforeEach
     void setUp() {
         lenient().when(masterTreeProvider.getTree()).thenReturn(masterTree);
+        MasterRoot actStatus = new MasterRoot(ACTIVE_STATUS_ID, "ACT", "Activo", null, 1L);
+        lenient().when(masterTree.getByCode("ACT")).thenReturn(actStatus);
     }
 
     // --- Metodos Auxiliares de Configuracion ---
@@ -146,7 +146,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(50L, 11L, new BigDecimal("5.00"), 10000);
             when(productOutletRepositoryPort.findById(50L)).thenReturn(Optional.of(product));
@@ -196,7 +195,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(60L, 12L, new BigDecimal("10.00"), 50);
             when(productOutletRepositoryPort.findById(60L)).thenReturn(Optional.of(product));
@@ -240,7 +238,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(70L, 13L, new BigDecimal("8.00"), 50000);
             when(productOutletRepositoryPort.findById(70L)).thenReturn(Optional.of(product));
@@ -280,7 +277,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(50L, 12L, new BigDecimal("15.00"), 20);
             when(productOutletRepositoryPort.findById(50L)).thenReturn(Optional.of(product));
@@ -328,7 +324,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(50L, 12L, new BigDecimal("25.00"), 20);
             when(productOutletRepositoryPort.findById(50L)).thenReturn(Optional.of(product));
@@ -387,7 +382,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(55L, 14L, new BigDecimal("10.00"), 100000);
             when(productOutletRepositoryPort.findById(55L)).thenReturn(Optional.of(product));
@@ -424,7 +418,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(56L, 15L, new BigDecimal("0.05"), 1000);
             when(productOutletRepositoryPort.findById(56L)).thenReturn(Optional.of(product));
@@ -461,7 +454,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(57L, 12L, new BigDecimal("10.00"), 50);
             when(productOutletRepositoryPort.findById(57L)).thenReturn(Optional.of(product));
@@ -503,7 +495,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = ProductDomain.fromPersistence(
                     50L, "Producto Test", "Descripcion", 10, 12L, "img.jpg",
@@ -661,7 +652,6 @@ class CreateSaleUseCaseImplTest {
         private void setupCommonSuccessMocks() {
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(50L, 12L, new BigDecimal("10.00"), 10);
             when(productOutletRepositoryPort.findById(50L)).thenReturn(Optional.of(product));
@@ -746,7 +736,7 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(null);
+            when(masterTree.getByCode("ACT")).thenReturn(null);
 
             CreateSaleRequest request = new CreateSaleRequest(
                     CLIENT_NUMBER_ID, OUTLET_ID, 8L, new BigDecimal("10.00"),
@@ -765,7 +755,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             when(productOutletRepositoryPort.findById(50L)).thenReturn(Optional.empty());
 
@@ -786,7 +775,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain productOtherOutlet = ProductDomain.fromPersistence(
                     50L, "Producto Otro Outlet", "Desc", 10, 12L, "img.jpg",
@@ -811,7 +799,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(50L, 999L, new BigDecimal("10.00"), 10);
             when(productOutletRepositoryPort.findById(50L)).thenReturn(Optional.of(product));
@@ -834,7 +821,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(50L, 11L, new BigDecimal("10.00"), 1000);
             when(productOutletRepositoryPort.findById(50L)).thenReturn(Optional.of(product));
@@ -860,7 +846,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(50L, 12L, new BigDecimal("10.00"), 1000);
             when(productOutletRepositoryPort.findById(50L)).thenReturn(Optional.of(product));
@@ -886,7 +871,6 @@ class CreateSaleUseCaseImplTest {
 
             when(userAvalonRepositoryPort.findByUserName(USERNAME)).thenReturn(Optional.of(createDefaultUser()));
             when(personRepositoryPort.findByNumberid(CLIENT_NUMBER_ID)).thenReturn(Optional.of(createDefaultClient()));
-            when(masterDataRepositoryPort.getIdByCode("ACT")).thenReturn(ACTIVE_STATUS_ID);
 
             ProductDomain product = createDefaultProduct(50L, 12L, new BigDecimal("10.00"), 1000);
             when(productOutletRepositoryPort.findById(50L)).thenReturn(Optional.of(product));

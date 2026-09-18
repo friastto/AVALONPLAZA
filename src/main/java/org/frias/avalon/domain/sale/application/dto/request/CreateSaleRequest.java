@@ -12,8 +12,9 @@ public record CreateSaleRequest(
         @NotNull(message = "El ID de la tienda (outlet) es requerido")
         Long outletId,
 
-        @NotNull(message = "El ID del método de pago es requerido")
         Long paymentMethodId,
+
+        String paymentMethodCode,
 
         BigDecimal amountReceived,
 
@@ -22,4 +23,7 @@ public record CreateSaleRequest(
 
         Boolean sendEmail
 ) {
+    public CreateSaleRequest(String clientNumberid, Long outletId, Long paymentMethodId, BigDecimal amountReceived, List<SaleItemRequest> items, Boolean sendEmail) {
+        this(clientNumberid, outletId, paymentMethodId, null, amountReceived, items, sendEmail);
+    }
 }

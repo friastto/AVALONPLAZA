@@ -5,7 +5,6 @@ import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.model.StatusRules;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.application.dto.response.PersonResponse;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
@@ -19,29 +18,14 @@ public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase 
 
     private final PersonRepositoryPort personPort;
     private final MasterTreeProvider treeProvider;
-    private final MasterDataRepositoryPort masterPort;
-    // userAvalonPort y rolePort ya no son necesarios para construir UserContext aquí
-    //private final UserAvalonRepositoryPort userAvalonPort;
-    //private final RoleAssignmentRepositoryPort rolePort;
-    //private final StatusChangeValidator statusChangeValidator;
     private final PersonMapper mapper;
 
     public ChangePersonStatusUseCaseImpl(
             PersonRepositoryPort personPort,
             MasterTreeProvider treeProvider,
-            MasterDataRepositoryPort masterPort,
-            //UserAvalonRepositoryPort userAvalonPort, // Eliminar de constructor
-            //RoleAssignmentRepositoryPort rolePort, // Eliminar de constructor
-            //StatusChangeValidator statusChangeValidator,
             PersonMapper mapper) {
         this.personPort = personPort;
         this.treeProvider = treeProvider;
-        this.masterPort = masterPort;
-        /*this.userAvalonPort = userAvalonPort; // Eliminar asignación
-        this.rolePort = rolePort; // Eliminar asignación
-        this.statusChangeValidator = statusChangeValidator;
-
-         */
         this.mapper = mapper;
     }
 
@@ -49,19 +33,13 @@ public class ChangePersonStatusUseCaseImpl implements ChangePersonStatusUseCase 
     @Override
     public PersonResponse execute(Long idPerson, Long idStatus) {
 
-        // 1. Obtener el UserContext del usuario actual usando SecurityUtils
-        //UserContext currentUserContext = SecurityUtils.getCurrentUserContext();
-
         PersonDomain person = personPort.findById(idPerson)
                 .orElseThrow(() -> new EntityNotFoundException("la persona no se encontro en la base de datos"));
 
-        MasterRoot oldStatus = masterPort.findById(person.getStatusId())
-                .orElseThrow(() -> new BusinessException("no se puede establecer este estado al la persona"));
-
-        MasterRoot newStatus = masterPort.findById(idStatus)
-                .orElseThrow(() -> new BusinessException("no se puede establecer este estado al la persona"));
-
         MasterTree tree = treeProvider.getTree();
+
+        MasterRoot oldStatus = tree.getByIdOrThrow(person.getStatusId());
+        MasterRoot newStatus = tree.getByIdOrThrow(idStatus);
 
         if (!tree.isChildOf(newStatus, "STSGEN")) {
             throw new IllegalStateException("no se puede establecer este estado");

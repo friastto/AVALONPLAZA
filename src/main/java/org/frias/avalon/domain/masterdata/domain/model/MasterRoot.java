@@ -73,9 +73,7 @@ public class MasterRoot {
     }
 
     public boolean canDisable(String statusCode) {
-        return "ACT".equals(statusCode)
-                && !"INACT".equals(statusCode)
-                && !"BLOK".equals(statusCode);
+        return "ACT".equals(statusCode);
     }
 
     public Long getId() {

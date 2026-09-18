@@ -63,7 +63,7 @@ class AssignCompanyManagerUseCaseImplTest {
         MasterRoot gerRole = new MasterRoot(86L, "GERENTE", "TYPE_GERENTES", 80L, 1L);
         MasterRoot gergenRole = new MasterRoot(87L, "GERGEN", "GERENTE_GENERAL", 86L, 1L);
         MasterRoot actStatus = new MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
-        MasterRoot inactStatus = new MasterRoot(4L, "INACT", "INACTIVO", null, 1L);
+        MasterRoot inactStatus = new MasterRoot(4L, "INA", "INACTIVO", null, 1L);
 
         MasterTree tree = new MasterTree(List.of(rootRole, gerRole, gergenRole, actStatus, inactStatus));
         lenient().when(masterTreeProvider.getTree()).thenReturn(tree);

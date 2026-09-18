@@ -26,7 +26,7 @@ import java.util.List;
  * Strictly orchestrates application Use Cases and returns standardized ApiResponse wrappers.
  */
 @RestController
-@RequestMapping("/api/v1/companies")
+@RequestMapping({"/avalon/companies", "/api/v1/companies"})
 public class CompanyController {
 
     private final CreateCompanyUseCase createCompanyUseCase;

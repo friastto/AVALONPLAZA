@@ -1,7 +1,9 @@
 package org.frias.avalon.domain.order.application.usecase;
 
+import org.frias.avalon.core.exeptions.InsufficientStockException;
 import org.frias.avalon.core.permissions.CurrentUserProviderPort;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.core.tenant.TenantContext;
+import org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.order.application.dto.CreateOrderRequest;
 import org.frias.avalon.domain.order.application.dto.OrderItemRequest;
@@ -37,7 +39,6 @@ import static org.mockito.Mockito.*;
 class CreateOrderUseCaseImplTest {
 
     private OrderRepositoryPort orderRepositoryPort;
-    private MasterDataRepositoryPort masterDataRepositoryPort;
     private JpaProductOutletRepository jpaProductOutletRepository;
     private OrderMapper orderMapper;
     private OrderWebSocketController orderWebSocketController;
@@ -46,17 +47,16 @@ class CreateOrderUseCaseImplTest {
     private MasterTreeProvider masterTreeProvider;
     private UnitConversionService unitConversionService;
     private OutletRepositoryPort outletRepositoryPort;
-    private org.springframework.transaction.PlatformTransactionManager transactionManager;
-    private org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository jpaOrderRepository;
+    private PlatformTransactionManager transactionManager;
+    private JpaOrderRepository jpaOrderRepository;
 
     private CreateOrderUseCaseImpl createOrderUseCase;
 
     @BeforeEach
     void setUp() {
         orderRepositoryPort = mock(OrderRepositoryPort.class);
-        masterDataRepositoryPort = mock(MasterDataRepositoryPort.class);
         jpaProductOutletRepository = mock(JpaProductOutletRepository.class);
-        jpaOrderRepository = mock(org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository.class);
+        jpaOrderRepository = mock(JpaOrderRepository.class);
         orderMapper = mock(OrderMapper.class);
         orderWebSocketController = mock(OrderWebSocketController.class);
         currentUserProvider = mock(CurrentUserProviderPort.class);
@@ -82,7 +82,6 @@ class CreateOrderUseCaseImplTest {
 
         createOrderUseCase = new CreateOrderUseCaseImpl(
                 orderRepositoryPort,
-                masterDataRepositoryPort,
                 jpaProductOutletRepository,
                 jpaOrderRepository,
                 orderMapper,
@@ -110,9 +109,7 @@ class CreateOrderUseCaseImplTest {
         request.setPaymentMethodId(2L);
         request.setItems(List.of(itemReq));
 
-        when(masterDataRepositoryPort.getIdByCode("ORD_PEN")).thenReturn(101L);
-        when(masterDataRepositoryPort.getIdByCode("PAY_PEN")).thenReturn(102L);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(103L);
+
 
         ProductOutlet productOutlet = new ProductOutlet();
         productOutlet.setId(10L);
@@ -172,14 +169,14 @@ class CreateOrderUseCaseImplTest {
         when(jpaProductOutletRepository.findById(10L)).thenReturn(Optional.of(productOutlet));
         when(jpaOrderRepository.sumQuantityByProductOutletIdAndStatusIn(eq(10L), anyList())).thenReturn(0);
 
-        assertThrows(org.frias.avalon.core.exeptions.InsufficientStockException.class, () -> createOrderUseCase.execute(request));
+        assertThrows(InsufficientStockException.class, () -> createOrderUseCase.execute(request));
     }
 
     @Test
     @DisplayName("Should switch tenant to order outlet and restore previous tenant after execution")
     void shouldSwitchAndRestoreTenantContext() {
-        org.frias.avalon.core.tenant.TenantContext.setTenantId(99L);
-        org.frias.avalon.core.tenant.TenantContext.setTenantOutletId(77L);
+        TenantContext.setTenantId(99L);
+        TenantContext.setTenantOutletId(77L);
 
         OrderItemRequest itemReq = new OrderItemRequest();
         itemReq.setProductOutletId(10L);
@@ -201,9 +198,9 @@ class CreateOrderUseCaseImplTest {
         OrderResponse result = createOrderUseCase.execute(request);
 
         assertNotNull(result);
-        assertEquals(99L, org.frias.avalon.core.tenant.TenantContext.getTenantId());
-        assertEquals(77L, org.frias.avalon.core.tenant.TenantContext.getTenantOutletId());
+        assertEquals(99L, TenantContext.getTenantId());
+        assertEquals(77L, TenantContext.getTenantOutletId());
 
-        org.frias.avalon.core.tenant.TenantContext.clear();
+        TenantContext.clear();
     }
 }

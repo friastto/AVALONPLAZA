@@ -5,8 +5,8 @@ import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.core.permissions.UserContext;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.infraestructure.mapper.MasterDataMapperService;
 import org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository;
 import org.frias.avalon.domain.product.application.dto.response.ProductResponse;
@@ -18,6 +18,8 @@ import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,7 +33,6 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
     private final JpaOrderRepository jpaOrderRepository;
     private final CurrentUserProviderPort currentUserProvider;
     private final UserAvalonRepositoryPort userAvalonRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
 
     @Override
     public ProductDomain toDomain(ProductOutlet entity) {
@@ -65,7 +66,7 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
                 .localDescription(domain.getDescription())
                 .stock(domain.getStock())
                 .unitMeasureId(domain.getUnitMeasureId())
-                .localImageUrl(domain.getImageUrl() != null && !domain.getImageUrl().isBlank() ? java.util.Arrays.asList(domain.getImageUrl().split(",")) : java.util.Collections.emptyList())
+                .localImageUrl(domain.getImageUrl() != null && !domain.getImageUrl().isBlank() ? Arrays.asList(domain.getImageUrl().split(",")) : Collections.emptyList())
                 .localPrice(domain.getPrice())
                 .outletId(domain.getOutletId())
                 .statusId(domain.getStatusId())
@@ -97,17 +98,17 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
         Integer reservedGlobalUnits = 0;
         Integer reservedUserUnits = 0;
         try {
-            org.frias.avalon.domain.masterdata.domain.model.MasterTree tree = masterTreeProvider.getTree();
+            MasterTree tree = masterTreeProvider.getTree();
             List<Long> activeStatusIds = new ArrayList<>();
-            org.frias.avalon.domain.masterdata.domain.model.MasterRoot penNode = tree.getByCode("PEN");
+            MasterRoot penNode = tree.getByCode("PEN");
             if (penNode == null) penNode = tree.getByCode("ORD_PEN");
             if (penNode != null) activeStatusIds.add(penNode.getId());
 
-            org.frias.avalon.domain.masterdata.domain.model.MasterRoot proNode = tree.getByCode("PRO");
+            MasterRoot proNode = tree.getByCode("PRO");
             if (proNode == null) proNode = tree.getByCode("ORD_REC");
             if (proNode != null) activeStatusIds.add(proNode.getId());
 
-            org.frias.avalon.domain.masterdata.domain.model.MasterRoot comNode = tree.getByCode("COM");
+            MasterRoot comNode = tree.getByCode("COM");
             if (comNode == null) comNode = tree.getByCode("ORD_DISP");
             if (comNode != null) activeStatusIds.add(comNode.getId());
 

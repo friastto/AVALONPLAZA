@@ -1,11 +1,9 @@
 package org.frias.avalon.domain.outlet.application.usecase.create;
 
 import org.frias.avalon.core.exeptions.DomainValidationException;
-import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.core.tenant.port.TenantSchemaMigrationPort;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.outlet.application.dto.LocationDto;
 import org.frias.avalon.domain.outlet.application.dto.request.OutletCreateRequestDto;
@@ -39,10 +37,10 @@ class CreateOutletUseCaseImplTest {
     private OutletRepositoryPort outletPort;
 
     @Mock
-    private MasterDataRepositoryPort masterPort;
+    private MasterTreeProvider masterTreeProvider;
 
     @Mock
-    private MasterTreeProvider masterTreeProvider;
+    private MasterTree masterTree;
 
     @Mock
     private OutletMapper outletMapper;
@@ -71,8 +69,8 @@ class CreateOutletUseCaseImplTest {
         );
 
         MasterRoot activeStatus = MasterRoot.fromPersistence(1L, "ACT", "Activo", null, 1L);
-        given(masterPort.getActiveStatus()).willReturn(Optional.of(activeStatus));
-        given(masterTreeProvider.getTree()).willReturn(mock(MasterTree.class));
+        given(masterTreeProvider.getTree()).willReturn(masterTree);
+        given(masterTree.getByCodeOrThrow("ACT")).willReturn(activeStatus);
 
         LocationDomain locationDomain = new LocationDomain(4.60971, -74.08175);
         OutletDomain savedOutlet = OutletDomain.fromPersistence(
@@ -109,7 +107,6 @@ class CreateOutletUseCaseImplTest {
         assertEquals(50L, response.companyId());
         assertEquals(locationDto, response.location());
 
-        verify(masterPort).getActiveStatus();
         verify(masterTreeProvider).getTree();
         verify(outletPort).save(any(OutletDomain.class));
         verify(tenantSchemaMigrationPort).migrateTenantSchema("company_50");
@@ -130,8 +127,8 @@ class CreateOutletUseCaseImplTest {
         );
 
         MasterRoot activeStatus = MasterRoot.fromPersistence(1L, "ACT", "Activo", null, 1L);
-        given(masterPort.getActiveStatus()).willReturn(Optional.of(activeStatus));
-        given(masterTreeProvider.getTree()).willReturn(mock(MasterTree.class));
+        given(masterTreeProvider.getTree()).willReturn(masterTree);
+        given(masterTree.getByCodeOrThrow("ACT")).willReturn(activeStatus);
 
         LocationDomain locationDomain = new LocationDomain(6.25184, -75.56359);
         OutletDomain savedOutlet = OutletDomain.fromPersistence(
@@ -166,8 +163,8 @@ class CreateOutletUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("Deberia lanzar ResourceNotFoundException cuando no se encuentra el estado activo")
-    void shouldThrowResourceNotFoundExceptionWhenActiveStatusNotFound() {
+    @DisplayName("Deberia lanzar IllegalStateException cuando no se encuentra el estado activo")
+    void shouldThrowIllegalStateExceptionWhenActiveStatusNotFound() {
         // Arrange
         LocationDto locationDto = new LocationDto(4.60971, -74.08175);
         OutletCreateRequestDto requestDto = new OutletCreateRequestDto(
@@ -179,17 +176,16 @@ class CreateOutletUseCaseImplTest {
                 10L
         );
 
-        given(masterPort.getActiveStatus()).willReturn(Optional.empty());
+        given(masterTreeProvider.getTree()).willReturn(masterTree);
+        given(masterTree.getByCodeOrThrow("ACT")).willThrow(new IllegalStateException("Nodo maestro no encontrado para codigo: ACT"));
 
         // Act & Assert
-        ResourceNotFoundException exception = assertThrows(
-                ResourceNotFoundException.class,
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
                 () -> createOutletUseCase.execute(requestDto)
         );
 
-        assertEquals("No se pudo activar la tienda en este momento", exception.getMessage());
-        verify(masterPort).getActiveStatus();
-        verifyNoInteractions(masterTreeProvider);
+        assertTrue(exception.getMessage().contains("ACT"));
         verifyNoInteractions(outletPort);
         verifyNoInteractions(tenantSchemaMigrationPort);
     }
@@ -209,8 +205,8 @@ class CreateOutletUseCaseImplTest {
         );
 
         MasterRoot activeStatus = MasterRoot.fromPersistence(1L, "ACT", "Activo", null, 1L);
-        given(masterPort.getActiveStatus()).willReturn(Optional.of(activeStatus));
-        given(masterTreeProvider.getTree()).willReturn(mock(MasterTree.class));
+        given(masterTreeProvider.getTree()).willReturn(masterTree);
+        given(masterTree.getByCodeOrThrow("ACT")).willReturn(activeStatus);
 
         // Act & Assert
         DomainValidationException exception = assertThrows(

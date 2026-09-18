@@ -30,13 +30,20 @@ public class CreateAllMasterDataUseCaseImpl implements CreateAllMasterDataUseCas
 
         List<MasterDataResponseDto> mdList = new ArrayList<>();
 
-        List<MasterRoot> mdList2 = new ArrayList<>();
+        MasterRoot statusNode = masterTreeProvider.getTree() != null
+                ? masterTreeProvider.getTree().getByCode("ACT")
+                : null;
+        Long statusId = statusNode != null ? statusNode.getId() : masterDataRepositoryPort.getIdByCode("ACT");
 
         for (MasterDataNewDto dto : request) {
 
-            Long parentId = masterDataRepositoryPort.getIdByCode(dto.parentShortName());
-
-            Long statusId = masterDataRepositoryPort.getIdByCode("ACT");
+            Long parentId = null;
+            if (dto.parentShortName() != null && !dto.parentShortName().isBlank()) {
+                MasterRoot parentNode = masterTreeProvider.getTree() != null
+                        ? masterTreeProvider.getTree().getByCode(dto.parentShortName().trim().toUpperCase())
+                        : null;
+                parentId = parentNode != null ? parentNode.getId() : masterDataRepositoryPort.getIdByCode(dto.parentShortName().trim().toUpperCase());
+            }
 
             MasterRoot domain = MasterRoot.create(
                     dto.shortName().trim().toUpperCase(),
@@ -46,7 +53,6 @@ public class CreateAllMasterDataUseCaseImpl implements CreateAllMasterDataUseCas
 
             mdList.add(mapper.toResponse(masterDataRepositoryPort.save(domain)));
         }
-
 
         masterTreeProvider.refresh();
         return mdList;

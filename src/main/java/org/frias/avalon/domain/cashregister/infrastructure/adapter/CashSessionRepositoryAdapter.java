@@ -3,13 +3,18 @@ package org.frias.avalon.domain.cashregister.infrastructure.adapter;
 import lombok.RequiredArgsConstructor;
 import org.frias.avalon.domain.cashregister.application.port.CashSessionRepositoryPort;
 import org.frias.avalon.domain.cashregister.domain.CashExpenseDomain;
+import org.frias.avalon.domain.cashregister.domain.CashPickupDomain;
 import org.frias.avalon.domain.cashregister.domain.CashSessionDomain;
 import org.frias.avalon.domain.cashregister.infrastructure.entity.CashExpenseEntity;
+import org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity;
 import org.frias.avalon.domain.cashregister.infrastructure.entity.CashSessionEntity;
 import org.frias.avalon.domain.cashregister.infrastructure.mapper.CashExpenseMapper;
 import org.frias.avalon.domain.cashregister.infrastructure.mapper.CashSessionMapper;
 import org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashExpenseRepository;
+import org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashPickupRepository;
 import org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashSessionRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -22,7 +27,7 @@ public class CashSessionRepositoryAdapter implements CashSessionRepositoryPort {
 
     private final JpaCashSessionRepository jpaCashSessionRepository;
     private final JpaCashExpenseRepository jpaCashExpenseRepository;
-    private final org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashPickupRepository jpaCashPickupRepository;
+    private final JpaCashPickupRepository jpaCashPickupRepository;
     private final CashSessionMapper cashSessionMapper;
     private final CashExpenseMapper cashExpenseMapper;
 
@@ -84,14 +89,14 @@ public class CashSessionRepositoryAdapter implements CashSessionRepositoryPort {
     }
 
     @Override
-    public org.frias.avalon.domain.cashregister.domain.CashPickupDomain savePickup(org.frias.avalon.domain.cashregister.domain.CashPickupDomain pickup) {
-        org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity entity = cashSessionMapper.toPickupEntity(pickup);
-        org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity saved = jpaCashPickupRepository.save(entity);
+    public CashPickupDomain savePickup(CashPickupDomain pickup) {
+        CashPickupEntity entity = cashSessionMapper.toPickupEntity(pickup);
+        CashPickupEntity saved = jpaCashPickupRepository.save(entity);
         return cashSessionMapper.toPickupDomain(saved);
     }
 
     @Override
-    public List<org.frias.avalon.domain.cashregister.domain.CashPickupDomain> findPickupsBySessionId(Long cashSessionId) {
+    public List<CashPickupDomain> findPickupsBySessionId(Long cashSessionId) {
         return jpaCashPickupRepository.findBySessionId(cashSessionId).stream()
                 .map(cashSessionMapper::toPickupDomain)
                 .collect(Collectors.toList());
@@ -103,7 +108,7 @@ public class CashSessionRepositoryAdapter implements CashSessionRepositoryPort {
     }
 
     @Override
-    public org.springframework.data.domain.Page<CashSessionDomain> findDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, org.springframework.data.domain.Pageable pageable) {
+    public Page<CashSessionDomain> findDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, Pageable pageable) {
         return jpaCashSessionRepository.findDiscrepanciesHistory(outletId, employeeId, discrepancyType, year, month, day, pageable)
                 .map(cashSessionMapper::toDomain);
     }

@@ -20,8 +20,8 @@ public class CreateOrderClaimRequest {
 
     private Long customerId;
 
-    @NotNull(message = "El claimTypeId es obligatorio")
     private Long claimTypeId;
+    private String claimTypeCode;
 
     @NotBlank(message = "La descripcion del reclamo es obligatoria")
     private String description;

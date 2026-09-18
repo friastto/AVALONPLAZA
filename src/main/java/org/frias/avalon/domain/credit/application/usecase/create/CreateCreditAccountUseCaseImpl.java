@@ -7,7 +7,9 @@ import org.frias.avalon.domain.credit.application.dto.request.CreateCreditAccoun
 import org.frias.avalon.domain.credit.application.dto.response.CreditAccountResponse;
 import org.frias.avalon.domain.credit.application.port.CreditRepositoryPort;
 import org.frias.avalon.domain.credit.domain.model.CreditAccountDomain;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,7 @@ public class CreateCreditAccountUseCaseImpl implements CreateCreditAccountUseCas
 
     private final CreditRepositoryPort creditRepositoryPort;
     private final PersonRepositoryPort personRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
+    private final MasterTreeProvider masterTreeProvider;
 
     /**
      * Executes the credit account creation flow for a specific client.
@@ -36,17 +38,19 @@ public class CreateCreditAccountUseCaseImpl implements CreateCreditAccountUseCas
     @Transactional
     public CreditAccountResponse execute(CreateCreditAccountRequest request) {
         PersonDomain client = personRepositoryPort.findByNumberid(request.clientNumberid())
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con identificación: " + request.clientNumberid()));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con identificacion: " + request.clientNumberid()));
 
         creditRepositoryPort.findByClientIdAndOutletId(client.getId(), request.outletId())
                 .ifPresent(acc -> {
-                    throw new BusinessException("El cliente ya cuenta con crédito configurado en este establecimiento");
+                    throw new BusinessException("El cliente ya cuenta con credito configurado en este establecimiento");
                 });
 
-        Long activeStatusId = masterDataRepositoryPort.getIdByCode("ACT");
-        if (activeStatusId == null) {
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot activeNode = tree != null ? tree.getByCode("ACT") : null;
+        if (activeNode == null) {
             throw new IllegalStateException("Estado Activo ('ACT') no encontrado en MasterData");
         }
+        Long activeStatusId = activeNode.getId();
 
         CreditAccountDomain account = CreditAccountDomain.create(
                 client.getId(),
@@ -57,6 +61,9 @@ public class CreateCreditAccountUseCaseImpl implements CreateCreditAccountUseCas
 
         CreditAccountDomain saved = creditRepositoryPort.save(account);
 
+        MasterRoot statusNode = tree.getById(saved.getStatusId());
+        String statusLabel = (statusNode != null && statusNode.getFullName() != null) ? statusNode.getFullName() : "ACTIVO";
+
         return new CreditAccountResponse(
                 saved.getId(),
                 saved.getClientId(),
@@ -65,7 +72,7 @@ public class CreateCreditAccountUseCaseImpl implements CreateCreditAccountUseCas
                 saved.getOutletId(),
                 saved.getCreditLimit(),
                 saved.getCurrentDebt(),
-                "ACTIVO",
+                statusLabel,
                 saved.getCreatedAt(),
                 saved.getUpdatedAt()
         );

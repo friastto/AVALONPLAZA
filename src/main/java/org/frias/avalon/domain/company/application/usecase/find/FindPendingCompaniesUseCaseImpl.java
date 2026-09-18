@@ -33,19 +33,13 @@ public class FindPendingCompaniesUseCaseImpl implements FindPendingCompaniesUseC
     public List<CompanyResponse> execute() {
         MasterTree tree = masterTreeProvider.getTree();
         MasterRoot rvwNode = tree.getByCode("RVW");
-        Long pendingStatusId = (rvwNode != null) ? rvwNode.getId() : tree.getByCodeOrThrow("ACT").getId();
+        if (rvwNode == null) {
+            return List.of();
+        }
+        Long pendingStatusId = rvwNode.getId();
 
         return companyPort.findByStatusId(pendingStatusId).stream()
-                .map(domain -> new CompanyResponse(
-                        domain.id(),
-                        domain.nit(),
-                        domain.name(),
-                        domain.email(),
-                        domain.statusId(),
-                        domain.defaultCashThresholdAmount(),
-                        domain.createdAt(),
-                        domain.updatedAt()
-                ))
+                .map(domain -> CompanyResponse.from(domain, tree))
                 .toList();
     }
 }

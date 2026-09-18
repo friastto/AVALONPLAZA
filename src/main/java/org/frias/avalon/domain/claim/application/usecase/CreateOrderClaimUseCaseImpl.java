@@ -1,6 +1,7 @@
 package org.frias.avalon.domain.claim.application.usecase;
 
 import lombok.RequiredArgsConstructor;
+import org.frias.avalon.core.exeptions.DomainValidationException;
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.domain.claim.application.dto.request.CreateOrderClaimRequest;
 import org.frias.avalon.domain.claim.application.dto.response.ClaimResponse;
@@ -9,7 +10,9 @@ import org.frias.avalon.domain.claim.domain.OrderClaimDomain;
 import org.frias.avalon.domain.claim.domain.OrderClaimItemDomain;
 import org.frias.avalon.domain.claim.domain.OrderClaimPhotoDomain;
 import org.frias.avalon.domain.claim.infrastructure.persistence.mapper.ClaimMapper;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketController;
 import org.springframework.stereotype.Service;
@@ -25,7 +28,7 @@ public class CreateOrderClaimUseCaseImpl implements CreateOrderClaimUseCase {
 
     private final ClaimRepositoryPort claimRepositoryPort;
     private final OrderRepositoryPort orderRepositoryPort;
-    private final org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider masterTreeProvider;
+    private final MasterTreeProvider masterTreeProvider;
     private final ClaimMapper claimMapper;
     private final OrderWebSocketController orderWebSocketController;
 
@@ -35,8 +38,8 @@ public class CreateOrderClaimUseCaseImpl implements CreateOrderClaimUseCase {
         orderRepositoryPort.findById(request.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido con ID " + request.getOrderId() + " no encontrado"));
 
-        org.frias.avalon.domain.masterdata.domain.model.MasterTree tree = masterTreeProvider.getTree();
-        org.frias.avalon.domain.masterdata.domain.model.MasterRoot clmPenNode = tree.getByCode("CLM_PEN");
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot clmPenNode = tree.getByCode("CLM_PEN");
         if (clmPenNode == null) {
             clmPenNode = tree.getByCode("PEN");
         }
@@ -45,13 +48,24 @@ public class CreateOrderClaimUseCaseImpl implements CreateOrderClaimUseCase {
         }
         Long clmPenStatusId = clmPenNode.getId();
 
+        Long claimTypeId = request.getClaimTypeId();
+        if (claimTypeId == null && request.getClaimTypeCode() != null) {
+            MasterRoot ctNode = tree.getByCode(request.getClaimTypeCode().trim());
+            if (ctNode != null) {
+                claimTypeId = ctNode.getId();
+            }
+        }
+        if (claimTypeId == null) {
+            throw new DomainValidationException("El tipo de reclamo es obligatorio");
+        }
+
         LocalDateTime now = LocalDateTime.now();
 
         List<OrderClaimItemDomain> claimItems = new ArrayList<>();
         for (var itemReq : request.getItems()) {
             claimItems.add(OrderClaimItemDomain.builder()
                     .orderItemId(itemReq.getOrderItemId())
-                    .quantityAffected(itemReq.getQuantityAffected())
+                    .quantityAffected(itemReq.getEffectiveQuantityAffected())
                     .reason(itemReq.getReason())
                     .build());
         }
@@ -69,7 +83,7 @@ public class CreateOrderClaimUseCaseImpl implements CreateOrderClaimUseCase {
         OrderClaimDomain domain = OrderClaimDomain.builder()
                 .orderId(request.getOrderId())
                 .customerId(request.getCustomerId())
-                .claimTypeId(request.getClaimTypeId())
+                .claimTypeId(claimTypeId)
                 .statusId(clmPenStatusId)
                 .description(request.getDescription())
                 .createdAt(now)

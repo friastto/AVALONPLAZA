@@ -17,7 +17,7 @@ import java.util.List;
  * Pure Clean Architecture REST Controller for store inventory management and Kardex audit ledger.
  */
 @RestController
-@RequestMapping("/api/v1/inventory")
+@RequestMapping({"/avalon/inventory", "/api/v1/inventory"})
 public class InventoryController {
 
     private final StockAdjustmentUseCase stockAdjustmentUseCase;

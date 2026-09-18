@@ -8,8 +8,8 @@ import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
 import org.frias.avalon.domain.product.domain.ProductDomain;
 import org.frias.avalon.domain.sale.application.dto.request.CreateOrderRequest;
@@ -34,7 +34,6 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
 
     private final OrderRepositoryPort orderRepositoryPort;
     private final ProductOutletRepositoryPort productOutletRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
     private final MasterTreeProvider masterTreeProvider;
     private final SaleWeightConversionService weightConversionService;
     private final CurrentUserProviderPort currentUserProvider;
@@ -54,13 +53,17 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
             }
         }
 
-        // Resolver Estado del Pedido: Pendiente ("PEN")
-        Long pendingStatusId = masterDataRepositoryPort.getIdByCode("PEN");
-        if (pendingStatusId == null) {
-            throw new IllegalStateException("Estado Pendiente ('PEN') no encontrado en MasterData.");
-        }
-
         MasterTree masterTree = masterTreeProvider.getTree();
+
+        // Resolver Estado del Pedido: Pendiente ("PEN")
+        MasterRoot penNode = masterTree.getByCode("PEN");
+        if (penNode == null) {
+            penNode = masterTree.getByCode("ORD_PEN");
+        }
+        if (penNode == null) {
+            throw new IllegalStateException("Estado maestro PEN no encontrado en MasterTree.");
+        }
+        Long pendingStatusId = penNode.getId();
 
         List<OrderItemDomain> itemDomains = new ArrayList<>();
         List<OrderItemResponse> itemResponses = new ArrayList<>();
@@ -148,9 +151,29 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
             ));
         }
 
+        Long paymentMethodId = request.paymentMethodId();
+        if (paymentMethodId == null && request.paymentMethodCode() != null) {
+            MasterRoot pmNode = masterTree.getByCode(request.paymentMethodCode().trim());
+            if (pmNode != null) {
+                paymentMethodId = pmNode.getId();
+            }
+        }
+        if (paymentMethodId == null) {
+            MasterRoot defaultCashNode = masterTree.getByCode("EFE");
+            if (defaultCashNode == null) {
+                defaultCashNode = masterTree.getByCode("MPG_CASH");
+            }
+            if (defaultCashNode != null) {
+                paymentMethodId = defaultCashNode.getId();
+            }
+        }
+        if (paymentMethodId == null) {
+            throw new DomainValidationException("El metodo de pago es requerido");
+        }
+
         // Crear y guardar el Pedido
         OrderDomain orderDomain = OrderDomain.create(
-                request.paymentMethodId(),
+                paymentMethodId,
                 pendingStatusId,
                 request.outletId(),
                 itemDomains

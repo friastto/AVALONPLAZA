@@ -1,7 +1,10 @@
 package org.frias.avalon.domain.cashregister.application.port;
 
 import org.frias.avalon.domain.cashregister.domain.CashExpenseDomain;
+import org.frias.avalon.domain.cashregister.domain.CashPickupDomain;
 import org.frias.avalon.domain.cashregister.domain.CashSessionDomain;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,11 +27,11 @@ public interface CashSessionRepositoryPort {
 
     List<CashExpenseDomain> findExpensesBySessionIds(List<Long> cashSessionIds);
 
-    org.frias.avalon.domain.cashregister.domain.CashPickupDomain savePickup(org.frias.avalon.domain.cashregister.domain.CashPickupDomain pickup);
+    CashPickupDomain savePickup(CashPickupDomain pickup);
 
-    List<org.frias.avalon.domain.cashregister.domain.CashPickupDomain> findPickupsBySessionId(Long cashSessionId);
+    List<CashPickupDomain> findPickupsBySessionId(Long cashSessionId);
 
     List<Long> findDistinctEmployeeIdsByOutletId(Long outletId);
 
-    org.springframework.data.domain.Page<CashSessionDomain> findDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, org.springframework.data.domain.Pageable pageable);
+    Page<CashSessionDomain> findDiscrepanciesHistory(Long outletId, Long employeeId, String discrepancyType, Integer year, Integer month, Integer day, Pageable pageable);
 }

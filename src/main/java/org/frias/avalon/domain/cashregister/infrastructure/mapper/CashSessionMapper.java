@@ -1,6 +1,8 @@
 package org.frias.avalon.domain.cashregister.infrastructure.mapper;
 
+import org.frias.avalon.domain.cashregister.domain.CashPickupDomain;
 import org.frias.avalon.domain.cashregister.domain.CashSessionDomain;
+import org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity;
 import org.frias.avalon.domain.cashregister.infrastructure.entity.CashSessionEntity;
 import org.springframework.stereotype.Component;
 
@@ -47,9 +49,9 @@ public class CashSessionMapper {
         );
     }
 
-    public org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity toPickupEntity(org.frias.avalon.domain.cashregister.domain.CashPickupDomain domain) {
+    public CashPickupEntity toPickupEntity(CashPickupDomain domain) {
         if (domain == null) return null;
-        return org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity.builder()
+        return CashPickupEntity.builder()
                 .id(domain.getId())
                 .sessionId(domain.getSessionId())
                 .employeeId(domain.getEmployeeId())
@@ -59,9 +61,9 @@ public class CashSessionMapper {
                 .build();
     }
 
-    public org.frias.avalon.domain.cashregister.domain.CashPickupDomain toPickupDomain(org.frias.avalon.domain.cashregister.infrastructure.entity.CashPickupEntity entity) {
+    public CashPickupDomain toPickupDomain(CashPickupEntity entity) {
         if (entity == null) return null;
-        return org.frias.avalon.domain.cashregister.domain.CashPickupDomain.fromPersistence(
+        return CashPickupDomain.fromPersistence(
                 entity.getId(),
                 entity.getSessionId(),
                 entity.getEmployeeId(),

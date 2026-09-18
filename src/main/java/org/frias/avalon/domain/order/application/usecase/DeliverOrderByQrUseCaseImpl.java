@@ -182,15 +182,25 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
                     throw new DomainValidationException("El item del pedido no tiene un producto valido asignado");
                 }
 
-                Integer qty = item.getQuantity() != null && item.getQuantity() > 0 ? item.getQuantity() : 1;
+                if (item.getQuantity() == null || item.getQuantity() <= 0) {
+                    throw new DomainValidationException("La cantidad del item del pedido debe ser mayor a cero");
+                }
+                Integer qty = item.getQuantity();
                 BigDecimal unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO;
                 BigDecimal subtotal = item.getSubtotal() != null ? item.getSubtotal() : unitPrice.multiply(BigDecimal.valueOf(qty));
+
+                String displayQty = item.getDisplayQuantity();
+                if (displayQty == null || displayQty.isBlank()) {
+                    MasterRoot unitNode = tree.getById(unitMeasureId);
+                    String unitCode = (unitNode != null && unitNode.getShortName() != null) ? unitNode.getShortName() : "UND";
+                    displayQty = qty + " " + unitCode;
+                }
 
                 SaleItemDomain saleItem = new SaleItemDomain(
                         null,
                         item.getProductOutletId(),
                         qty,
-                        item.getDisplayQuantity() != null ? item.getDisplayQuantity() : (qty + " UND"),
+                        displayQty,
                         unitPrice,
                         subtotal,
                         unitMeasureId
@@ -204,17 +214,19 @@ public class DeliverOrderByQrUseCaseImpl implements DeliverOrderByQrUseCase {
             }
             Long activeSaleStatusId = actNode.getId();
 
-            MasterRoot cashNode = tree.getByCode("EFE");
-            if (cashNode == null) {
-                cashNode = tree.getByCode("MPG_CASH");
+            Long cashPaymentMethodId = order.getPaymentMethodId();
+            if (cashPaymentMethodId == null) {
+                MasterRoot cashNode = tree.getByCode("EFE");
+                if (cashNode == null) {
+                    cashNode = tree.getByCode("MPG_CASH");
+                }
+                if (cashNode != null) {
+                    cashPaymentMethodId = cashNode.getId();
+                }
             }
-            if (cashNode == null) {
-                cashNode = tree.getByCode("CASH");
+            if (cashPaymentMethodId == null) {
+                throw new DomainValidationException("No se pudo determinar el metodo de pago para emitir la venta");
             }
-            if (cashNode == null) {
-                cashNode = tree.getByCode("EFECTIVO");
-            }
-            Long cashPaymentMethodId = cashNode != null ? cashNode.getId() : order.getPaymentMethodId();
 
             Long customerId = order.getCustomerId();
             if (customerId == null || customerId <= 0) {

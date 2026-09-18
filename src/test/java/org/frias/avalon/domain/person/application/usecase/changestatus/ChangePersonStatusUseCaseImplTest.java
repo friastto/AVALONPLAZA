@@ -1,11 +1,9 @@
 package org.frias.avalon.domain.person.application.usecase.changestatus;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.application.dto.response.PersonResponse;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
@@ -37,9 +35,6 @@ class ChangePersonStatusUseCaseImplTest {
     private MasterTreeProvider treeProvider;
 
     @Mock
-    private MasterDataRepositoryPort masterPort;
-
-    @Mock
     private PersonMapper mapper;
 
     @Mock
@@ -53,7 +48,7 @@ class ChangePersonStatusUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new ChangePersonStatusUseCaseImpl(personPort, treeProvider, masterPort, mapper);
+        useCase = new ChangePersonStatusUseCaseImpl(personPort, treeProvider, mapper);
     }
 
     private PersonDomain createSamplePerson(Long statusId) {
@@ -77,10 +72,9 @@ class ChangePersonStatusUseCaseImplTest {
             MasterRoot oldStatus = new MasterRoot(activeStatusId, "ACT", "Activo", 0L, 1L);
             MasterRoot newStatus = new MasterRoot(inactiveStatusId, "INA", "Inactivo", 0L, 1L);
 
-            when(masterPort.findById(activeStatusId)).thenReturn(Optional.of(oldStatus));
-            when(masterPort.findById(inactiveStatusId)).thenReturn(Optional.of(newStatus));
-
             when(treeProvider.getTree()).thenReturn(masterTree);
+            when(masterTree.getByIdOrThrow(activeStatusId)).thenReturn(oldStatus);
+            when(masterTree.getByIdOrThrow(inactiveStatusId)).thenReturn(newStatus);
             when(masterTree.isChildOf(newStatus, "STSGEN")).thenReturn(true);
 
             when(personPort.save(any(PersonDomain.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -118,30 +112,15 @@ class ChangePersonStatusUseCaseImplTest {
         }
 
         @Test
-        @DisplayName("Should throw BusinessException when old status is missing in master data")
-        void shouldThrowBusinessExceptionWhenOldStatusMissing() {
+        @DisplayName("Should throw EntityNotFoundException when status is missing in MasterTree")
+        void shouldThrowEntityNotFoundExceptionWhenStatusMissing() {
             PersonDomain person = createSamplePerson(activeStatusId);
             when(personPort.findById(personId)).thenReturn(Optional.of(person));
-            when(masterPort.findById(activeStatusId)).thenReturn(Optional.empty());
+            when(treeProvider.getTree()).thenReturn(masterTree);
+            when(masterTree.getByIdOrThrow(activeStatusId)).thenThrow(new EntityNotFoundException("Nodo no encontrado"));
 
-            BusinessException ex = assertThrows(BusinessException.class,
+            assertThrows(EntityNotFoundException.class,
                     () -> useCase.execute(personId, inactiveStatusId));
-            assertEquals("no se puede establecer este estado al la persona", ex.getMessage());
-        }
-
-        @Test
-        @DisplayName("Should throw BusinessException when new status is missing in master data")
-        void shouldThrowBusinessExceptionWhenNewStatusMissing() {
-            PersonDomain person = createSamplePerson(activeStatusId);
-            when(personPort.findById(personId)).thenReturn(Optional.of(person));
-
-            MasterRoot oldStatus = new MasterRoot(activeStatusId, "ACT", "Activo", 0L, 1L);
-            when(masterPort.findById(activeStatusId)).thenReturn(Optional.of(oldStatus));
-            when(masterPort.findById(inactiveStatusId)).thenReturn(Optional.empty());
-
-            BusinessException ex = assertThrows(BusinessException.class,
-                    () -> useCase.execute(personId, inactiveStatusId));
-            assertEquals("no se puede establecer este estado al la persona", ex.getMessage());
         }
 
         @Test
@@ -153,10 +132,9 @@ class ChangePersonStatusUseCaseImplTest {
             MasterRoot oldStatus = new MasterRoot(activeStatusId, "ACT", "Activo", 0L, 1L);
             MasterRoot newStatus = new MasterRoot(inactiveStatusId, "INVALID", "Invalido", 0L, 1L);
 
-            when(masterPort.findById(activeStatusId)).thenReturn(Optional.of(oldStatus));
-            when(masterPort.findById(inactiveStatusId)).thenReturn(Optional.of(newStatus));
-
             when(treeProvider.getTree()).thenReturn(masterTree);
+            when(masterTree.getByIdOrThrow(activeStatusId)).thenReturn(oldStatus);
+            when(masterTree.getByIdOrThrow(inactiveStatusId)).thenReturn(newStatus);
             when(masterTree.isChildOf(newStatus, "STSGEN")).thenReturn(false);
 
             IllegalStateException ex = assertThrows(IllegalStateException.class,

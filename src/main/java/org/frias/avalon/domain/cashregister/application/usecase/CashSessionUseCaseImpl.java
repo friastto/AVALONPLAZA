@@ -14,6 +14,7 @@ import org.frias.avalon.domain.cashregister.application.dto.ConsolidatedHistoryR
 import org.frias.avalon.domain.cashregister.application.dto.DiscrepancyHistoryResponse;
 import org.frias.avalon.domain.cashregister.application.dto.OutletCashSummaryResponse;
 import org.frias.avalon.domain.cashregister.application.dto.PageResponseDto;
+import org.frias.avalon.domain.cashregister.application.dto.ThresholdConfigurationResponse;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -360,6 +362,32 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
                 .orElseThrow(() -> new BusinessException("No se encontró la tienda"));
         outlet.setCashThresholdAmount(thresholdAmount);
         outletRepositoryPort.update(outlet);
+    }
+
+    @Override
+    public ThresholdConfigurationResponse getThresholds(Long outletId) {
+        BigDecimal blockThreshold = null;
+        if (outletId != null) {
+            Optional<OutletDomain> outletOpt = outletRepositoryPort.findById(outletId);
+            if (outletOpt.isPresent()) {
+                blockThreshold = outletOpt.get().getCashThresholdAmount();
+                if (blockThreshold == null && outletOpt.get().getCompanyId() != null) {
+                    Optional<CompanyDomain> companyOpt = companyRepositoryPort.findById(outletOpt.get().getCompanyId());
+                    if (companyOpt.isPresent()) {
+                        blockThreshold = companyOpt.get().defaultCashThresholdAmount();
+                    }
+                }
+            }
+        }
+        if (blockThreshold == null || blockThreshold.compareTo(BigDecimal.ZERO) <= 0) {
+            blockThreshold = new BigDecimal("1000000");
+        }
+        BigDecimal warningThreshold = blockThreshold.multiply(new BigDecimal("0.70")).setScale(2, RoundingMode.HALF_UP);
+
+        return ThresholdConfigurationResponse.builder()
+                .warningThreshold(warningThreshold)
+                .blockThreshold(blockThreshold)
+                .build();
     }
 
     @Override

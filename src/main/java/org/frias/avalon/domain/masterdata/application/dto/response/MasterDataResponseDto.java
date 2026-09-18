@@ -8,6 +8,6 @@ public record MasterDataResponseDto(
         String statusCode
 ) {
     public MasterDataResponseDto(Long id, String shortName, String fullName) {
-        this(id, shortName, fullName, null, "ACTIVO");
+        this(id, shortName, fullName, null, "ACT");
     }
 }

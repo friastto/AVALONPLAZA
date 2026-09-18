@@ -39,9 +39,6 @@ public class CreateCompanyUseCaseImpl implements CreateCompanyUseCase {
 
         MasterTree tree = masterTreeProvider.getTree();
         MasterRoot rvwNode = tree.getByCode("RVW");
-        if (rvwNode == null) {
-            rvwNode = tree.getByCode("ACT");
-        }
         Long statusId = (rvwNode != null) ? rvwNode.getId() : tree.getByCodeOrThrow("ACT").getId();
 
         CompanyDomain toSave = new CompanyDomain(
@@ -57,15 +54,6 @@ public class CreateCompanyUseCaseImpl implements CreateCompanyUseCase {
 
         CompanyDomain saved = companyPort.save(toSave);
 
-        return new CompanyResponse(
-                saved.id(),
-                saved.nit(),
-                saved.name(),
-                saved.email(),
-                saved.statusId(),
-                saved.defaultCashThresholdAmount(),
-                saved.createdAt(),
-                saved.updatedAt()
-        );
+        return CompanyResponse.from(saved, tree);
     }
 }

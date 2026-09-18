@@ -5,7 +5,6 @@ import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataRes
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
@@ -36,7 +35,6 @@ class AssignmentRoleUseCaseImplTest {
 
     private UserAvalonRepositoryPort userPort;
     private RoleAssignmentRepositoryPort rolePort;
-    private MasterDataRepositoryPort masterPort;
     private RoleAssignmentMapper mapper;
     private MasterTreeProvider treeProvider;
     private OutletRepositoryPort outletRepositoryPort;
@@ -48,14 +46,13 @@ class AssignmentRoleUseCaseImplTest {
     void setUp() {
         userPort = mock(UserAvalonRepositoryPort.class);
         rolePort = mock(RoleAssignmentRepositoryPort.class);
-        masterPort = mock(MasterDataRepositoryPort.class);
         mapper = mock(RoleAssignmentMapper.class);
         treeProvider = mock(MasterTreeProvider.class);
         outletRepositoryPort = mock(OutletRepositoryPort.class);
         permissionService = mock(PermissionService.class);
 
         assignmentRoleUseCase = new AssignmentRoleUseCaseImpl(
-                userPort, rolePort, masterPort, mapper, treeProvider, outletRepositoryPort, permissionService
+                userPort, rolePort, mapper, treeProvider, outletRepositoryPort, permissionService
         );
     }
 
@@ -84,9 +81,9 @@ class AssignmentRoleUseCaseImplTest {
         MasterRoot roleNode = new MasterRoot(5L, "CJTURNO", "Cajero de Turno", 0L, 1L);
         MasterRoot activeStatus = new MasterRoot(1L, "ACT", "Activo", 0L, 1L);
 
-        when(masterPort.findById(1L)).thenReturn(Optional.of(userStatus));
-        when(masterPort.findById(5L)).thenReturn(Optional.of(roleNode));
-        when(masterPort.getActiveStatus()).thenReturn(Optional.of(activeStatus));
+        when(tree.getByIdOrThrow(1L)).thenReturn(userStatus);
+        when(tree.getByIdOrThrow(5L)).thenReturn(roleNode);
+        when(tree.getByCodeOrThrow("ACT")).thenReturn(activeStatus);
 
         when(tree.isChildOf(roleNode, "ROL")).thenReturn(true);
         when(tree.isChildOf(roleNode, "CONS")).thenReturn(false);

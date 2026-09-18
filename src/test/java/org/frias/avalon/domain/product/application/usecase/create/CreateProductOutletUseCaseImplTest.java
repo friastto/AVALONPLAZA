@@ -3,7 +3,6 @@ package org.frias.avalon.domain.product.application.usecase.create;
 import org.frias.avalon.core.exeptions.DomainValidationException;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.product.application.dto.request.ProductNewDataRequest;
 import org.frias.avalon.domain.product.application.dto.response.ProductResponse;
@@ -38,8 +37,6 @@ class CreateProductOutletUseCaseImplTest {
     @Mock
     private ProductOutletRepositoryPort productOutletRepositoryPort;
     @Mock
-    private MasterDataRepositoryPort masterDataRepositoryPort;
-    @Mock
     private ProductOutletMapper productOutletMapper;
     @Mock
     private UnitConversionService unitConversionService;
@@ -59,11 +56,16 @@ class CreateProductOutletUseCaseImplTest {
 
     private ProductNewDataRequest validRequestDto;
     private MasterRoot mockUnitNode;
+    private MasterRoot mockActiveNode;
 
     @BeforeEach
     void setUp() {
         lenient().when(currentUserProvider.hasRole(anyString())).thenReturn(true); // Permitir admin en tests
         lenient().when(barcodeRepositoryPort.findByCode(any())).thenReturn(java.util.Optional.empty());
+
+        mockActiveNode = new MasterRoot(1L, "ACT", "Activo", null, 1L);
+        lenient().when(masterTreeProvider.getTree()).thenReturn(masterTree);
+        lenient().when(masterTree.getByCode("ACT")).thenReturn(mockActiveNode);
 
         validRequestDto = new ProductNewDataRequest(
                 "",
@@ -80,25 +82,20 @@ class CreateProductOutletUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("Debería crear un producto exitosamente tras parsear y validar la unidad")
+    @DisplayName("Deberia crear un producto exitosamente tras parsear y validar la unidad")
     void shouldCreateProductSuccessfully() {
         // Arrange
-        Long activeStatusId = 1L;
         Integer convertedStock = 1500;
         BigDecimal parsedQuantity = new BigDecimal("1.5");
         ProductResponse expectedResponse = new ProductResponse(1L, "Test Product", "Description", "1.5 KG", "0.0 KG", "0.0 KG", "url", null, new BigDecimal("10.0"), 100L, null, "12345",null, null,null);
 
-
-        given(masterDataRepositoryPort.getIdByCode("ACT")).willReturn(activeStatusId);
-        
         // Simular el nuevo servicio de parsing
         given(quantityParserService.parseAndValidate(validRequestDto.stockQuantity())).willReturn(parsedQuantity);
         
-        given(masterTreeProvider.getTree()).willReturn(masterTree);
         given(masterTree.getById(validRequestDto.stockUnitId())).willReturn(mockUnitNode);
         given(masterTree.isChildOf(mockUnitNode, "UNIT")).willReturn(true);
         
-        // La fábrica de conversión ahora recibe el BigDecimal parseado
+        // La fabrica de conversion ahora recibe el BigDecimal parseado
         given(unitConversionService.convertToSmallestUnit(parsedQuantity, "KG")).willReturn(convertedStock);
         
         given(productOutletRepositoryPort.save(any(ProductDomain.class))).willAnswer(invocation -> {
@@ -120,14 +117,14 @@ class CreateProductOutletUseCaseImplTest {
         
         assertEquals(convertedStock, savedDomain.getStock());
         assertEquals(validRequestDto.stockUnitId(), savedDomain.getUnitMeasureId());
+        assertEquals(1L, savedDomain.getStatusId());
     }
 
     @Test
-    @DisplayName("Debería lanzar excepción si la cantidad tiene un formato inválido")
+    @DisplayName("Deberia lanzar excepcion si la cantidad tiene un formato invalido")
     void shouldThrowExceptionIfQuantityFormatIsInvalid() {
         // Arrange
-        given(masterDataRepositoryPort.getIdByCode("ACT")).willReturn(1L);
-        // Simulamos que el parser falla (ej. si el usuario mandó "0.0.5")
+        // Simulamos que el parser falla (ej. si el usuario mando "0.0.5")
         given(quantityParserService.parseAndValidate(validRequestDto.stockQuantity()))
             .willThrow(new DomainValidationException("Invalid number format for quantity"));
 
@@ -138,17 +135,15 @@ class CreateProductOutletUseCaseImplTest {
 
         assertEquals("Invalid number format for quantity", exception.getMessage());
         
-        // Verificamos que no se intentó hacer nada más después de fallar el parsing
-        verifyNoInteractions(masterTreeProvider, unitConversionService, productOutletRepositoryPort, productOutletMapper);
+        // Verificamos que no se intento hacer nada mas despues de fallar el parsing
+        verifyNoInteractions(unitConversionService, productOutletRepositoryPort, productOutletMapper);
     }
 
     @Test
-    @DisplayName("Debería lanzar excepción si el ID de la unidad no existe")
+    @DisplayName("Deberia lanzar excepcion si el ID de la unidad no existe")
     void shouldThrowExceptionIfUnitIdDoesNotExist() {
         // Arrange
-        given(masterDataRepositoryPort.getIdByCode("ACT")).willReturn(1L);
         given(quantityParserService.parseAndValidate(validRequestDto.stockQuantity())).willReturn(new BigDecimal("1.5"));
-        given(masterTreeProvider.getTree()).willReturn(masterTree);
         given(masterTree.getById(validRequestDto.stockUnitId())).willReturn(null);
 
         // Act & Assert
@@ -161,12 +156,10 @@ class CreateProductOutletUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("Debería lanzar excepción si el ID no es hijo de UNIT")
+    @DisplayName("Deberia lanzar excepcion si el ID no es hijo de UNIT")
     void shouldThrowExceptionIfIdIsNotAUnit() {
         // Arrange
-        given(masterDataRepositoryPort.getIdByCode("ACT")).willReturn(1L);
         given(quantityParserService.parseAndValidate(validRequestDto.stockQuantity())).willReturn(new BigDecimal("1.5"));
-        given(masterTreeProvider.getTree()).willReturn(masterTree);
         given(masterTree.getById(validRequestDto.stockUnitId())).willReturn(mockUnitNode);
         given(masterTree.isChildOf(mockUnitNode, "UNIT")).willReturn(false);
 

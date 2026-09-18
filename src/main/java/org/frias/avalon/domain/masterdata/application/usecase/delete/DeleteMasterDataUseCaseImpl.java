@@ -24,7 +24,9 @@ public class DeleteMasterDataUseCaseImpl implements DeleteMasterDataUseCase {
         return new MasterDataResponseDto(
                 deletedDomainObject.getId(),
                 deletedDomainObject.getShortName(),
-                deletedDomainObject.getFullName()
+                deletedDomainObject.getFullName(),
+                deletedDomainObject.getParentId(),
+                "DEL"
         );
     }
 }

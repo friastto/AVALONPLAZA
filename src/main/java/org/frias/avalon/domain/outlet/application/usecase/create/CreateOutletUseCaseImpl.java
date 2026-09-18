@@ -5,7 +5,6 @@ import org.frias.avalon.core.tenant.port.TenantSchemaMigrationPort;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterRefDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.outlet.application.dto.LocationDto;
 import org.frias.avalon.domain.outlet.application.dto.request.OutletCreateRequestDto;
@@ -18,24 +17,24 @@ import org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 @Service
 public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
 
     private final OutletRepositoryPort outletPort;
-    private final MasterDataRepositoryPort masterPort;
     private final MasterTreeProvider masterTreeProvider;
     private final OutletMapper outletMapper;
     private final LocationMapper locationMapper;
     private final TenantSchemaMigrationPort tenantSchemaMigrationPort;
 
-    public CreateOutletUseCaseImpl(OutletRepositoryPort outletPort,
-                                 MasterDataRepositoryPort masterPort,
-                                 MasterTreeProvider masterTreeProvider,
-                                 OutletMapper outletMapper,
-                                 LocationMapper locationMapper,
-                                 TenantSchemaMigrationPort tenantSchemaMigrationPort) {
+    public CreateOutletUseCaseImpl(
+            OutletRepositoryPort outletPort,
+            MasterTreeProvider masterTreeProvider,
+            OutletMapper outletMapper,
+            LocationMapper locationMapper,
+            TenantSchemaMigrationPort tenantSchemaMigrationPort) {
         this.outletPort = outletPort;
-        this.masterPort = masterPort;
         this.masterTreeProvider = masterTreeProvider;
         this.outletMapper = outletMapper;
         this.locationMapper = locationMapper;
@@ -46,10 +45,8 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
     @Override
     public OutletResponseDto execute(OutletCreateRequestDto dto) {
 
-        MasterRoot status = masterPort.getActiveStatus()
-                .orElseThrow(() -> new ResourceNotFoundException("No se pudo activar la tienda en este momento"));
-
         MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot status = tree.getByCodeOrThrow("ACT");
 
         LocationDomain location = new LocationDomain(dto.location().lat(), dto.location().lon());
 
@@ -60,7 +57,7 @@ public class CreateOutletUseCaseImpl implements CreateOutletUseCase {
                 dto.nit(),
                 status.getId(),
                 location,
-                java.math.BigDecimal.ZERO,
+                BigDecimal.ZERO,
                 dto.companyId()
         );
 

@@ -9,7 +9,6 @@ import org.frias.avalon.core.permissions.UserContext;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
@@ -46,7 +45,6 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
     private final ProductOutletRepositoryPort productOutletRepositoryPort;
     private final PersonRepositoryPort personRepositoryPort;
     private final UserAvalonRepositoryPort userAvalonRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
     private final MasterTreeProvider masterTreeProvider;
     private final SaleWeightConversionService weightConversionService;
     private final CurrentUserProviderPort currentUserProvider;
@@ -109,10 +107,22 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
         PersonDomain clientDomain = personRepositoryPort.findByNumberid(request.clientNumberid())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente con identificación '" + request.clientNumberid() + "' no encontrado."));
 
-        // --- 5. Obtener Estado de la Venta (ACT) ---
-        Long activeStatusId = masterDataRepositoryPort.getIdByCode("ACT");
-        if (activeStatusId == null) {
+        // --- 5. Obtener Estado de la Venta (ACT) y Resolver Metodo de Pago ---
+        MasterRoot actNode = masterTree.getByCode("ACT");
+        if (actNode == null) {
             throw new IllegalStateException("Estado Activo ('ACT') no encontrado en MasterData.");
+        }
+        Long activeStatusId = actNode.getId();
+
+        Long paymentMethodId = request.paymentMethodId();
+        if (paymentMethodId == null && request.paymentMethodCode() != null && !request.paymentMethodCode().isBlank()) {
+            MasterRoot payNode = masterTree.getByCode(request.paymentMethodCode().trim());
+            if (payNode != null) {
+                paymentMethodId = payNode.getId();
+            }
+        }
+        if (paymentMethodId == null) {
+            throw new DomainValidationException("El método de pago es requerido (suministre paymentMethodId o paymentMethodCode).");
         }
 
         // --- 6. Procesar Items y Descontar Inventario ---
@@ -213,7 +223,7 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
 
         // --- 7. Crear la Venta ---
         SaleDomain saleDomain = SaleDomain.create(
-                request.paymentMethodId(),
+                paymentMethodId,
                 activeStatusId,
                 clientDomain.getId(),
                 request.outletId(),
@@ -223,7 +233,7 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
 
         // --- 8. Aplicar Pago si viene recibido ---
         if (request.amountReceived() != null) {
-            MasterRoot payMethodNode = masterTreeProvider.getTree().getById(request.paymentMethodId());
+            MasterRoot payMethodNode = masterTree.getById(paymentMethodId);
             boolean isFiado = payMethodNode != null && "FIA".equals(payMethodNode.getShortName());
             saleDomain.applyPayment(request.amountReceived(), isFiado);
         }

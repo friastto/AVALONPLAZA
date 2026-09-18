@@ -2,6 +2,7 @@ package org.frias.avalon.domain.product.infraestructure.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.frias.avalon.domain.product.infrastructure.entity.ProductCompanyEntity;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -27,7 +28,7 @@ public class ProductOutlet {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_company_id", insertable = false, updatable = false)
-    private org.frias.avalon.domain.product.infrastructure.entity.ProductCompanyEntity productCompany;
+    private ProductCompanyEntity productCompany;
 
     private String localName;
 

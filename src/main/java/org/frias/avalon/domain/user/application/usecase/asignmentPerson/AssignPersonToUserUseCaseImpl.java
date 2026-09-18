@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.application.dto.request.CreatePersonRequest;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
@@ -22,12 +21,11 @@ class AssignPersonToUserUseCaseImpl implements AssignPersonToUserUseCase {
 
     private final UserAvalonRepositoryPort userRepositoryPort;
     private final PersonRepositoryPort personRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
     private final MasterTreeProvider masterTreeProvider;
     private final UserAvalonMapper userAvalonMapper;
 
     @Override
-    @Transactional // Súper importante para que si algo falla, no quede la persona creada sin usuario
+    @Transactional
     public UserAvalonDto execute(Long userId, CreatePersonRequest data) {
 
         MasterTree tree = masterTreeProvider.getTree();
@@ -41,29 +39,34 @@ class AssignPersonToUserUseCaseImpl implements AssignPersonToUserUseCase {
             throw new BusinessException("El usuario ya tiene una persona vinculada");
         }
 
-        // 3. Validar y resolver que typeIdentificationId y sexId sean nodos semánticamente válidos
+        // 3. Validar y resolver que typeIdentificationId y sexId sean nodos semanticamente validos
         Long typeId = data.typeIdentificationId();
+        if (typeId == null && data.typeIdentificationCode() != null && !data.typeIdentificationCode().isBlank()) {
+            MasterRoot node = tree.getByCode(data.typeIdentificationCode().trim().toUpperCase());
+            if (node != null) {
+                typeId = node.getId();
+            }
+        }
         MasterRoot typeNode = (typeId != null) ? tree.getById(typeId) : null;
         if (typeNode == null || !tree.isChildOf(typeNode, "IDENT")) {
-            MasterRoot ccNode = tree.getByCode("CC");
-            typeId = ccNode != null ? ccNode.getId() : null;
+            throw new BusinessException("Tipo de identificacion invalido o no proporcionado");
         }
 
         Long sexId = data.sexId();
-        MasterRoot sexNode = (sexId != null) ? tree.getById(sexId) : null;
-        if (sexNode == null || !tree.isChildOf(sexNode, "GEN")) {
-            MasterRoot defaultSex = tree.getByCode("SINDET");
-            if (defaultSex == null) defaultSex = tree.getByCode("M");
-            sexId = defaultSex != null ? defaultSex.getId() : null;
+        if (sexId == null && data.sexCode() != null && !data.sexCode().isBlank()) {
+            MasterRoot node = tree.getByCode(data.sexCode().trim().toUpperCase());
+            if (node != null) {
+                sexId = node.getId();
+            }
+        }
+        if (sexId != null) {
+            MasterRoot sexNode = tree.getById(sexId);
+            if (sexNode == null || !tree.isChildOf(sexNode, "GEN")) {
+                throw new BusinessException("Genero invalido");
+            }
         }
 
-        MasterRoot statusNode = tree.getByCode("ACT");
-        if (statusNode == null) {
-            statusNode = tree.getByCode("ACTIVO");
-        }
-        if (statusNode == null) {
-            throw new IllegalStateException("Estado ACTIVO (ACT) no encontrado en MasterTree");
-        }
+        MasterRoot statusNode = tree.getByCodeOrThrow("ACT");
         Long statusId = statusNode.getId();
 
         // 4. Crear el objeto de dominio de la nueva Persona (incluyendo la dirección)

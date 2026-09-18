@@ -38,11 +38,7 @@ public class ApproveCompanyUseCaseImpl implements ApproveCompanyUseCase {
                 .orElseThrow(() -> new IllegalArgumentException("Company with ID " + companyId + " not found"));
 
         MasterTree tree = masterTreeProvider.getTree();
-        MasterRoot actNode = tree.getByCode("ACT");
-        if (actNode == null) {
-            actNode = tree.getByCode("APR");
-        }
-        Long approvedStatusId = (actNode != null) ? actNode.getId() : tree.getByCodeOrThrow("ACT").getId();
+        Long approvedStatusId = tree.getByCodeOrThrow("ACT").getId();
 
         CompanyDomain approvedDomain = new CompanyDomain(
                 company.id(),
@@ -58,15 +54,6 @@ public class ApproveCompanyUseCaseImpl implements ApproveCompanyUseCase {
         CompanyDomain saved = companyPort.save(approvedDomain);
         tenantSchemaMigrationPort.migrateTenantSchema("company_" + companyId);
 
-        return new CompanyResponse(
-                saved.id(),
-                saved.nit(),
-                saved.name(),
-                saved.email(),
-                saved.statusId(),
-                saved.defaultCashThresholdAmount(),
-                saved.createdAt(),
-                saved.updatedAt()
-        );
+        return CompanyResponse.from(saved, tree);
     }
 }

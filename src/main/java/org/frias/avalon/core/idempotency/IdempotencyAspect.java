@@ -9,6 +9,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
 import org.frias.avalon.core.exeptions.BusinessException;
+import org.frias.avalon.core.tenant.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -43,8 +44,8 @@ public class IdempotencyAspect {
             return joinPoint.proceed();
         }
 
-        String tenantId = org.frias.avalon.core.tenant.TenantContext.getTenantId() != null 
-                ? String.valueOf(org.frias.avalon.core.tenant.TenantContext.getTenantId()) 
+        String tenantId = TenantContext.getTenantId() != null 
+                ? String.valueOf(TenantContext.getTenantId()) 
                 : "default";
         String key = "tenant:" + tenantId + ":idempotency:" + idempotencyKey.trim();
 

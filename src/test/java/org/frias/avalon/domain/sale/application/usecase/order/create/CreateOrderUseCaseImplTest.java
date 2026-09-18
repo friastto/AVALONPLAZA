@@ -6,8 +6,8 @@ import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
 import org.frias.avalon.domain.product.domain.ProductDomain;
 import org.frias.avalon.domain.sale.application.dto.request.CreateOrderRequest;
@@ -45,9 +45,6 @@ class CreateOrderUseCaseImplTest {
     private ProductOutletRepositoryPort productOutletRepositoryPort;
 
     @Mock
-    private MasterDataRepositoryPort masterDataRepositoryPort;
-
-    @Mock
     private MasterTreeProvider masterTreeProvider;
 
     @Mock
@@ -63,7 +60,6 @@ class CreateOrderUseCaseImplTest {
         createOrderUseCase = new CreateOrderUseCaseImpl(
                 orderRepositoryPort,
                 productOutletRepositoryPort,
-                masterDataRepositoryPort,
                 masterTreeProvider,
                 weightConversionService,
                 currentUserProvider
@@ -102,20 +98,20 @@ class CreateOrderUseCaseImplTest {
         CreateOrderRequest request = new CreateOrderRequest(1L, 10L, List.of(new OrderItemRequest(100L, "2")));
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(null);
+        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of()));
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, () -> createOrderUseCase.execute(request));
-        assertEquals("Estado Pendiente ('PEN') no encontrado en MasterData.", ex.getMessage());
+        assertEquals("Estado maestro PEN no encontrado en MasterTree.", ex.getMessage());
     }
 
     @Test
     @DisplayName("Should throw ResourceNotFoundException when product does not exist")
     void shouldThrowResourceNotFoundExceptionWhenProductDoesNotExist() {
         CreateOrderRequest request = new CreateOrderRequest(1L, 10L, List.of(new OrderItemRequest(100L, "2")));
+        MasterRoot penNode = new MasterRoot(500L, "PEN", "Pendiente", null, 1L);
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(500L);
-        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of()));
+        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of(penNode)));
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> createOrderUseCase.execute(request));
@@ -129,10 +125,10 @@ class CreateOrderUseCaseImplTest {
         ProductDomain product = ProductDomain.fromPersistence(
                 100L, "Carne", "Carne", 50, 2L, null, new BigDecimal("20.00"), 99L, 1L, LocalDateTime.now(), LocalDateTime.now()
         );
+        MasterRoot penNode = new MasterRoot(500L, "PEN", "Pendiente", null, 1L);
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(500L);
-        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of()));
+        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of(penNode)));
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.of(product));
 
         BusinessException ex = assertThrows(BusinessException.class, () -> createOrderUseCase.execute(request));
@@ -146,10 +142,10 @@ class CreateOrderUseCaseImplTest {
         ProductDomain product = ProductDomain.fromPersistence(
                 100L, "Manzana", "Manzana", 50, 99L, null, new BigDecimal("5.00"), 10L, 1L, LocalDateTime.now(), LocalDateTime.now()
         );
+        MasterRoot penNode = new MasterRoot(500L, "PEN", "Pendiente", null, 1L);
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(500L);
-        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of()));
+        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of(penNode)));
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.of(product));
 
         DomainValidationException ex = assertThrows(DomainValidationException.class, () -> createOrderUseCase.execute(request));
@@ -163,11 +159,11 @@ class CreateOrderUseCaseImplTest {
         ProductDomain product = ProductDomain.fromPersistence(
                 100L, "Queso", "Queso", 50, 2L, null, new BigDecimal("30.00"), 10L, 1L, LocalDateTime.now(), LocalDateTime.now()
         );
+        MasterRoot penNode = new MasterRoot(500L, "PEN", "Pendiente", null, 1L);
         MasterRoot unitNode = MasterRoot.fromPersistence(2L, "KG", "Kilogramos", null, 1L);
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(500L);
-        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of(unitNode)));
+        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of(penNode, unitNode)));
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.of(product));
         when(weightConversionService.isWeighable("KG")).thenReturn(true);
 
@@ -182,11 +178,11 @@ class CreateOrderUseCaseImplTest {
         ProductDomain product = ProductDomain.fromPersistence(
                 100L, "Soda", "Soda", 50, 3L, null, new BigDecimal("2.50"), 10L, 1L, LocalDateTime.now(), LocalDateTime.now()
         );
+        MasterRoot penNode = new MasterRoot(500L, "PEN", "Pendiente", null, 1L);
         MasterRoot unitNode = MasterRoot.fromPersistence(3L, "UND", "Unidades", null, 1L);
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(500L);
-        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of(unitNode)));
+        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of(penNode, unitNode)));
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.of(product));
         when(weightConversionService.isWeighable("UND")).thenReturn(false);
 
@@ -201,11 +197,11 @@ class CreateOrderUseCaseImplTest {
         ProductDomain product = ProductDomain.fromPersistence(
                 100L, "Pan", "Pan", 50, 3L, null, new BigDecimal("1.00"), 10L, 1L, LocalDateTime.now(), LocalDateTime.now()
         );
+        MasterRoot penNode = new MasterRoot(500L, "PEN", "Pendiente", null, 1L);
         MasterRoot unitNode = MasterRoot.fromPersistence(3L, "UND", "Unidades", null, 1L);
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(500L);
-        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of(unitNode)));
+        when(masterTreeProvider.getTree()).thenReturn(new MasterTree(List.of(penNode, unitNode)));
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.of(product));
         when(weightConversionService.isWeighable("UND")).thenReturn(false);
 
@@ -233,7 +229,6 @@ class CreateOrderUseCaseImplTest {
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(false);
         when(currentUserProvider.hasRole("ROLE_ADMINTI")).thenReturn(false);
         when(currentUserProvider.getCurrentOutletId()).thenReturn(outletId);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(pendingStatusId);
         when(masterTreeProvider.getTree()).thenReturn(masterTree);
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.of(product));
         when(weightConversionService.isWeighable("KG")).thenReturn(true);
@@ -284,7 +279,6 @@ class CreateOrderUseCaseImplTest {
         MasterTree masterTree = new MasterTree(List.of(unitNode, payNode, statusNode));
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(pendingStatusId);
         when(masterTreeProvider.getTree()).thenReturn(masterTree);
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.of(product));
         when(weightConversionService.isWeighable("LB")).thenReturn(true);
@@ -327,7 +321,6 @@ class CreateOrderUseCaseImplTest {
         MasterTree masterTree = new MasterTree(List.of(unitNode, payNode, statusNode));
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(pendingStatusId);
         when(masterTreeProvider.getTree()).thenReturn(masterTree);
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.of(product));
         when(weightConversionService.isWeighable("GR")).thenReturn(true);
@@ -365,7 +358,6 @@ class CreateOrderUseCaseImplTest {
         MasterTree masterTree = new MasterTree(List.of(unitNode, payNode, statusNode));
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(pendingStatusId);
         when(masterTreeProvider.getTree()).thenReturn(masterTree);
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.of(product));
         when(weightConversionService.isWeighable("L")).thenReturn(true);
@@ -403,7 +395,6 @@ class CreateOrderUseCaseImplTest {
         MasterTree masterTree = new MasterTree(List.of(unitNode, payNode, statusNode));
 
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
-        when(masterDataRepositoryPort.getIdByCode("PEN")).thenReturn(pendingStatusId);
         when(masterTreeProvider.getTree()).thenReturn(masterTree);
         when(productOutletRepositoryPort.findById(100L)).thenReturn(Optional.of(product));
         when(weightConversionService.isWeighable("UND")).thenReturn(false);

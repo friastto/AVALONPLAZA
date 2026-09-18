@@ -1,11 +1,13 @@
 package org.frias.avalon.domain.claim.application.dto.request;
 
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -15,9 +17,17 @@ public class ClaimItemRequest {
     @NotNull(message = "El orderItemId es obligatorio")
     private Long orderItemId;
 
-    @NotNull(message = "La cantidad afectada es obligatoria")
-    @Min(value = 1, message = "La cantidad afectada debe ser al menos 1")
     private Integer quantityAffected;
 
+    @DecimalMin(value = "0.001", message = "La cantidad afectada debe ser mayor a 0")
+    private BigDecimal decimalQuantityAffected;
+
     private String reason;
+
+    public Integer getEffectiveQuantityAffected() {
+        if (decimalQuantityAffected != null) {
+            return decimalQuantityAffected.intValue();
+        }
+        return quantityAffected != null ? quantityAffected : 1;
+    }
 }

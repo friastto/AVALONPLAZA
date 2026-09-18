@@ -8,6 +8,7 @@ import org.frias.avalon.domain.notification.domain.service.QrCodeGeneratorServic
 import org.frias.avalon.domain.notification.domain.service.TicketGeneratorService;
 import org.frias.avalon.domain.sale.application.dto.response.SaleResponse;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -25,11 +26,17 @@ public class TicketGeneratorServiceImpl implements TicketGeneratorService {
     private final PebbleEngine pebbleEngine;
     private final QrCodeGeneratorService qrCodeGeneratorService;
 
+    @Value("${avalon.app.sales-url:https://avalon.friascorporations.org/sales/}")
+    private String salesBaseUrl;
+
     @Override
     public byte[] generateTicketPdf(SaleResponse sale) {
         try {
-            // 1. Generar la URL de consulta o informacion del QR (Simulado para tiendas de barrio)
-            String qrUrl = "https://avalon.friascorporations.org/sales/" + sale.saleCode();
+            // 1. Generar la URL de consulta o informacion del QR configurable
+            String cleanBaseUrl = (salesBaseUrl != null && !salesBaseUrl.isBlank())
+                    ? (salesBaseUrl.endsWith("/") ? salesBaseUrl : salesBaseUrl + "/")
+                    : "https://avalon.friascorporations.org/sales/";
+            String qrUrl = cleanBaseUrl + sale.saleCode();
             String qrBase64 = qrCodeGeneratorService.generateQrCodeBase64(qrUrl, 150, 150);
 
             // 2. Leer la imagen del logo en bytes y codificarla a Base64

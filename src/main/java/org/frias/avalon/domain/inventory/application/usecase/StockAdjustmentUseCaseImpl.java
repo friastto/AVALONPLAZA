@@ -6,11 +6,17 @@ import org.frias.avalon.domain.inventory.application.dto.StockAdjustmentResponse
 import org.frias.avalon.domain.inventory.application.event.StockAdjustmentNotificationEvent;
 import org.frias.avalon.domain.inventory.infrastructure.entity.StockMovementEntity;
 import org.frias.avalon.domain.inventory.infrastructure.repository.JpaStockMovementRepository;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
 import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 /**
  * Implementation of StockAdjustmentUseCase Input Port.
@@ -21,15 +27,21 @@ public class StockAdjustmentUseCaseImpl implements StockAdjustmentUseCase {
     private final JpaProductOutletRepository productOutletRepository;
     private final JpaStockMovementRepository stockMovementRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UnitConversionService unitConversionService;
+    private final MasterTreeProvider masterTreeProvider;
 
     public StockAdjustmentUseCaseImpl(
             JpaProductOutletRepository productOutletRepository,
             JpaStockMovementRepository stockMovementRepository,
-            ApplicationEventPublisher eventPublisher
+            ApplicationEventPublisher eventPublisher,
+            UnitConversionService unitConversionService,
+            MasterTreeProvider masterTreeProvider
     ) {
         this.productOutletRepository = productOutletRepository;
         this.stockMovementRepository = stockMovementRepository;
         this.eventPublisher = eventPublisher;
+        this.unitConversionService = unitConversionService;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     @Transactional
@@ -40,8 +52,21 @@ public class StockAdjustmentUseCaseImpl implements StockAdjustmentUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "ProductOutlet not found for id: " + request.productOutletId()));
 
+        MasterTree tree = masterTreeProvider != null ? masterTreeProvider.getTree() : null;
+        MasterRoot unitNode = (tree != null && productOutlet.getUnitMeasureId() != null)
+                ? tree.getById(productOutlet.getUnitMeasureId())
+                : null;
+        String unitCode = unitNode != null ? unitNode.getShortName() : "UND";
+
+        BigDecimal qty = request.decimalQuantity() != null
+                ? request.decimalQuantity()
+                : (request.newQuantity() != null ? BigDecimal.valueOf(request.newQuantity()) : BigDecimal.ZERO);
+
+        int after = (unitConversionService != null)
+                ? unitConversionService.convertToSmallestUnit(qty, unitCode)
+                : qty.intValue();
+
         int before = productOutlet.getStock();
-        int after = request.newQuantity();
         int delta = after - before;
 
         String movementType = delta >= 0 ? "ADJUSTMENT_SURPLUS" : "MERMA";

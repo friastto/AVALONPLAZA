@@ -8,7 +8,6 @@ import org.frias.avalon.core.permissions.UserContext;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
-import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
@@ -41,7 +40,6 @@ public class InvoiceOrderUseCaseImpl implements InvoiceOrderUseCase {
     private final ProductOutletRepositoryPort productOutletRepositoryPort;
     private final PersonRepositoryPort personRepositoryPort;
     private final UserAvalonRepositoryPort userAvalonRepositoryPort;
-    private final MasterDataRepositoryPort masterDataRepositoryPort;
     private final MasterTreeProvider masterTreeProvider;
     private final CurrentUserProviderPort currentUserProvider;
 
@@ -86,12 +84,17 @@ public class InvoiceOrderUseCaseImpl implements InvoiceOrderUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente con identificación '" + clientNumberid + "' no encontrado."));
 
         // --- 6. Resolver Estados Nuevos ---
-        Long activeSaleStatusId = masterDataRepositoryPort.getIdByCode("ACT"); // Venta activa
-        Long completedOrderStatusId = masterDataRepositoryPort.getIdByCode("COM"); // Pedido completado
+        MasterRoot actNode = masterTree.getByCode("ACT");
+        MasterRoot comNode = masterTree.getByCode("COM");
+        if (comNode == null) {
+            comNode = masterTree.getByCode("ORD_DISP");
+        }
 
-        if (activeSaleStatusId == null || completedOrderStatusId == null) {
+        if (actNode == null || comNode == null) {
             throw new IllegalStateException("Estados ('ACT' o 'COM') no encontrados en MasterData.");
         }
+        Long activeSaleStatusId = actNode.getId();
+        Long completedOrderStatusId = comNode.getId();
 
         // --- 7. Procesar Ítems y Descontar Inventario ---
         List<SaleItemDomain> saleItems = new ArrayList<>();
