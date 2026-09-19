@@ -21,6 +21,8 @@ import org.frias.avalon.domain.user.infraestructure.persistence.repository.JpaUs
 import org.frias.avalon.domain.user.infraestructure.persistence.entity.UserAvalon;
 import org.frias.avalon.domain.person.infraestructure.persistence.repository.JpaPersonRepository;
 import org.frias.avalon.domain.person.infraestructure.persistence.entity.PersonEntity;
+import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
+import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,6 +35,7 @@ public class OrderMapper {
     private final MasterTreeProvider masterTreeProvider;
     private final JpaUserAvalonRepository jpaUserAvalonRepository;
     private final JpaPersonRepository jpaPersonRepository;
+    private final JpaOutletRepository jpaOutletRepository;
 
     public OrderMapper() {
         this.unitConversionService = null;
@@ -40,6 +43,7 @@ public class OrderMapper {
         this.masterTreeProvider = null;
         this.jpaUserAvalonRepository = null;
         this.jpaPersonRepository = null;
+        this.jpaOutletRepository = null;
     }
 
     @Autowired
@@ -47,12 +51,14 @@ public class OrderMapper {
                        JpaProductOutletRepository jpaProductOutletRepository,
                        @Autowired(required = false) MasterTreeProvider masterTreeProvider,
                        @Autowired(required = false) JpaUserAvalonRepository jpaUserAvalonRepository,
-                       @Autowired(required = false) JpaPersonRepository jpaPersonRepository) {
+                       @Autowired(required = false) JpaPersonRepository jpaPersonRepository,
+                       @Autowired(required = false) JpaOutletRepository jpaOutletRepository) {
         this.unitConversionService = unitConversionService;
         this.jpaProductOutletRepository = jpaProductOutletRepository;
         this.masterTreeProvider = masterTreeProvider;
         this.jpaUserAvalonRepository = jpaUserAvalonRepository;
         this.jpaPersonRepository = jpaPersonRepository;
+        this.jpaOutletRepository = jpaOutletRepository;
     }
 
     public OrderDomain toDomain(OrderEntity entity, List<OrderItemEntity> itemEntities) {
@@ -73,6 +79,10 @@ public class OrderMapper {
                 .tax(entity.getTax())
                 .total(entity.getTotal())
                 .claimedByUserId(entity.getClaimedByUserId())
+                .deliveryType(entity.getDeliveryType())
+                .deliveryAddress(entity.getDeliveryAddress())
+                .deliveryFee(entity.getDeliveryFee())
+                .notes(entity.getNotes())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .items(items)
@@ -93,6 +103,10 @@ public class OrderMapper {
                 .tax(domain.getTax())
                 .total(domain.getTotal())
                 .claimedByUserId(domain.getClaimedByUserId())
+                .deliveryType(domain.getDeliveryType())
+                .deliveryAddress(domain.getDeliveryAddress())
+                .deliveryFee(domain.getDeliveryFee())
+                .notes(domain.getNotes())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .build();
@@ -123,6 +137,7 @@ public class OrderMapper {
                 .unitPrice(entity.getUnitPrice())
                 .subtotal(entity.getSubtotal())
                 .dispatchStatusId(entity.getDispatchStatusId())
+                .notes(entity.getNotes())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -139,6 +154,7 @@ public class OrderMapper {
                 .unitPrice(domain.getUnitPrice())
                 .subtotal(domain.getSubtotal())
                 .dispatchStatusId(domain.getDispatchStatusId())
+                .notes(domain.getNotes())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .build();
@@ -176,6 +192,7 @@ public class OrderMapper {
                 .subtotal(domain.getSubtotal())
                 .dispatchStatusId(domain.getDispatchStatusId())
                 .dispatchStatus(dispatchStatus)
+                .notes(domain.getNotes())
                 .build();
     }
 
@@ -244,11 +261,19 @@ public class OrderMapper {
             }
         }
 
+        String outletName = null;
+        if (domain.getOutletId() != null && jpaOutletRepository != null) {
+            outletName = jpaOutletRepository.findById(domain.getOutletId())
+                    .map(Outlet::getName)
+                    .orElse(null);
+        }
+
         return OrderResponse.builder()
                 .id(domain.getId())
                 .orderCode(domain.getOrderCode())
                 .customerId(domain.getCustomerId())
                 .outletId(domain.getOutletId())
+                .outletName(outletName)
                 .orderStatusId(domain.getOrderStatusId())
                 .orderStatusCode(orderStatusCode)
                 .orderStatus(orderStatus)
@@ -263,6 +288,10 @@ public class OrderMapper {
                 .claimedByUserId(domain.getClaimedByUserId())
                 .claimedByName(claimedByName)
                 .claimedByUserName(claimedByUserName)
+                .deliveryType(domain.getDeliveryType())
+                .deliveryAddress(domain.getDeliveryAddress())
+                .deliveryFee(domain.getDeliveryFee())
+                .notes(domain.getNotes())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .items(itemResponses)

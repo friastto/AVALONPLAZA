@@ -20,6 +20,7 @@ public class OrderResponse {
     private String orderCode;
     private Long customerId;
     private Long outletId;
+    private String outletName;
     private Long orderStatusId;
     private String orderStatusCode;
     private MasterRefDto orderStatus;
@@ -34,6 +35,10 @@ public class OrderResponse {
     private Long claimedByUserId;
     private String claimedByName;
     private String claimedByUserName;
+    private String deliveryType;
+    private String deliveryAddress;
+    private BigDecimal deliveryFee;
+    private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<OrderItemResponse> items;

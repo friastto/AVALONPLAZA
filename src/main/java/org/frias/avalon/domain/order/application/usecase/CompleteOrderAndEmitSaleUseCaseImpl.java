@@ -3,6 +3,7 @@ package org.frias.avalon.domain.order.application.usecase;
 import lombok.RequiredArgsConstructor;
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.order.application.dto.CompleteOrderRequest;
 import org.frias.avalon.domain.order.application.dto.OrderResponse;
 import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.order.domain.OrderDomain;
@@ -16,7 +17,6 @@ import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -34,6 +34,12 @@ public class CompleteOrderAndEmitSaleUseCaseImpl implements CompleteOrderAndEmit
     @Override
     @Transactional
     public OrderResponse execute(Long orderId, Long userId) {
+        return execute(orderId, userId, null);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse execute(Long orderId, Long userId, CompleteOrderRequest request) {
         OrderDomain order = orderRepositoryPort.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido con ID " + orderId + " no encontrado"));
 
@@ -51,9 +57,21 @@ public class CompleteOrderAndEmitSaleUseCaseImpl implements CompleteOrderAndEmit
         order.setOrderStatusId(ordDispStatusId);
         order.setUpdatedAt(LocalDateTime.now());
 
-        // Descontar inventario fisico de la tienda al completar/entregar la orden
+        if (request != null && request.getNotes() != null && !request.getNotes().isBlank()) {
+            order.setNotes(request.getNotes().trim());
+        }
+
+        // Marcar todos los items como despachados y actualizar notas por item
         if (order.getItems() != null) {
             for (OrderItemDomain item : order.getItems()) {
+                item.setDispatchStatusId(ordDispStatusId);
+                if (request != null && request.getItemNotes() != null && request.getItemNotes().containsKey(item.getId())) {
+                    String itemNote = request.getItemNotes().get(item.getId());
+                    if (itemNote != null && !itemNote.isBlank()) {
+                        item.setNotes(itemNote.trim());
+                    }
+                }
+
                 if (item.getProductOutletId() != null && item.getQuantity() != null) {
                     jpaProductOutletRepository.findById(item.getProductOutletId()).ifPresent(productOutlet -> {
                         int currentStock = productOutlet.getStock() != null ? productOutlet.getStock() : 0;
@@ -68,12 +86,16 @@ public class CompleteOrderAndEmitSaleUseCaseImpl implements CompleteOrderAndEmit
 
         OrderDomain updated = orderRepositoryPort.save(order);
 
+        String historyNotes = (request != null && request.getNotes() != null && !request.getNotes().isBlank())
+                ? request.getNotes().trim()
+                : "Pedido completado en preparacion y despachado por el usuario " + userId;
+
         orderRepositoryPort.saveStatusHistory(OrderStatusHistoryDomain.builder()
                 .orderId(orderId)
                 .previousStatusId(previousStatusId)
                 .newStatusId(ordDispStatusId)
                 .changedByUserId(userId)
-                .notes("Pedido completado en preparacion y despachado por el usuario " + userId)
+                .notes(historyNotes)
                 .createdAt(LocalDateTime.now())
                 .build());
 

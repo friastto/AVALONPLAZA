@@ -23,4 +23,5 @@ public class OrderItemResponse {
     private BigDecimal subtotal;
     private Long dispatchStatusId;
     private MasterRefDto dispatchStatus;
+    private String notes;
 }

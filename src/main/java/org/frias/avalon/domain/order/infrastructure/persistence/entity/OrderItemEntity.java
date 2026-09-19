@@ -42,6 +42,9 @@ public class OrderItemEntity {
     @Column(name = "dispatch_status_id", nullable = false)
     private Long dispatchStatusId;
 
+    @Column(name = "notes")
+    private String notes;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

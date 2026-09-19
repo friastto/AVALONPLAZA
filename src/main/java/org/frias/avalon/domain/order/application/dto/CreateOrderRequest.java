@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -21,6 +22,10 @@ public class CreateOrderRequest {
 
     private Long paymentMethodId;
     private String paymentMethodCode;
+
+    private String deliveryType;
+    private String deliveryAddress;
+    private BigDecimal deliveryFee;
 
     @NotEmpty(message = "El pedido debe contener al menos un item")
     private List<OrderItemRequest> items;

@@ -226,6 +226,16 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
             }
         }
 
+        String deliveryType = request.getDeliveryType() != null && !request.getDeliveryType().isBlank()
+                ? request.getDeliveryType().trim() : "PICKUP";
+        String deliveryAddress = request.getDeliveryAddress() != null && !request.getDeliveryAddress().isBlank()
+                ? request.getDeliveryAddress().trim() : null;
+        BigDecimal deliveryFee = request.getDeliveryFee() != null ? request.getDeliveryFee() : BigDecimal.ZERO;
+
+        if ("DELIVERY".equalsIgnoreCase(deliveryType) && deliveryFee.compareTo(BigDecimal.ZERO) > 0) {
+            total = total.add(deliveryFee);
+        }
+
         OrderDomain domain = OrderDomain.builder()
                 .orderCode(orderCode)
                 .customerId(customerId)
@@ -236,6 +246,9 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
                 .subtotal(subtotal)
                 .tax(tax)
                 .total(total)
+                .deliveryType(deliveryType)
+                .deliveryAddress(deliveryAddress)
+                .deliveryFee(deliveryFee)
                 .createdAt(now)
                 .updatedAt(now)
                 .items(itemsDomain)

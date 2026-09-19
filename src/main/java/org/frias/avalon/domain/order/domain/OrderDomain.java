@@ -25,6 +25,10 @@ public class OrderDomain {
     private BigDecimal tax;
     private BigDecimal total;
     private Long claimedByUserId;
+    private String deliveryType;
+    private String deliveryAddress;
+    private BigDecimal deliveryFee;
+    private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<OrderItemDomain> items;

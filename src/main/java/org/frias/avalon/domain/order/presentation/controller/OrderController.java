@@ -3,6 +3,7 @@ package org.frias.avalon.domain.order.presentation.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
+import org.frias.avalon.domain.order.application.dto.CompleteOrderRequest;
 import org.frias.avalon.domain.order.application.dto.CreateOrderRequest;
 import org.frias.avalon.domain.order.application.dto.OrderResponse;
 import org.frias.avalon.domain.order.application.dto.UpdateDispatchStatusRequest;
@@ -67,8 +68,9 @@ public class OrderController {
     @PostMapping("/{orderId}/complete")
     public ResponseEntity<OrderResponse> completeOrder(
             @PathVariable Long orderId,
-            @RequestParam Long userId) {
-        OrderResponse response = completeOrderAndEmitSaleUseCase.execute(orderId, userId);
+            @RequestParam Long userId,
+            @RequestBody(required = false) CompleteOrderRequest request) {
+        OrderResponse response = completeOrderAndEmitSaleUseCase.execute(orderId, userId, request);
         return ResponseEntity.ok(response);
     }
 

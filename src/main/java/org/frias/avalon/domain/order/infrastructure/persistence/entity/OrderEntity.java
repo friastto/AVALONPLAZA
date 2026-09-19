@@ -51,6 +51,18 @@ public class OrderEntity {
     @Column(name = "claimed_by_user_id")
     private Long claimedByUserId;
 
+    @Column(name = "delivery_type", length = 30)
+    private String deliveryType;
+
+    @Column(name = "delivery_address")
+    private String deliveryAddress;
+
+    @Column(name = "delivery_fee", precision = 15, scale = 2)
+    private BigDecimal deliveryFee;
+
+    @Column(name = "notes")
+    private String notes;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

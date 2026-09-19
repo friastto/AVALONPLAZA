@@ -22,6 +22,7 @@ public class OrderItemDomain {
     private BigDecimal unitPrice;
     private BigDecimal subtotal;
     private Long dispatchStatusId;
+    private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
