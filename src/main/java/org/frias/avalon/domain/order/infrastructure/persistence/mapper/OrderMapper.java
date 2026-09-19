@@ -17,7 +17,12 @@ import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutl
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.frias.avalon.domain.user.infraestructure.persistence.repository.JpaUserAvalonRepository;
+import org.frias.avalon.domain.user.infraestructure.persistence.entity.UserAvalon;
+import org.frias.avalon.domain.person.infraestructure.persistence.repository.JpaPersonRepository;
+import org.frias.avalon.domain.person.infraestructure.persistence.entity.PersonEntity;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component("omnichannelOrderMapper")
@@ -26,20 +31,28 @@ public class OrderMapper {
     private final UnitConversionService unitConversionService;
     private final JpaProductOutletRepository jpaProductOutletRepository;
     private final MasterTreeProvider masterTreeProvider;
+    private final JpaUserAvalonRepository jpaUserAvalonRepository;
+    private final JpaPersonRepository jpaPersonRepository;
 
     public OrderMapper() {
         this.unitConversionService = null;
         this.jpaProductOutletRepository = null;
         this.masterTreeProvider = null;
+        this.jpaUserAvalonRepository = null;
+        this.jpaPersonRepository = null;
     }
 
     @Autowired
     public OrderMapper(UnitConversionService unitConversionService,
                        JpaProductOutletRepository jpaProductOutletRepository,
-                       @Autowired(required = false) MasterTreeProvider masterTreeProvider) {
+                       @Autowired(required = false) MasterTreeProvider masterTreeProvider,
+                       @Autowired(required = false) JpaUserAvalonRepository jpaUserAvalonRepository,
+                       @Autowired(required = false) JpaPersonRepository jpaPersonRepository) {
         this.unitConversionService = unitConversionService;
         this.jpaProductOutletRepository = jpaProductOutletRepository;
         this.masterTreeProvider = masterTreeProvider;
+        this.jpaUserAvalonRepository = jpaUserAvalonRepository;
+        this.jpaPersonRepository = jpaPersonRepository;
     }
 
     public OrderDomain toDomain(OrderEntity entity, List<OrderItemEntity> itemEntities) {
@@ -208,6 +221,29 @@ public class OrderMapper {
             }
         }
 
+        String claimedByName = null;
+        String claimedByUserName = null;
+        if (domain.getClaimedByUserId() != null && jpaUserAvalonRepository != null) {
+            Optional<UserAvalon> userOpt = jpaUserAvalonRepository.findById(domain.getClaimedByUserId());
+            if (userOpt.isPresent()) {
+                UserAvalon user = userOpt.get();
+                claimedByUserName = user.getUserName();
+                if (user.getPersonId() != null && jpaPersonRepository != null) {
+                    Optional<PersonEntity> personOpt = jpaPersonRepository.findById(user.getPersonId());
+                    if (personOpt.isPresent()) {
+                        PersonEntity person = personOpt.get();
+                        String fullName = ((person.getName() != null ? person.getName().trim() : "") + " " +
+                                (person.getLastName() != null ? person.getLastName().trim() : "")).trim();
+                        claimedByName = !fullName.isEmpty() ? fullName : claimedByUserName;
+                    } else {
+                        claimedByName = claimedByUserName;
+                    }
+                } else {
+                    claimedByName = claimedByUserName;
+                }
+            }
+        }
+
         return OrderResponse.builder()
                 .id(domain.getId())
                 .orderCode(domain.getOrderCode())
@@ -225,6 +261,8 @@ public class OrderMapper {
                 .tax(domain.getTax())
                 .total(domain.getTotal())
                 .claimedByUserId(domain.getClaimedByUserId())
+                .claimedByName(claimedByName)
+                .claimedByUserName(claimedByUserName)
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .items(itemResponses)

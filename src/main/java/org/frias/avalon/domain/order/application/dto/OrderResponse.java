@@ -32,6 +32,8 @@ public class OrderResponse {
     private BigDecimal tax;
     private BigDecimal total;
     private Long claimedByUserId;
+    private String claimedByName;
+    private String claimedByUserName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<OrderItemResponse> items;
