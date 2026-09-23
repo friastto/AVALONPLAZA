@@ -33,7 +33,7 @@ USER 1001:1001
 EXPOSE 8900
 
 # Variables de entorno recomendadas de la JVM para contenedores en Render (512MB RAM)
-ENV JAVA_OPTS="-Xmx340m -Xms128m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:+UseContainerSupport"
+ENV JAVA_OPTS="-Xms64m -Xmx260m -XX:MaxMetaspaceSize=110m -Xss512k -XX:ReservedCodeCacheSize=48m -XX:+UseSerialGC -XX:+UseContainerSupport"
 
 # Comando de inicio
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
