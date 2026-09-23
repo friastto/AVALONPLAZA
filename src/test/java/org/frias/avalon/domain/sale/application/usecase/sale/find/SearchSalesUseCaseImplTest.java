@@ -9,6 +9,8 @@ import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
 import org.frias.avalon.domain.product.domain.ProductDomain;
+import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
+import org.frias.avalon.domain.order.domain.OrderDomain;
 import org.frias.avalon.domain.sale.application.dto.response.SaleResponse;
 import org.frias.avalon.domain.sale.application.port.SaleRepositoryPort;
 import org.frias.avalon.domain.sale.domain.SaleDomain;
@@ -35,6 +37,7 @@ import static org.mockito.Mockito.*;
 class SearchSalesUseCaseImplTest {
 
     private SaleRepositoryPort saleRepositoryPort;
+    private OrderRepositoryPort orderRepositoryPort;
     private PersonRepositoryPort personRepositoryPort;
     private ProductOutletRepositoryPort productOutletRepositoryPort;
     private MasterTreeProvider masterTreeProvider;
@@ -49,6 +52,7 @@ class SearchSalesUseCaseImplTest {
     @BeforeEach
     void setUp() {
         saleRepositoryPort = mock(SaleRepositoryPort.class);
+        orderRepositoryPort = mock(OrderRepositoryPort.class);
         personRepositoryPort = mock(PersonRepositoryPort.class);
         productOutletRepositoryPort = mock(ProductOutletRepositoryPort.class);
         masterTreeProvider = mock(MasterTreeProvider.class);
@@ -56,6 +60,7 @@ class SearchSalesUseCaseImplTest {
 
         searchSalesUseCase = new SearchSalesUseCaseImpl(
                 saleRepositoryPort,
+                orderRepositoryPort,
                 personRepositoryPort,
                 productOutletRepositoryPort,
                 masterTreeProvider,
@@ -301,6 +306,34 @@ class SearchSalesUseCaseImplTest {
 
             assertNotNull(response);
             assertEquals(400L, response.id());
+        }
+
+        @Test
+        @DisplayName("Should find omnichannel order by ORD code in findByFlexibleCode")
+        void shouldFindOmnichannelOrderByOrdCode() {
+            when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
+
+            OrderDomain order = OrderDomain.builder()
+                    .id(500L)
+                    .orderCode("ORD-STORE1-20260921-001")
+                    .customerId(clientId)
+                    .outletId(outletId)
+                    .paymentMethodId(1L)
+                    .orderStatusId(16L)
+                    .total(new BigDecimal("15000"))
+                    .items(List.of())
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            when(orderRepositoryPort.findByOrderCode("ORD-STORE1-20260921-001")).thenReturn(Optional.of(order));
+
+            MasterTree masterTree = mock(MasterTree.class);
+            when(masterTreeProvider.getTree()).thenReturn(masterTree);
+
+            SaleResponse response = searchSalesUseCase.findByFlexibleCode("ORD-STORE1-20260921-001", outletId);
+
+            assertNotNull(response);
+            assertEquals(500L, response.id());
         }
 
         @Test

@@ -5,10 +5,16 @@ import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.core.permissions.UserContext;
+import org.frias.avalon.domain.credit.application.port.CreditRepositoryPort;
+import org.frias.avalon.domain.credit.domain.model.CreditAccountDomain;
+import org.frias.avalon.domain.credit.domain.model.CreditTransactionDomain;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
+import org.frias.avalon.domain.order.domain.OrderDomain;
+import org.frias.avalon.domain.order.domain.OrderItemDomain;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
@@ -26,37 +32,24 @@ import org.frias.avalon.domain.sale.domain.SaleItemDomain;
 import org.frias.avalon.domain.sale.domain.service.SaleWeightConversionService;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
-import org.frias.avalon.domain.credit.application.port.CreditRepositoryPort;
-import org.frias.avalon.domain.credit.domain.model.CreditAccountDomain;
-import org.frias.avalon.domain.credit.domain.model.CreditTransactionDomain;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-/**
- * Lógica de negocio para procesar devoluciones y cambios de productos en POS.
- *
- * Flujo:
- *  1. Validar tenant y rol del empleado
- *  2. Buscar venta original por saleCode (el cliente debe presentar el ticket físico)
- *  3. Validar que los ítems a devolver existan en la venta y la cantidad no supere lo vendido
- *  4. Restituir stock de cada producto devuelto
- *  5. Según resolutionType:
- *     - REEMBOLSO: solo registra la devolución (la caja se ajusta manualmente)
- *     - NOTA_CREDITO: crea transacción de crédito a favor del cliente
- *     - CAMBIO: restituye el stock devuelto (el cambio físico se gestiona en el POS normal)
- *  6. Guardar ReturnDomain
- */
 @Service
 @RequiredArgsConstructor
 public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
 
     private final ReturnRepositoryPort returnRepositoryPort;
     private final SaleRepositoryPort saleRepositoryPort;
+    private final OrderRepositoryPort orderRepositoryPort;
     private final ProductOutletRepositoryPort productOutletRepositoryPort;
     private final PersonRepositoryPort personRepositoryPort;
     private final UserAvalonRepositoryPort userAvalonRepositoryPort;
@@ -70,17 +63,46 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
     @Transactional
     public ReturnResponse execute(CreateReturnRequest request) {
 
-        // --- 1. Validar Tenant ---
+        // --- 1. Validate Tenant ---
         UserContext userContext = currentUserProvider.getCurrentUserContext();
         boolean isSystemAdmin = currentUserProvider.hasRole("ROLE_ADMIN") || currentUserProvider.hasRole("ROLE_ADMINTI");
 
-        // --- 2. Buscar la Venta Original por saleCode (presentado en el ticket físico) ---
-        SaleDomain originalSale = saleRepositoryPort.findByCode(request.originalSaleCode())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontró ninguna venta con el código: " + request.originalSaleCode() +
-                        ". Verifique que el ticket presentado sea de esta tienda."));
+        // --- 2. Search Original Sale by saleCode or Omnichannel Order (orderCode) ---
+        SaleDomain originalSale = saleRepositoryPort.findByCode(request.originalSaleCode()).orElse(null);
 
-        // Validar que la venta sea de la misma tienda del empleado
+        if (originalSale == null) {
+            // Try as omnichannel order by orderCode string or synthetic UUID
+            String codeStr = request.originalSaleCode().toString();
+            OrderDomain order = orderRepositoryPort.findByOrderCode(codeStr).orElse(null);
+            if (order == null) {
+                Long tenantOutletId = currentUserProvider.getCurrentOutletId();
+                if (tenantOutletId != null) {
+                    List<OrderDomain> orders = orderRepositoryPort.findAllByOutletId(tenantOutletId);
+                    for (OrderDomain o : orders) {
+                        if (o.getOrderCode() != null) {
+                            try {
+                                UUID synth = UUID.nameUUIDFromBytes(o.getOrderCode().getBytes(StandardCharsets.UTF_8));
+                                if (synth.equals(request.originalSaleCode())) {
+                                    order = o;
+                                    break;
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                    }
+                }
+            }
+            if (order != null) {
+                originalSale = convertOrderToSaleDomain(order);
+            }
+        }
+
+        if (originalSale == null) {
+            throw new ResourceNotFoundException(
+                    "No se encontró ninguna venta con el código: " + request.originalSaleCode() +
+                    ". Verifique que el ticket o código presentado sea de esta tienda.");
+        }
+
+        // Validate outlet access
         if (!isSystemAdmin) {
             Long tenantOutletId = currentUserProvider.getCurrentOutletId();
             if (tenantOutletId != null && !tenantOutletId.equals(originalSale.getOutletId())) {
@@ -88,31 +110,38 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
             }
         }
 
-        // --- 3. Resolver empleado ---
+        // --- 3. Resolve employee ---
         UserAvalonDomain userDomain = userAvalonRepositoryPort.findByUserName(userContext.username())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado"));
         Long employeeId = userDomain.getPersonId();
-        if (employeeId == null)
+        if (employeeId == null) {
             throw new BusinessException("El usuario actual no tiene un registro de persona (empleado) asociado");
-
-        // --- 4. Buscar cliente de la venta original ---
-        PersonDomain clientDomain = personRepositoryPort.findById(originalSale.getClientId())
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente de la venta original no encontrado"));
-
-        // --- 5. Obtener estado DEV para la devolución ---
-        Long devStatusId = masterDataRepositoryPort.getIdByCode("DEV");
-        if (devStatusId == null) {
-            throw new IllegalStateException("Estado 'DEV' (Devuelto) no encontrado en MasterData. Ejecute el INSERT SQL en PostgreSQL.");
         }
 
-        // --- 6. Validar y procesar ítems a devolver ---
+        // --- 4. Resolve client of original sale ---
+        PersonDomain clientDomain;
+        if (originalSale.getClientId() != null) {
+            clientDomain = personRepositoryPort.findById(originalSale.getClientId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Cliente de la venta original no encontrado"));
+        } else {
+            clientDomain = personRepositoryPort.findById(1L)
+                    .orElseThrow(() -> new ResourceNotFoundException("Cliente general no encontrado"));
+        }
+
+        // --- 5. Resolve DEV master data status ---
+        Long devStatusId = masterDataRepositoryPort.getIdByCode("DEV");
+        if (devStatusId == null) {
+            throw new IllegalStateException("Estado 'DEV' (Devuelto) no encontrado en MasterData.");
+        }
+
+        // --- 6. Validate and process returned items ---
         MasterTree masterTree = masterTreeProvider.getTree();
         List<ReturnItemDomain> returnItems = new ArrayList<>();
         List<ReturnItemResponse> itemResponses = new ArrayList<>();
 
         for (ReturnItemRequest itemReq : request.items()) {
 
-            // Verificar que el producto esté en la venta original
+            // Check that product exists in original sale
             SaleItemDomain originalItem = originalSale.getItems().stream()
                     .filter(si -> si.getProductId().equals(itemReq.productId()))
                     .findFirst()
@@ -120,7 +149,7 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                             "El producto con ID " + itemReq.productId() +
                             " no está en la venta original. No se puede devolver."));
 
-            // Obtener el producto del catálogo
+            // Get product from catalog
             ProductDomain product = productOutletRepositoryPort.findById(itemReq.productId())
                     .orElseThrow(() -> new ResourceNotFoundException("Producto " + itemReq.productId() + " no encontrado"));
 
@@ -128,7 +157,7 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
             String unitCode = unitNode != null ? unitNode.getShortName() : "UND";
             boolean isWeighable = weightConversionService.isWeighable(unitCode);
 
-            // Parsear cantidad
+            // Parse quantity
             Integer qtyInBaseUnits;
             BigDecimal displayQty;
 
@@ -148,17 +177,18 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                 }
             }
 
-            if (qtyInBaseUnits <= 0)
+            if (qtyInBaseUnits <= 0) {
                 throw new BusinessException("La cantidad a devolver debe ser mayor a cero: " + product.getName());
+            }
 
-            // Validar que no supere lo vendido originalmente
+            // Validate not exceeding original sale
             if (qtyInBaseUnits > originalItem.getQuantityInBaseUnits()) {
                 throw new BusinessException(
                         "La cantidad a devolver (" + qtyInBaseUnits + ") supera lo vendido (" +
                         originalItem.getQuantityInBaseUnits() + ") para: " + product.getName());
             }
 
-            // Calcular subtotal de devolución
+            // Calculate return subtotal
             BigDecimal subtotal;
             if (isWeighable) {
                 BigDecimal factor;
@@ -175,7 +205,7 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
 
             String displayQtyStr = weightConversionService.formatFromBaseUnit(qtyInBaseUnits, unitCode);
 
-            // --- 7. Restituir stock al inventario ---
+            // --- 7. Restock inventory ---
             product.addStock(qtyInBaseUnits);
             productOutletRepositoryPort.save(product);
 
@@ -190,7 +220,7 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
             ));
         }
 
-        // --- 8. Crear el dominio de devolución ---
+        // --- 8. Create return domain ---
         ReturnDomain returnDomain = ReturnDomain.create(
                 originalSale.getId(),
                 request.reason(),
@@ -203,7 +233,7 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                 returnItems
         );
 
-        // --- 9. Según resolución, aplicar lógica adicional y validaciones de protección ---
+        // --- 9. Apply resolution logic ---
         String resolution = request.resolutionType().toUpperCase();
 
         MasterRoot origPayMethodNode = masterTree.getById(originalSale.getPaymentMethodId());
@@ -216,16 +246,17 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
         }
 
         if ("NOTA_CREDITO".equals(resolution)) {
-            // Abonar saldo a favor en la cuenta de crédito del cliente
             BigDecimal creditAmount = returnDomain.getTotalRefundAmount();
+            final Long creditClientId = clientDomain.getId();
+            final Long creditOutletId = originalSale.getOutletId();
 
             Long activeStatusId = masterDataRepositoryPort.getIdByCode("ACT");
             CreditAccountDomain creditAccount = creditRepositoryPort
-                    .findByClientIdAndOutletId(clientDomain.getId(), originalSale.getOutletId())
+                    .findByClientIdAndOutletId(creditClientId, creditOutletId)
                     .orElseGet(() -> {
                         CreditAccountDomain newAcc = CreditAccountDomain.create(
-                                clientDomain.getId(),
-                                originalSale.getOutletId(),
+                                creditClientId,
+                                creditOutletId,
                                 new BigDecimal("150000"),
                                 activeStatusId
                         );
@@ -233,7 +264,6 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                     });
 
             BigDecimal oldDebt = creditAccount.getCurrentDebt();
-            // Aplicar nota de crédito: reducir la deuda solo hasta 0 (no puede quedar negativa)
             BigDecimal payAmount = creditAmount.min(oldDebt);
             if (payAmount.compareTo(BigDecimal.ZERO) > 0) {
                 creditAccount.pay(payAmount);
@@ -247,16 +277,13 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                     creditAmount,
                     oldDebt,
                     creditAccount.getCurrentDebt(),
-                    "Nota de crédito por devolución - Código #" + returnDomain.getReturnCode(),
+                    "Nota de credito por devolucion - Codigo #" + returnDomain.getReturnCode(),
                     employeeId
             );
             creditRepositoryPort.save(txn);
         }
-        // REEMBOLSO y CAMBIO: el stock ya fue restituido arriba.
-        // REEMBOLSO: el empleado devuelve el dinero físicamente en caja.
-        // CAMBIO: el cliente selecciona otro producto en el POS normal.
 
-        // --- 10. Guardar Devolución ---
+        // --- 10. Save Return ---
         ReturnDomain savedReturn = returnRepositoryPort.save(returnDomain);
 
         return new ReturnResponse(
@@ -268,13 +295,81 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                 savedReturn.getReason(),
                 savedReturn.getNotes(),
                 savedReturn.getResolutionType(),
-                "DEV",
+                "DEVUELTO",
                 clientDomain.getFullName(),
                 clientDomain.getNumberid(),
-                savedReturn.getOutletId(),
-                savedReturn.getEmployeeId(),
+                originalSale.getOutletId(),
+                employeeId,
                 savedReturn.getReturnDate(),
                 itemResponses
+        );
+    }
+
+    private SaleDomain convertOrderToSaleDomain(OrderDomain order) {
+        MasterTree tree = masterTreeProvider.getTree();
+        MasterRoot actNode = tree.getByCode("ACT");
+        Long activeStatusId = actNode != null ? actNode.getId() : 1L;
+
+        Long cashPaymentMethodId = order.getPaymentMethodId();
+        if (cashPaymentMethodId == null) {
+            MasterRoot cashNode = tree.getByCode("EFE");
+            if (cashNode == null) cashNode = tree.getByCode("MPG_CASH");
+            cashPaymentMethodId = cashNode != null ? cashNode.getId() : 1L;
+        }
+
+        List<SaleItemDomain> saleItems = new ArrayList<>();
+        if (order.getItems() != null) {
+            for (OrderItemDomain item : order.getItems()) {
+                Long pId = item.getProductOutletId();
+                if (pId == null) continue;
+
+                ProductDomain product = productOutletRepositoryPort.findById(pId).orElse(null);
+                Long unitMeasureId = product != null ? product.getUnitMeasureId() : 1L;
+                Integer qty = item.getQuantity() != null ? item.getQuantity() : 1;
+                BigDecimal unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO;
+                BigDecimal subtotal = item.getSubtotal() != null ? item.getSubtotal() : unitPrice.multiply(BigDecimal.valueOf(qty));
+
+                String displayQty = item.getDisplayQuantity();
+                if (displayQty == null || displayQty.isBlank()) {
+                    MasterRoot unitNode = tree.getById(unitMeasureId);
+                    String unitCode = (unitNode != null && unitNode.getShortName() != null) ? unitNode.getShortName() : "UND";
+                    displayQty = qty + " " + unitCode;
+                }
+
+                saleItems.add(new SaleItemDomain(
+                        item.getId(),
+                        pId,
+                        qty,
+                        displayQty,
+                        unitPrice,
+                        subtotal,
+                        unitMeasureId
+                ));
+            }
+        }
+
+        UUID syntheticCode;
+        try {
+            syntheticCode = UUID.nameUUIDFromBytes(order.getOrderCode().getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            syntheticCode = UUID.randomUUID();
+        }
+
+        return SaleDomain.fromPersistence(
+                order.getId(),
+                syntheticCode,
+                order.getTotal() != null ? order.getTotal() : BigDecimal.ZERO,
+                order.getTotal() != null ? order.getTotal() : BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                cashPaymentMethodId,
+                activeStatusId,
+                order.getCustomerId() != null ? order.getCustomerId() : 1L,
+                order.getOutletId() != null ? order.getOutletId() : 1L,
+                order.getClaimedByUserId() != null ? order.getClaimedByUserId() : 1L,
+                order.getCreatedAt() != null ? order.getCreatedAt() : LocalDateTime.now(),
+                order.getCreatedAt() != null ? order.getCreatedAt() : LocalDateTime.now(),
+                order.getUpdatedAt() != null ? order.getUpdatedAt() : LocalDateTime.now(),
+                saleItems
         );
     }
 }

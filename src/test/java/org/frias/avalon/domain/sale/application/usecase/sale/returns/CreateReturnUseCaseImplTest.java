@@ -11,6 +11,7 @@ import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
@@ -44,11 +45,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@DisplayName("Unit Tests for CreateReturnUseCaseImpl in POS Sales Domain")
+@DisplayName("Unit Tests for CreateReturnUseCaseImpl in POS Returns Domain")
 class CreateReturnUseCaseImplTest {
 
     private ReturnRepositoryPort returnRepositoryPort;
     private SaleRepositoryPort saleRepositoryPort;
+    private OrderRepositoryPort orderRepositoryPort;
     private ProductOutletRepositoryPort productOutletRepositoryPort;
     private PersonRepositoryPort personRepositoryPort;
     private UserAvalonRepositoryPort userAvalonRepositoryPort;
@@ -70,6 +72,7 @@ class CreateReturnUseCaseImplTest {
     void setUp() {
         returnRepositoryPort = mock(ReturnRepositoryPort.class);
         saleRepositoryPort = mock(SaleRepositoryPort.class);
+        orderRepositoryPort = mock(OrderRepositoryPort.class);
         productOutletRepositoryPort = mock(ProductOutletRepositoryPort.class);
         personRepositoryPort = mock(PersonRepositoryPort.class);
         userAvalonRepositoryPort = mock(UserAvalonRepositoryPort.class);
@@ -82,6 +85,7 @@ class CreateReturnUseCaseImplTest {
         createReturnUseCase = new CreateReturnUseCaseImpl(
                 returnRepositoryPort,
                 saleRepositoryPort,
+                orderRepositoryPort,
                 productOutletRepositoryPort,
                 personRepositoryPort,
                 userAvalonRepositoryPort,
