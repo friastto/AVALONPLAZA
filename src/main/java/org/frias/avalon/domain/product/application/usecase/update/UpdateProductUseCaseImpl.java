@@ -15,6 +15,7 @@ import org.frias.avalon.domain.product.application.service.QuantityParserService
 import org.frias.avalon.domain.product.domain.ProductDomain;
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.mapper.ProductOutletMapper;
+import org.frias.avalon.domain.product.presentation.ProductWebSocketPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.math.BigDecimal;
 /**
  * Caso de uso para actualizar los detalles de un producto existente.
  * Valida la existencia, unidades de medida y aplica reglas de aislamiento de tienda (Tenant Isolation).
+ * Emite notificacion reactiva por WebSocket para sincronizacion instantanea de clientes.
  */
 @Service
 @RequiredArgsConstructor
@@ -34,6 +36,7 @@ public class UpdateProductUseCaseImpl implements UpdateProductUseCase {
     private final UnitConversionService unitConversionService;
     private final ProductOutletMapper productOutletMapper;
     private final CurrentUserProviderPort currentUserProvider;
+    private final ProductWebSocketPublisher productWebSocketPublisher;
 
     @Override
     @Transactional
@@ -86,6 +89,13 @@ public class UpdateProductUseCaseImpl implements UpdateProductUseCase {
         ProductDomain updatedProduct = productOutletRepositoryPort.save(productDomain);
 
         // 7. Mapear y devolver
-        return productOutletMapper.toResponse(updatedProduct);
+        ProductResponse response = productOutletMapper.toResponse(updatedProduct);
+
+        // 8. Notificar reactivamente a los clientes conectados por WebSocket
+        if (productWebSocketPublisher != null && response != null) {
+            productWebSocketPublisher.broadcastProductStockChanged(response.outletId(), response);
+        }
+
+        return response;
     }
 }

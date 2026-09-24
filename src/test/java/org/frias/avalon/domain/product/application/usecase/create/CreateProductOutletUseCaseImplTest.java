@@ -12,6 +12,7 @@ import org.frias.avalon.domain.product.domain.ProductDomain;
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.mapper.ProductOutletMapper;
 import org.frias.avalon.domain.product.domain.repository.BarcodeRepositoryPort;
+import org.frias.avalon.domain.product.presentation.ProductWebSocketPublisher;
 import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,6 +51,8 @@ class CreateProductOutletUseCaseImplTest {
     private BarcodeRepositoryPort barcodeRepositoryPort;
     @Mock
     private CurrentUserProviderPort currentUserProvider;
+    @Mock
+    private ProductWebSocketPublisher productWebSocketPublisher;
 
     @InjectMocks
     private CreateProductOutletUseCaseImpl createProductUseCase;

@@ -17,6 +17,7 @@ import org.frias.avalon.domain.product.domain.exceptions.ProductAlreadyExistsExc
 import org.frias.avalon.domain.product.domain.repository.BarcodeRepositoryPort;
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.mapper.ProductOutletMapper;
+import org.frias.avalon.domain.product.presentation.ProductWebSocketPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +26,9 @@ import java.util.Optional;
 
 /**
  * Caso de uso para registrar un producto en una tienda.
- * Valida la consistencia de los datos, la existencia del código de barras,
+ * Valida la consistencia de los datos, la existencia del codigo de barras,
  * y aplica reglas estrictas de aislamiento de tienda (Tenant Isolation).
+ * Emite notificacion reactiva por WebSocket para sincronizacion instantanea de clientes.
  */
 @Service
 @RequiredArgsConstructor
@@ -39,6 +41,7 @@ public class CreateProductOutletUseCaseImpl implements CreateProductOutletUseCas
     private final QuantityParserService quantityParserService;
     private final BarcodeRepositoryPort barcodeRepositoryPort;
     private final CurrentUserProviderPort currentUserProvider;
+    private final ProductWebSocketPublisher productWebSocketPublisher;
 
     @Override
     @Transactional
@@ -115,7 +118,14 @@ public class CreateProductOutletUseCaseImpl implements CreateProductOutletUseCas
             barcodeRepositoryPort.save(newBarcode);
         }
 
-        // 8. Mapear el resultado a un DTO de respuesta con el código de barras
-        return productOutletMapper.toResponse(savedProductDomain, request.barCode());
+        // 8. Mapear el resultado a un DTO de respuesta con el codigo de barras
+        ProductResponse response = productOutletMapper.toResponse(savedProductDomain, request.barCode());
+
+        // 9. Notificar reactivamente a los clientes conectados por WebSocket
+        if (productWebSocketPublisher != null && response != null) {
+            productWebSocketPublisher.broadcastProductStockChanged(response.outletId(), response);
+        }
+
+        return response;
     }
 }
