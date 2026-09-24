@@ -117,5 +117,78 @@ public class BrevoEmailServiceAdapter implements EmailServicePort {
             log.error("Failed to send applicant verification PIN to {} via Brevo: {}", to, e.getMessage(), e);
         }
     }
+
+    @Override
+    public void sendCompanyRejectionEmail(String to, String applicantName, String companyName, String reason, String explanation) {
+        log.info("Sending company rejection email to {} for company {} using Brevo API", to, companyName);
+        try {
+            String emailBody = "<html><body style='font-family: Arial, sans-serif; color: #333; line-height: 1.6;'>"
+                    + "<p>Hola " + applicantName + ",</p>"
+                    + "<p>Gracias por tu interes en formar parte de la plataforma comercial Avalon con tu empresa <strong>" + companyName + "</strong>.</p>"
+                    + "<p>Tras revisar minuciosamente la informacion remitida, te informamos que en esta oportunidad tu solicitud no ha podido ser aprobada por el siguiente motivo:</p>"
+                    + "<div style='background-color: #fff2f2; border-left: 4px solid #ff4d4f; padding: 12px 16px; margin: 16px 0; border-radius: 4px;'>"
+                    + "<p style='margin: 0 0 8px 0; font-weight: bold; color: #cf1322;'>Motivo: " + reason + "</p>"
+                    + "<p style='margin: 0; color: #595959;'>" + explanation + "</p>"
+                    + "</div>"
+                    + "<p>Si consideras que la documentacion o los datos pueden ser subsanados, te invitamos a iniciar una nueva solicitud de servicio desde la aplicacion movil de Avalon adjuntando la informacion corregida.</p>"
+                    + "<br><p>Atentamente,<br><strong>Equipo de Validacion y Auditoria - Avalon</strong></p>"
+                    + "</body></html>";
+
+            Map<String, Object> payload = Map.of(
+                    "sender", Map.of("name", senderName, "email", senderEmail),
+                    "to", List.of(Map.of("email", to)),
+                    "subject", "Actualizacion sobre tu solicitud de empresa en Avalon",
+                    "htmlContent", emailBody
+            );
+
+            restClient.post()
+                    .uri(apiUrl)
+                    .header("api-key", apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(payload)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            log.info("Company rejection email sent successfully to {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send company rejection email to {} via Brevo: {}", to, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void sendCompanyApprovalEmail(String to, String applicantName, String companyName) {
+        log.info("Sending company approval email to {} for company {} using Brevo API", to, companyName);
+        try {
+            String emailBody = "<html><body style='font-family: Arial, sans-serif; color: #333; line-height: 1.6;'>"
+                    + "<p>Estimado(a) " + applicantName + ",</p>"
+                    + "<p>Nos complace informarte que tu solicitud para la empresa <strong>" + companyName + "</strong> ha sido <strong>APROBADA</strong> por el equipo de Avalon.</p>"
+                    + "<p>Tu esquema empresarial dedicado y tu tienda inicial ya se encuentran activos en la plataforma. Tu usuario ha sido promovido al rol de <strong>Gerente General (GERGEN)</strong>.</p>"
+                    + "<div style='background-color: #f6ffed; border-left: 4px solid #52c41a; padding: 12px 16px; margin: 16px 0; border-radius: 4px;'>"
+                    + "<p style='margin: 0; font-weight: bold; color: #389e0d;'>¡Todo listo para operar!</p>"
+                    + "<p style='margin: 4px 0 0 0; color: #595959;'>Abre la aplicacion movil de Avalon, ingresa con tu cuenta y alterna al <strong>Modo Administrador</strong> para configurar tus productos, tiendas y personal.</p>"
+                    + "</div>"
+                    + "<br><p>Bienvenido a Avalon,<br><strong>El equipo de Avalon</strong></p>"
+                    + "</body></html>";
+
+            Map<String, Object> payload = Map.of(
+                    "sender", Map.of("name", senderName, "email", senderEmail),
+                    "to", List.of(Map.of("email", to)),
+                    "subject", "¡Tu empresa ha sido aprobada en Avalon!",
+                    "htmlContent", emailBody
+            );
+
+            restClient.post()
+                    .uri(apiUrl)
+                    .header("api-key", apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(payload)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            log.info("Company approval email sent successfully to {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send company approval email to {} via Brevo: {}", to, e.getMessage(), e);
+        }
+    }
 }
 

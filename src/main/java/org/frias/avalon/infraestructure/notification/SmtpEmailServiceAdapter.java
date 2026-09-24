@@ -64,4 +64,48 @@ public class SmtpEmailServiceAdapter implements EmailServicePort {
             System.err.println("Error al enviar correo de verificacion de gerente: " + e.getMessage());
         }
     }
+
+    @Override
+    public void sendCompanyRejectionEmail(String to, String applicantName, String companyName, String reason, String explanation) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(to);
+            message.setSubject("Actualizacion sobre tu solicitud de empresa en Avalon");
+
+            String emailBody = "Hola " + applicantName + ",\n\n"
+                    + "Gracias por tu interes en formar parte de Avalon con tu empresa " + companyName + ".\n\n"
+                    + "Te informamos que tu solicitud no ha podido ser aprobada por el siguiente motivo:\n\n"
+                    + "Motivo: " + reason + "\n"
+                    + "Detalle: " + explanation + "\n\n"
+                    + "Si deseas corregir esta informacion, puedes iniciar una nueva solicitud desde la aplicacion movil.\n\n"
+                    + "Atentamente,\nEquipo de Validacion y Auditoria - Avalon";
+
+            message.setText(emailBody);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Error al enviar correo de rechazo de empresa: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendCompanyApprovalEmail(String to, String applicantName, String companyName) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(to);
+            message.setSubject("¡Tu empresa ha sido aprobada en Avalon!");
+
+            String emailBody = "Estimado(a) " + applicantName + ",\n\n"
+                    + "Tu solicitud para la empresa " + companyName + " ha sido APROBADA exitosamente.\n\n"
+                    + "Tu esquema empresarial y tienda inicial ya se encuentran activos, y tu rol de Gerente General (GERGEN) ha sido activado.\n\n"
+                    + "Ya puedes ingresar a la aplicacion movil en Modo Administrador.\n\n"
+                    + "Bienvenido a Avalon,\nEl equipo de Avalon";
+
+            message.setText(emailBody);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Error al enviar correo de aprobacion de empresa: " + e.getMessage());
+        }
+    }
 }

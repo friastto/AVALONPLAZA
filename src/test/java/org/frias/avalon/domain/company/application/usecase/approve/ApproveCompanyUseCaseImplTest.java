@@ -12,6 +12,9 @@ import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
+import org.frias.avalon.core.notification.EmailServicePort;
+import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
+import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,6 +51,15 @@ class ApproveCompanyUseCaseImplTest {
 
     @Mock
     private RoleAssignmentRepositoryPort roleAssignmentRepository;
+
+    @Mock
+    private UserAvalonRepositoryPort userPort;
+
+    @Mock
+    private PersonRepositoryPort personPort;
+
+    @Mock
+    private EmailServicePort emailServicePort;
 
     @InjectMocks
     private ApproveCompanyUseCaseImpl approveCompanyUseCase;

@@ -11,6 +11,9 @@ import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
+import org.frias.avalon.core.notification.EmailServicePort;
+import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
+import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +23,8 @@ import java.util.Optional;
 /**
  * Implementation of ApproveCompanyUseCase.
  * Updates company status to ACT (Approved), provisions PostgreSQL tenant schema,
- * activates initial outlets, and activates GERGEN role for applicant manager.
+ * activates initial outlets, activates GERGEN role for applicant manager,
+ * and notifies the applicant via email.
  */
 @Service
 public class ApproveCompanyUseCaseImpl implements ApproveCompanyUseCase {
@@ -30,19 +34,28 @@ public class ApproveCompanyUseCaseImpl implements ApproveCompanyUseCase {
     private final MasterTreeProvider masterTreeProvider;
     private final OutletRepositoryPort outletPort;
     private final RoleAssignmentRepositoryPort roleAssignmentRepository;
+    private final UserAvalonRepositoryPort userPort;
+    private final PersonRepositoryPort personPort;
+    private final EmailServicePort emailServicePort;
 
     public ApproveCompanyUseCaseImpl(
             CompanyRepositoryPort companyPort,
             TenantSchemaMigrationPort tenantSchemaMigrationPort,
             MasterTreeProvider masterTreeProvider,
             OutletRepositoryPort outletPort,
-            RoleAssignmentRepositoryPort roleAssignmentRepository
+            RoleAssignmentRepositoryPort roleAssignmentRepository,
+            UserAvalonRepositoryPort userPort,
+            PersonRepositoryPort personPort,
+            EmailServicePort emailServicePort
     ) {
         this.companyPort = companyPort;
         this.tenantSchemaMigrationPort = tenantSchemaMigrationPort;
         this.masterTreeProvider = masterTreeProvider;
         this.outletPort = outletPort;
         this.roleAssignmentRepository = roleAssignmentRepository;
+        this.userPort = userPort;
+        this.personPort = personPort;
+        this.emailServicePort = emailServicePort;
     }
 
     @Transactional
@@ -85,6 +98,18 @@ public class ApproveCompanyUseCaseImpl implements ApproveCompanyUseCase {
                 RoleAssignmentDomain managerRole = managerRoleOpt.get();
                 managerRole.changeStatus(approvedStatusId);
                 roleAssignmentRepository.update(managerRole);
+
+                if (userPort != null && personPort != null && emailServicePort != null) {
+                    userPort.findById(managerRole.getUserId()).ifPresent(user -> {
+                        personPort.findById(user.getPersonId()).ifPresent(person -> {
+                            String applicantName = (person.getName() + " " + (person.getLastName() != null ? person.getLastName() : "")).trim();
+                            String recipientEmail = (person.getEmail() != null && !person.getEmail().isBlank()) ? person.getEmail() : saved.email();
+                            if (recipientEmail != null && !recipientEmail.isBlank()) {
+                                emailServicePort.sendCompanyApprovalEmail(recipientEmail, applicantName, saved.name());
+                            }
+                        });
+                    });
+                }
             }
         }
 

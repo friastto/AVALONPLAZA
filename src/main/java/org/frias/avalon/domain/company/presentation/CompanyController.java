@@ -16,6 +16,9 @@ import org.frias.avalon.domain.company.application.usecase.assign.AssignCompanyM
 import org.frias.avalon.domain.company.application.usecase.create.CreateCompanyServiceRequestUseCase;
 import org.frias.avalon.domain.company.application.usecase.create.CreateCompanyUseCase;
 
+import org.frias.avalon.domain.company.application.dto.request.RejectCompanyServiceRequestDto;
+import org.frias.avalon.domain.company.application.dto.response.CompanyServiceRequestDetailResponse;
+import org.frias.avalon.domain.company.application.usecase.reject.RejectCompanyServiceRequestUseCase;
 import org.frias.avalon.domain.company.application.usecase.find.*;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.springframework.http.HttpStatus;
@@ -44,6 +47,8 @@ public class CompanyController {
     private final FindCompanyEmployeesUseCase findCompanyEmployeesUseCase;
     private final AssignCompanyEmployeeUseCase assignCompanyEmployeeUseCase;
     private final CreateCompanyServiceRequestUseCase createCompanyServiceRequestUseCase;
+    private final FindCompanyServiceRequestDetailUseCase findCompanyServiceRequestDetailUseCase;
+    private final RejectCompanyServiceRequestUseCase rejectCompanyServiceRequestUseCase;
 
 
     public CompanyController(
@@ -58,7 +63,9 @@ public class CompanyController {
             GetCompanyManagerUseCase getCompanyManagerUseCase,
             FindCompanyEmployeesUseCase findCompanyEmployeesUseCase,
             AssignCompanyEmployeeUseCase assignCompanyEmployeeUseCase,
-            CreateCompanyServiceRequestUseCase createCompanyServiceRequestUseCase
+            CreateCompanyServiceRequestUseCase createCompanyServiceRequestUseCase,
+            FindCompanyServiceRequestDetailUseCase findCompanyServiceRequestDetailUseCase,
+            RejectCompanyServiceRequestUseCase rejectCompanyServiceRequestUseCase
     ) {
 
         this.createCompanyUseCase = createCompanyUseCase;
@@ -73,6 +80,8 @@ public class CompanyController {
         this.findCompanyEmployeesUseCase = findCompanyEmployeesUseCase;
         this.assignCompanyEmployeeUseCase = assignCompanyEmployeeUseCase;
         this.createCompanyServiceRequestUseCase = createCompanyServiceRequestUseCase;
+        this.findCompanyServiceRequestDetailUseCase = findCompanyServiceRequestDetailUseCase;
+        this.rejectCompanyServiceRequestUseCase = rejectCompanyServiceRequestUseCase;
     }
 
 
@@ -169,6 +178,35 @@ public class CompanyController {
                 HttpStatus.OK.value(),
                 "Company approved successfully and tenant schema provisioned",
                 approved
+        ));
+    }
+
+    /**
+     * GET /api/v1/companies/service-requests/{id} - Retrieves detailed service request information.
+     */
+    @GetMapping("/service-requests/{id}")
+    public ResponseEntity<ApiResponse<CompanyServiceRequestDetailResponse>> getServiceRequestDetail(@PathVariable Long id) {
+        CompanyServiceRequestDetailResponse detail = findCompanyServiceRequestDetailUseCase.execute(id);
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Detalle de solicitud de servicio recuperado exitosamente",
+                detail
+        ));
+    }
+
+    /**
+     * POST /api/v1/companies/{id}/reject - Rejects company service request with reason and notification.
+     */
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<ApiResponse<Void>> rejectCompany(
+            @PathVariable Long id,
+            @Valid @RequestBody RejectCompanyServiceRequestDto request
+    ) {
+        rejectCompanyServiceRequestUseCase.execute(id, request);
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Solicitud de servicio rechazada exitosamente",
+                null
         ));
     }
 
