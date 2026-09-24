@@ -99,8 +99,8 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
     }
 
     @Override
-    public List<OutletLocationInfo> findNearbyByRadiusLight(Double latitude, Double longitude, int radius) {
-        List<OutletLightProjection> projections = jpa.findNearbyByRadiusLight(latitude, longitude, radius);
+    public List<OutletLocationInfo> findNearbyByRadiusLight(Double latitude, Double longitude, int radius, String query) {
+        List<OutletLightProjection> projections = jpa.findNearbyByRadiusLight(latitude, longitude, radius, query);
         return projections.stream()
                 .map(p -> new OutletLocationInfo(p.getId(), p.getName(), p.getLatitude(), p.getLongitude()))
                 .collect(Collectors.toList());

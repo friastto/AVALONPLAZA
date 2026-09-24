@@ -4,6 +4,7 @@ import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -48,14 +49,16 @@ public interface JpaOutletRepository extends JpaRepository<Outlet, Long>, JpaSpe
                 ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
                 :radius
             )
+            AND (:query IS NULL OR :query = '' OR LOWER(name) LIKE LOWER(CONCAT('%', :query, '%')))
             ORDER BY ST_Distance(
                 location::geography,
                 ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography
             )
             """, nativeQuery = true)
     List<OutletLightProjection> findNearbyByRadiusLight(
-            double lat,
-            double lon,
-            double radius
+            @Param("lat") double lat,
+            @Param("lon") double lon,
+            @Param("radius") double radius,
+            @Param("query") String query
     );
 }

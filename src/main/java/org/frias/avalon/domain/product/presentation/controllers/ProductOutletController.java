@@ -2,14 +2,19 @@ package org.frias.avalon.domain.product.presentation.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import java.util.List;
 import org.frias.avalon.core.exeptions.ApiResponse;
 import org.frias.avalon.domain.product.application.dto.request.ChangeStatusRequest;
 import org.frias.avalon.domain.product.application.dto.request.LinkBarcodeRequest;
+import org.frias.avalon.domain.product.application.dto.request.NearbyStoresByProductRequestDto;
 import org.frias.avalon.domain.product.application.dto.request.ProductNewDataRequest;
 import org.frias.avalon.domain.product.application.dto.request.ProductUpdateRequest;
+import org.frias.avalon.domain.product.application.dto.response.NearbyStoreProductResponseDto;
 import org.frias.avalon.domain.product.application.dto.response.ProductResponse;
 import org.frias.avalon.domain.product.application.usecase.changestatus.ChangeProductStatusUseCase;
 import org.frias.avalon.domain.product.application.usecase.create.CreateProductOutletUseCase;
+import org.frias.avalon.domain.product.application.usecase.find.FindNearbyProductSuggestionsUseCase;
+import org.frias.avalon.domain.product.application.usecase.find.FindNearbyStoresByProductUseCase;
 import org.frias.avalon.domain.product.application.usecase.find.FindProductByBarcodeUseCase;
 import org.frias.avalon.domain.product.application.usecase.find.FindProductCatalogByOutletUseCase;
 import org.frias.avalon.domain.product.application.usecase.find.FindProductCatalogUseCase;
@@ -47,6 +52,8 @@ public class ProductOutletController {
     private final FindProductByIdUseCase findProductByIdUseCase;
     private final UpdateProductUseCase updateProductUseCase;
     private final ChangeProductStatusUseCase changeProductStatusUseCase;
+    private final FindNearbyProductSuggestionsUseCase findNearbyProductSuggestionsUseCase;
+    private final FindNearbyStoresByProductUseCase findNearbyStoresByProductUseCase;
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@Valid @RequestBody ProductNewDataRequest request) {
@@ -119,5 +126,22 @@ public class ProductOutletController {
                         "Estado del producto actualizado exitosamente",
                         updatedProduct
                 ));
+    }
+
+    @GetMapping("/nearby/suggestions")
+    public ResponseEntity<ApiResponse<List<String>>> getNearbyProductSuggestions(
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam(required = false, defaultValue = "2000") int radius,
+            @RequestParam String query) {
+        List<String> suggestions = findNearbyProductSuggestionsUseCase.execute(latitude, longitude, radius, query);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(HttpStatus.OK.value(), "Sugerencias de productos obtenidas exitosamente", suggestions));
+    }
+
+    @PostMapping("/nearby/stores")
+    public ResponseEntity<ApiResponse<List<NearbyStoreProductResponseDto>>> getNearbyStoresByProduct(
+            @Valid @RequestBody NearbyStoresByProductRequestDto request) {
+        List<NearbyStoreProductResponseDto> stores = findNearbyStoresByProductUseCase.execute(request);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(HttpStatus.OK.value(), "Tiendas cercanas con el producto obtenidas exitosamente", stores));
     }
 }

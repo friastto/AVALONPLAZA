@@ -54,4 +54,13 @@ public class ProductSpecification {
             return criteriaBuilder.conjunction();
         };
     }
+
+    /**
+     * Devuelve una Specification para filtrar solo productos con stock disponible mayor a cero.
+     *
+     * @return Una {@link Specification} para usar con JPA.
+     */
+    public static Specification<ProductOutlet> hasStockGreaterThanZero() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.greaterThan(root.get("stock"), 0);
+    }
 }

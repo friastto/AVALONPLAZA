@@ -241,10 +241,10 @@ class OutletRepositoryAdapterTest {
         when(projection.getLatitude()).thenReturn(lat);
         when(projection.getLongitude()).thenReturn(lon);
 
-        given(jpa.findNearbyByRadiusLight(lat, lon, radius)).willReturn(List.of(projection));
+        given(jpa.findNearbyByRadiusLight(lat, lon, radius, null)).willReturn(List.of(projection));
 
         // Act
-        List<OutletLocationInfo> result = adapter.findNearbyByRadiusLight(lat, lon, radius);
+        List<OutletLocationInfo> result = adapter.findNearbyByRadiusLight(lat, lon, radius, null);
 
         // Assert
         assertNotNull(result);
@@ -254,7 +254,7 @@ class OutletRepositoryAdapterTest {
         assertEquals("Tienda Light", info.name());
         assertEquals(lat, info.latitude());
         assertEquals(lon, info.longitude());
-        verify(jpa).findNearbyByRadiusLight(lat, lon, radius);
+        verify(jpa).findNearbyByRadiusLight(lat, lon, radius, null);
     }
 
     @Test

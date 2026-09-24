@@ -31,6 +31,6 @@ public interface OutletRepositoryPort {
 
     List<OutletDomain> findNearbyByRadius(LocationDomain location, int radius);
 
-    List<OutletLocationInfo> findNearbyByRadiusLight(Double latitude, Double longitude, int radius);
+    List<OutletLocationInfo> findNearbyByRadiusLight(Double latitude, Double longitude, int radius, String query);
 
 }

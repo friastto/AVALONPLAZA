@@ -26,7 +26,8 @@ public class FindNearbyOutletsLightUseCaseImpl implements FindNearbyOutletsLight
         List<OutletLocationInfo> outlets = outletRepository.findNearbyByRadiusLight(
                 request.location().lat(),
                 request.location().lon(),
-                request.radius()
+                request.radius(),
+                request.query()
         );
 
         return outlets.stream()

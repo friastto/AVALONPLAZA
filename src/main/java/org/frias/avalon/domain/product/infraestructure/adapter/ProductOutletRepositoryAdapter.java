@@ -51,4 +51,14 @@ public class ProductOutletRepositoryAdapter implements ProductOutletRepositoryPo
         Page<ProductOutlet> entityPage = jpaProductOutletRepository.findAll(spec, pageable);
         return entityPage.map(productOutletMapper::toDomain);
     }
+
+    @Override
+    public Page<ProductDomain> findAvailableByName(String name, Long outletId, Pageable pageable) {
+        Specification<ProductOutlet> spec = ProductSpecification.hasName(name)
+                .and(ProductSpecification.hasOutletId(outletId))
+                .and(ProductSpecification.hasStockGreaterThanZero());
+
+        Page<ProductOutlet> entityPage = jpaProductOutletRepository.findAll(spec, pageable);
+        return entityPage.map(productOutletMapper::toDomain);
+    }
 }

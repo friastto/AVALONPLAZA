@@ -61,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers("/avalon/products/barcode").hasAnyRole("ADMINTI", "ADMIN", "GERGEN","CJPRINCIPAL","CJTURNO")
                         .requestMatchers("/avalon/products/catalog/**").permitAll()
                         .requestMatchers("/avalon/products/catalog").permitAll()
+                        .requestMatchers("/avalon/products/nearby/**").permitAll()
 
 
 

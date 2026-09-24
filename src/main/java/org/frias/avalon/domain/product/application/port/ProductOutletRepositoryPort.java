@@ -43,4 +43,13 @@ public interface ProductOutletRepositoryPort {
      * @return A Page of product domain models.
      */
     Page<ProductDomain> findAll(String name, Long outletId, Long categoryId, Pageable pageable);
+
+    /**
+     * Retrieves products filtered by name and outlet ID that have stock greater than zero.
+     * @param name Name filter (case-insensitive substring, can be null or empty).
+     * @param outletId Outlet ID (can be null).
+     * @param pageable Pagination and sorting information.
+     * @return A Page of product domain models with stock > 0.
+     */
+    Page<ProductDomain> findAvailableByName(String name, Long outletId, Pageable pageable);
 }
