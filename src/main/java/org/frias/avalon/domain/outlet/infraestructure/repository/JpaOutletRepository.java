@@ -24,7 +24,8 @@ public interface JpaOutletRepository extends JpaRepository<Outlet, Long>, JpaSpe
                            ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography
                        ) AS distance
                 FROM outlet
-                WHERE ST_DWithin(
+                WHERE (:statusId IS NULL OR status_id = :statusId)
+                AND ST_DWithin(
                     location::geography,
                     ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
                     :radius
@@ -32,9 +33,10 @@ public interface JpaOutletRepository extends JpaRepository<Outlet, Long>, JpaSpe
                 ORDER BY distance
             """, nativeQuery = true)
     List<Outlet> findNearByOrderByDistance(
-            double lat,
-            double lon,
-            double radius
+            @Param("lat") double lat,
+            @Param("lon") double lon,
+            @Param("radius") double radius,
+            @Param("statusId") Long statusId
     );
 
     @Query(value = """
@@ -44,7 +46,8 @@ public interface JpaOutletRepository extends JpaRepository<Outlet, Long>, JpaSpe
                 ST_Y(location::geometry) AS latitude,
                 ST_X(location::geometry) AS longitude
             FROM outlet
-            WHERE ST_DWithin(
+            WHERE (:statusId IS NULL OR status_id = :statusId)
+            AND ST_DWithin(
                 location::geography,
                 ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
                 :radius
@@ -59,6 +62,7 @@ public interface JpaOutletRepository extends JpaRepository<Outlet, Long>, JpaSpe
             @Param("lat") double lat,
             @Param("lon") double lon,
             @Param("radius") double radius,
-            @Param("query") String query
+            @Param("query") String query,
+            @Param("statusId") Long statusId
     );
 }

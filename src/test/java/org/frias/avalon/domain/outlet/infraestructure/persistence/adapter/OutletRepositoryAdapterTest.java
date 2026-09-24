@@ -9,6 +9,9 @@ import org.frias.avalon.domain.outlet.infraestructure.mapper.LocationMapper;
 import org.frias.avalon.domain.outlet.infraestructure.mapper.OutletMapper;
 import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.outlet.infraestructure.repository.OutletLightProjection;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,6 +47,9 @@ class OutletRepositoryAdapterTest {
 
     @Mock
     private LocationMapper locationMapper;
+
+    @Mock
+    private MasterTreeProvider masterTreeProvider;
 
     @InjectMocks
     private OutletRepositoryAdapter adapter;
@@ -214,7 +220,13 @@ class OutletRepositoryAdapterTest {
                 1L, "OUT-001", "Tienda Cercana", "Calle 100", "3001234567", "900123456-1", 1L, location
         );
 
-        given(jpa.findNearByOrderByDistance(-74.08175, 4.60971, radius)).willReturn(List.of(entity));
+        MasterTree masterTree = mock(MasterTree.class);
+        MasterRoot activeNode = mock(MasterRoot.class);
+        given(masterTreeProvider.getTree()).willReturn(masterTree);
+        given(masterTree.getByCode("ACT")).willReturn(activeNode);
+        given(activeNode.getId()).willReturn(10L);
+
+        given(jpa.findNearByOrderByDistance(4.60971, -74.08175, radius, 10L)).willReturn(List.of(entity));
         given(outletMapper.toDomain(entity)).willReturn(domain);
 
         // Act
@@ -224,7 +236,7 @@ class OutletRepositoryAdapterTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(domain, result.get(0));
-        verify(jpa).findNearByOrderByDistance(-74.08175, 4.60971, radius);
+        verify(jpa).findNearByOrderByDistance(4.60971, -74.08175, radius, 10L);
     }
 
     @Test
@@ -241,7 +253,13 @@ class OutletRepositoryAdapterTest {
         when(projection.getLatitude()).thenReturn(lat);
         when(projection.getLongitude()).thenReturn(lon);
 
-        given(jpa.findNearbyByRadiusLight(lat, lon, radius, null)).willReturn(List.of(projection));
+        MasterTree masterTree = mock(MasterTree.class);
+        MasterRoot activeNode = mock(MasterRoot.class);
+        given(masterTreeProvider.getTree()).willReturn(masterTree);
+        given(masterTree.getByCode("ACT")).willReturn(activeNode);
+        given(activeNode.getId()).willReturn(10L);
+
+        given(jpa.findNearbyByRadiusLight(lat, lon, radius, null, 10L)).willReturn(List.of(projection));
 
         // Act
         List<OutletLocationInfo> result = adapter.findNearbyByRadiusLight(lat, lon, radius, null);
@@ -254,7 +272,7 @@ class OutletRepositoryAdapterTest {
         assertEquals("Tienda Light", info.name());
         assertEquals(lat, info.latitude());
         assertEquals(lon, info.longitude());
-        verify(jpa).findNearbyByRadiusLight(lat, lon, radius, null);
+        verify(jpa).findNearbyByRadiusLight(lat, lon, radius, null, 10L);
     }
 
     @Test

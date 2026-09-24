@@ -11,6 +11,7 @@ import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletReposi
 import org.frias.avalon.domain.outlet.infraestructure.repository.OutletLightProjection;
 import org.frias.avalon.domain.outlet.application.dto.request.OutletSearchCriteria;
 import org.frias.avalon.domain.outlet.infraestructure.specification.OutletSpecification;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -26,11 +27,13 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
     private final JpaOutletRepository jpa;
     private final OutletMapper outletMapper;
     private final LocationMapper locationMapper;
+    private final MasterTreeProvider masterTreeProvider;
 
-    public OutletRepositoryAdapter(JpaOutletRepository jpa, OutletMapper outletMapper, LocationMapper locationMapper) {
+    public OutletRepositoryAdapter(JpaOutletRepository jpa, OutletMapper outletMapper, LocationMapper locationMapper, MasterTreeProvider masterTreeProvider) {
         this.jpa = jpa;
         this.outletMapper = outletMapper;
         this.locationMapper = locationMapper;
+        this.masterTreeProvider = masterTreeProvider;
     }
 
     @Override
@@ -92,17 +95,28 @@ public class OutletRepositoryAdapter implements OutletRepositoryPort {
 
     @Override
     public List<OutletDomain> findNearbyByRadius(LocationDomain location, int radius) {
-
-        List<Outlet> outletsList = jpa.findNearByOrderByDistance(location.longitude(), location.latitude(), radius);
+        Long activeStatusId = getActiveStatusId();
+        List<Outlet> outletsList = jpa.findNearByOrderByDistance(location.latitude(), location.longitude(), radius, activeStatusId);
 
         return outletsList.stream().map(outletMapper::toDomain).toList();
     }
 
     @Override
     public List<OutletLocationInfo> findNearbyByRadiusLight(Double latitude, Double longitude, int radius, String query) {
-        List<OutletLightProjection> projections = jpa.findNearbyByRadiusLight(latitude, longitude, radius, query);
+        Long activeStatusId = getActiveStatusId();
+        List<OutletLightProjection> projections = jpa.findNearbyByRadiusLight(latitude, longitude, radius, query, activeStatusId);
         return projections.stream()
                 .map(p -> new OutletLocationInfo(p.getId(), p.getName(), p.getLatitude(), p.getLongitude()))
                 .collect(Collectors.toList());
+    }
+
+    private Long getActiveStatusId() {
+        if (masterTreeProvider != null && masterTreeProvider.getTree() != null) {
+            var node = masterTreeProvider.getTree().getByCode("ACT");
+            if (node != null) {
+                return node.getId();
+            }
+        }
+        return null;
     }
 }
