@@ -6,6 +6,12 @@ import org.frias.avalon.domain.company.domain.model.CompanyDomain;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
+import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
+import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
+import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
+import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,13 +41,19 @@ class ApproveCompanyUseCaseImplTest {
     private TenantSchemaMigrationPort tenantSchemaMigrationPort;
 
     @Mock
-    private org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider masterTreeProvider;
+    private MasterTreeProvider masterTreeProvider;
+
+    @Mock
+    private OutletRepositoryPort outletPort;
+
+    @Mock
+    private RoleAssignmentRepositoryPort roleAssignmentRepository;
 
     @InjectMocks
     private ApproveCompanyUseCaseImpl approveCompanyUseCase;
 
     @Test
-    @DisplayName("Deberia aprobar una empresa exitosamente y migrar el esquema tenant")
+    @DisplayName("Deberia aprobar una empresa exitosamente, migrar tenant y activar tiendas y gerente")
     void shouldApproveCompanySuccessfullyWhenCompanyExists() {
         // Arrange
         Long companyId = 10L;
@@ -73,8 +85,24 @@ class ApproveCompanyUseCaseImplTest {
         given(companyPort.save(any(CompanyDomain.class))).willReturn(approvedCompany);
 
         MasterRoot actNode = new MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
-        MasterTree masterTree = new MasterTree(List.of(actNode));
+        MasterRoot gergenNode = new MasterRoot(50L, "GERGEN", "GERENTE GENERAL", null, 1L);
+        MasterTree masterTree = new MasterTree(List.of(actNode, gergenNode));
         given(masterTreeProvider.getTree()).willReturn(masterTree);
+
+        OutletDomain inactiveOutlet = OutletDomain.create(
+                "Tienda Inicial",
+                "Calle 123",
+                "3001234567",
+                "900123456-1",
+                2L,
+                new LocationDomain(4.6, -74.0),
+                BigDecimal.ZERO,
+                companyId
+        );
+        given(outletPort.findByCompanyId(companyId)).willReturn(List.of(inactiveOutlet));
+
+        RoleAssignmentDomain inactiveRole = RoleAssignmentDomain.createCompanyRole(100L, 50L, companyId, 2L);
+        given(roleAssignmentRepository.findByCompanyIdAndRoleId(companyId, 50L)).willReturn(Optional.of(inactiveRole));
 
         // Act
         CompanyResponse response = approveCompanyUseCase.execute(companyId);
@@ -94,6 +122,8 @@ class ApproveCompanyUseCaseImplTest {
 
         verify(companyPort).findById(companyId);
         verify(tenantSchemaMigrationPort).migrateTenantSchema("company_10");
+        verify(outletPort).update(any(OutletDomain.class));
+        verify(roleAssignmentRepository).update(any(RoleAssignmentDomain.class));
     }
 
     @Test
@@ -115,3 +145,4 @@ class ApproveCompanyUseCaseImplTest {
         verifyNoInteractions(tenantSchemaMigrationPort);
     }
 }
+

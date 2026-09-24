@@ -77,4 +77,45 @@ public class BrevoEmailServiceAdapter implements EmailServicePort {
             log.error("Failed to send password reset PIN to {} via Brevo: {}", to, e.getMessage(), e);
         }
     }
+
+    /**
+     * Sends an applicant verification PIN for company registration to the specified recipient.
+     *
+     * @param to  the recipient's email address
+     * @param pin the 6-digit verification PIN
+     */
+    @Override
+    public void sendApplicantVerificationPin(String to, String pin) {
+        log.info("Sending applicant verification PIN to {} using Brevo API", to);
+        try {
+            String emailBody = "<html><body>"
+                    + "<p>Hola,</p>"
+                    + "<p>Has sido postulado o has solicitado registrar una empresa en Avalon. Para validar tu identidad como gerente corporativo, ingresa el siguiente codigo de seguridad:</p>"
+                    + "<h2 style='color: #00FF7F; letter-spacing: 4px;'>CODIGO: " + pin + "</h2>"
+                    + "<p>Este codigo de verificacion expirara en 10 minutos.</p>"
+                    + "<p>Si no realizaste esta solicitud, por favor ignora este correo.</p>"
+                    + "<br><p>Atentamente,<br>Equipo de Seguridad Avalon</p>"
+                    + "</body></html>";
+
+            Map<String, Object> payload = Map.of(
+                    "sender", Map.of("name", senderName, "email", senderEmail),
+                    "to", List.of(Map.of("email", to)),
+                    "subject", "Codigo de Verificacion de Gerente - Avalon",
+                    "htmlContent", emailBody
+            );
+
+            restClient.post()
+                    .uri(apiUrl)
+                    .header("api-key", apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(payload)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            log.info("Applicant verification PIN sent successfully to {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send applicant verification PIN to {} via Brevo: {}", to, e.getMessage(), e);
+        }
+    }
 }
+

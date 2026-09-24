@@ -3,6 +3,7 @@ package org.frias.avalon.domain.company.presentation;
 import jakarta.validation.Valid;
 import org.frias.avalon.core.exeptions.ApiResponse;
 import org.frias.avalon.domain.company.application.dto.request.CreateCompanyRequest;
+import org.frias.avalon.domain.company.application.dto.request.CreateCompanyServiceRequestDto;
 import org.frias.avalon.domain.company.application.dto.response.CompanyDashboardResponse;
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
 import org.frias.avalon.domain.company.application.dto.request.AssignCompanyManagerRequest;
@@ -12,7 +13,9 @@ import org.frias.avalon.domain.company.application.dto.response.CompanyEmployeeR
 import org.frias.avalon.domain.company.application.usecase.approve.ApproveCompanyUseCase;
 import org.frias.avalon.domain.company.application.usecase.assign.AssignCompanyEmployeeUseCase;
 import org.frias.avalon.domain.company.application.usecase.assign.AssignCompanyManagerUseCase;
+import org.frias.avalon.domain.company.application.usecase.create.CreateCompanyServiceRequestUseCase;
 import org.frias.avalon.domain.company.application.usecase.create.CreateCompanyUseCase;
+
 import org.frias.avalon.domain.company.application.usecase.find.*;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.springframework.http.HttpStatus;
@@ -40,6 +43,8 @@ public class CompanyController {
     private final GetCompanyManagerUseCase getCompanyManagerUseCase;
     private final FindCompanyEmployeesUseCase findCompanyEmployeesUseCase;
     private final AssignCompanyEmployeeUseCase assignCompanyEmployeeUseCase;
+    private final CreateCompanyServiceRequestUseCase createCompanyServiceRequestUseCase;
+
 
     public CompanyController(
             CreateCompanyUseCase createCompanyUseCase,
@@ -52,8 +57,10 @@ public class CompanyController {
             AssignCompanyManagerUseCase assignCompanyManagerUseCase,
             GetCompanyManagerUseCase getCompanyManagerUseCase,
             FindCompanyEmployeesUseCase findCompanyEmployeesUseCase,
-            AssignCompanyEmployeeUseCase assignCompanyEmployeeUseCase
+            AssignCompanyEmployeeUseCase assignCompanyEmployeeUseCase,
+            CreateCompanyServiceRequestUseCase createCompanyServiceRequestUseCase
     ) {
+
         this.createCompanyUseCase = createCompanyUseCase;
         this.findAllCompaniesUseCase = findAllCompaniesUseCase;
         this.findPendingCompaniesUseCase = findPendingCompaniesUseCase;
@@ -65,7 +72,9 @@ public class CompanyController {
         this.getCompanyManagerUseCase = getCompanyManagerUseCase;
         this.findCompanyEmployeesUseCase = findCompanyEmployeesUseCase;
         this.assignCompanyEmployeeUseCase = assignCompanyEmployeeUseCase;
+        this.createCompanyServiceRequestUseCase = createCompanyServiceRequestUseCase;
     }
+
 
     /**
      * GET /api/v1/companies - Retrieves all companies.
@@ -134,6 +143,21 @@ public class CompanyController {
                         createdCompany
                 ));
     }
+
+    /**
+     * POST /api/v1/companies/service-request - Creates a full company service request with initial outlet and applicant manager.
+     */
+    @PostMapping("/service-request")
+    public ResponseEntity<ApiResponse<CompanyResponse>> createServiceRequest(@Valid @RequestBody CreateCompanyServiceRequestDto request) {
+        CompanyResponse createdCompany = createCompanyServiceRequestUseCase.execute(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(
+                        HttpStatus.CREATED.value(),
+                        "Company service request submitted successfully",
+                        createdCompany
+                ));
+    }
+
 
     /**
      * POST /api/v1/companies/{id}/approve - Approves company request and provisions tenant schema.

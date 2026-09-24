@@ -67,10 +67,11 @@ public class SecurityConfig {
 
 
                         .requestMatchers("/avalon/person/verify-identification").permitAll()
-
+                        .requestMatchers("/avalon/companies/service-request", "/api/v1/companies/service-request").permitAll()
 
                         // Lectura pública de catálogos específicos para formularios de registro (ej. tipos de documento IDENT, géneros GEN)
                         .requestMatchers("/avalon/masterdata/{parentCode}/children").permitAll()
+
 
 
 

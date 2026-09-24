@@ -155,7 +155,27 @@ public class OutletDomain {
         return "ACT".equals(status);
     }
 
+    public OutletDomain withStatus(Long newStatusId) {
+        return new OutletDomain(
+                this.id,
+                this.code,
+                this.name,
+                this.address,
+                this.phone,
+                this.nit,
+                newStatusId,
+                this.location,
+                this.cashThresholdAmount,
+                this.deliveryEnabled,
+                this.deliveryFee,
+                this.companyId,
+                this.createdAt,
+                LocalDateTime.now()
+        );
+    }
+
     public Long getId() { return id; }
+
     public String getCode() { return code; }
     public String getName() { return name; }
     public String getAddress() { return address; }

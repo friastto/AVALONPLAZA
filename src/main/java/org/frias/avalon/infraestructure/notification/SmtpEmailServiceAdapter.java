@@ -42,4 +42,26 @@ public class SmtpEmailServiceAdapter implements EmailServicePort {
             System.err.println("Error al enviar correo de restablecimiento: " + e.getMessage());
         }
     }
-}
+
+    @Override
+    public void sendApplicantVerificationPin(String to, String pin) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(to);
+            message.setSubject("Codigo de Verificacion de Gerente - Avalon");
+
+            String emailBody = "Hola,\n\n"
+                    + "Has solicitado validar tu identidad como gerente corporativo en Avalon. Usa el siguiente codigo:\n\n"
+                    + "CODIGO: " + pin + "\n\n"
+                    + "Este codigo expirara en 10 minutos.\n\n"
+                    + "Si no solicitaste esto, ignora este correo.\n\n"
+                    + "El equipo de Avalon";
+
+            message.setText(emailBody);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Error al enviar correo de verificacion de gerente: " + e.getMessage());
+        }
+    }
+}

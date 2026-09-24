@@ -7,7 +7,12 @@ import org.frias.avalon.domain.user.application.dtos.request.*;
 import org.frias.avalon.domain.user.application.dtos.response.AuthResponse;
 import org.frias.avalon.domain.user.application.dtos.response.ForgotPasswordResponseDto;
 import org.frias.avalon.domain.user.application.dtos.response.VerifyPinResponseDto;
+import org.frias.avalon.domain.user.application.dtos.response.ApplicantLookupResponseDto;
+import org.frias.avalon.domain.user.application.dtos.response.ApplicantVerifiedResponseDto;
 import org.frias.avalon.domain.user.application.usecase.accesrefreshtoken.GenerateAccessTokenAndRefreshTokenUseCase;
+import org.frias.avalon.domain.user.application.usecase.applicant.ApplicantLookupUseCase;
+import org.frias.avalon.domain.user.application.usecase.applicant.ApplicantSendPinUseCase;
+import org.frias.avalon.domain.user.application.usecase.applicant.ApplicantVerifyPinUseCase;
 import org.frias.avalon.domain.user.application.usecase.login.LoginUseCase;
 import org.frias.avalon.domain.user.application.usecase.password.ConfirmEmailAndSendPinUseCase;
 import org.frias.avalon.domain.user.application.usecase.password.RequestPasswordResetUseCase;
@@ -32,8 +37,22 @@ public class AuthController {
     private final ConfirmEmailAndSendPinUseCase confirmEmailAndSendPinUseCase;
     private final VerifyPasswordResetPinUseCase verifyPasswordResetPinUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
+    private final ApplicantLookupUseCase applicantLookupUseCase;
+    private final ApplicantSendPinUseCase applicantSendPinUseCase;
+    private final ApplicantVerifyPinUseCase applicantVerifyPinUseCase;
 
-    public AuthController(LoginUseCase loginUseCase, GenerateAccessTokenAndRefreshTokenUseCase refreshTokenUseCase, VerifyUsernameUseCase verifyUsernameUseCase, RequestPasswordResetUseCase requestPasswordResetUseCase, ConfirmEmailAndSendPinUseCase confirmEmailAndSendPinUseCase, VerifyPasswordResetPinUseCase verifyPasswordResetPinUseCase, ResetPasswordUseCase resetPasswordUseCase) {
+    public AuthController(
+            LoginUseCase loginUseCase,
+            GenerateAccessTokenAndRefreshTokenUseCase refreshTokenUseCase,
+            VerifyUsernameUseCase verifyUsernameUseCase,
+            RequestPasswordResetUseCase requestPasswordResetUseCase,
+            ConfirmEmailAndSendPinUseCase confirmEmailAndSendPinUseCase,
+            VerifyPasswordResetPinUseCase verifyPasswordResetPinUseCase,
+            ResetPasswordUseCase resetPasswordUseCase,
+            ApplicantLookupUseCase applicantLookupUseCase,
+            ApplicantSendPinUseCase applicantSendPinUseCase,
+            ApplicantVerifyPinUseCase applicantVerifyPinUseCase
+    ) {
         this.loginUseCase = loginUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.verifyUsernameUseCase = verifyUsernameUseCase;
@@ -41,6 +60,9 @@ public class AuthController {
         this.confirmEmailAndSendPinUseCase = confirmEmailAndSendPinUseCase;
         this.verifyPasswordResetPinUseCase = verifyPasswordResetPinUseCase;
         this.resetPasswordUseCase = resetPasswordUseCase;
+        this.applicantLookupUseCase = applicantLookupUseCase;
+        this.applicantSendPinUseCase = applicantSendPinUseCase;
+        this.applicantVerifyPinUseCase = applicantVerifyPinUseCase;
     }
 
 
@@ -89,7 +111,24 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> resetPassword(@Valid @RequestBody ResetPasswordRequestDto request) {
         resetPasswordUseCase.execute(request);
 
-
-        return ResponseEntity.ok(new ApiResponse<>(200, "Su contraseña ha sido restablecida exitosamente.", null));
+        return ResponseEntity.ok(new ApiResponse<>(200, "Su contrasena ha sido restablecida exitosamente.", null));
     }
-}
+
+    @PostMapping("/applicant/lookup")
+    public ResponseEntity<ApiResponse<ApplicantLookupResponseDto>> applicantLookup(@Valid @RequestBody ApplicantLookupRequestDto request) {
+        ApplicantLookupResponseDto response = applicantLookupUseCase.execute(request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Consulta de solicitante completada exitosamente.", response));
+    }
+
+    @PostMapping("/applicant/send-pin")
+    public ResponseEntity<ApiResponse<String>> applicantSendPin(@Valid @RequestBody ApplicantSendPinRequestDto request) {
+        applicantSendPinUseCase.execute(request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Si el usuario esta registrado, se ha enviado un codigo de verificacion a su correo.", null));
+    }
+
+    @PostMapping("/applicant/verify-pin")
+    public ResponseEntity<ApiResponse<ApplicantVerifiedResponseDto>> applicantVerifyPin(@Valid @RequestBody ApplicantVerifyPinRequestDto request) {
+        ApplicantVerifiedResponseDto response = applicantVerifyPinUseCase.execute(request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Identidad de gerente confirmada exitosamente.", response));
+    }
+}
