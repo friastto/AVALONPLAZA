@@ -45,6 +45,11 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
 
     @Override
     public String generateAccessToken(UserDetails userDetails, Long outletId, Long companyId) {
+        return generateAccessToken(userDetails, outletId, companyId, null);
+    }
+
+    @Override
+    public String generateAccessToken(UserDetails userDetails, Long outletId, Long companyId, Long userId) {
         Instant now = Instant.now();
         Instant expiryDate = now.plusMillis(jwtExpirationMs);
 
@@ -54,6 +59,9 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiryDate));
 
+        if (userId != null) {
+            tknBuilder.claim("user_id", userId);
+        }
         if (outletId != null) {
             tknBuilder.claim("outlet_id", outletId);
         }
@@ -144,6 +152,22 @@ public class JwtTokenProviderAdapter implements JwtTokenProviderPort {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    @Override
+    public Instant extractIssuedAt(String token) {
+        Claims claims = extractAllClaims(token);
+        Date issuedAt = claims.getIssuedAt();
+        return issuedAt != null ? issuedAt.toInstant() : null;
+    }
+
+    @Override
+    public Long extractUserId(String token) {
+        Long id = extractClaimAsLong(token, "user_id");
+        if (id != null) {
+            return id;
+        }
+        return extractClaimAsLong(token, "userId");
     }
 
     private Claims extractAllClaims(String token) {

@@ -65,6 +65,14 @@ public class RoleAssignmentDomain {
         this.status = newStatus;
     }
 
+    public void changeOutlet(Long newOutletId) {
+        this.outletId = newOutletId;
+    }
+
+    public void changeCompany(Long newCompanyId) {
+        this.companyId = newCompanyId;
+    }
+
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
     public Long getRoleId() { return roleId; }

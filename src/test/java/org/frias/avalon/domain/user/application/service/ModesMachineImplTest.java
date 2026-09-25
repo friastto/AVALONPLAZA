@@ -50,6 +50,9 @@ class ModesMachineImplTest {
     @BeforeEach
     void setUp() {
         lenient().when(treeProvider.getTree()).thenReturn(masterTree);
+        MasterRoot actStatus = new MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
+        lenient().when(masterTree.getById(1L)).thenReturn(actStatus);
+        lenient().when(masterTree.is(actStatus, "ACT")).thenReturn(true);
     }
 
     @Test
@@ -175,6 +178,36 @@ class ModesMachineImplTest {
         ModesResult result = modesMachine.resolve(List.of(invalidRoleAssign), null);
 
         assertNull(result.client());
+        assertNull(result.employee());
+        assertNull(result.adminAvalon());
+    }
+
+    @Test
+    @DisplayName("Should skip inactive role assignments (e.g. INA status) and resolve only active roles")
+    void resolveSkipsInactiveRoleAssignments() {
+        MasterRoot activeStatus = new MasterRoot(1L, "ACT", "Activo", null, null);
+        MasterRoot inactiveStatus = new MasterRoot(2L, "INA", "Inactivo", null, null);
+
+        RoleAssignmentDomain consRoleAssign = new RoleAssignmentDomain(1L, 10L, 201L, 1L, 1L); // ACT
+        RoleAssignmentDomain empRoleAssignInactive = new RoleAssignmentDomain(2L, 10L, 202L, 1L, 2L); // INA
+
+        MasterRoot consRole = new MasterRoot(201L, "CSTNDR", "Cliente Estándar", 10L, 1L);
+        MasterRoot empRole = new MasterRoot(202L, "CJTURNO", "Cajero de Turno", 11L, 1L);
+
+        when(masterTree.getById(1L)).thenReturn(activeStatus);
+        when(masterTree.is(activeStatus, "ACT")).thenReturn(true);
+
+        when(masterTree.getById(2L)).thenReturn(inactiveStatus);
+        when(masterTree.is(inactiveStatus, "ACT")).thenReturn(false);
+
+        when(masterTree.getById(201L)).thenReturn(consRole);
+        when(masterTree.isChildOf(consRole, "CONS")).thenReturn(true);
+        when(permissionService.resolvePermissions(consRole)).thenReturn(List.of("BUY_PRODUCTS"));
+
+        ModesResult result = modesMachine.resolve(List.of(consRoleAssign, empRoleAssignInactive), null);
+
+        assertNotNull(result.client());
+        assertEquals("Cliente Estándar", result.client().type());
         assertNull(result.employee());
         assertNull(result.adminAvalon());
     }

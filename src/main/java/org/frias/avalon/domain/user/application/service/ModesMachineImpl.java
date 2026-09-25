@@ -67,6 +67,14 @@ public class ModesMachineImpl implements ModesMachine {
         } else {
             // --- Procesar roles asignados si la lista no está vacía ---
             for (RoleAssignmentDomain roleAssigned : byUser) {
+                // Solo roles en estado ACT (Activo) otorgan modos laborales o permisos
+                if (roleAssigned.getStatus() != null) {
+                    MasterRoot statusNode = tree.getById(roleAssigned.getStatus());
+                    if (statusNode != null && !tree.is(statusNode, "ACT")) {
+                        continue;
+                    }
+                }
+
                 MasterRoot role = tree.getById(roleAssigned.getRoleId());
                 if (role == null) {
                     // Loggear o manejar IDs de rol inconsistentes, saltar esta asignación

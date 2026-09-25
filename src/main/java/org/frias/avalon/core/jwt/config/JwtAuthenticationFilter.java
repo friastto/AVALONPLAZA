@@ -6,12 +6,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.frias.avalon.core.jwt.service.JwtTokenProviderPort;
+import org.frias.avalon.core.jwt.service.SessionRevocationRegistry;
 import org.frias.avalon.core.jwt.util.SecurityUtils;
 import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
+import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
+import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,12 +36,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final MasterTreeProvider treeProvider;
     private final CustomUserDetailsService userDetailsService;
     private final OutletRepositoryPort outletRepositoryPort;
+    private final SessionRevocationRegistry sessionRevocationRegistry;
+    private final UserAvalonRepositoryPort userAvalonRepositoryPort;
 
-    public JwtAuthenticationFilter(JwtTokenProviderPort jwtTokenProvider, MasterTreeProvider treeProvider, CustomUserDetailsService userDetailsService, OutletRepositoryPort outletRepositoryPort) {
+    public JwtAuthenticationFilter(
+            JwtTokenProviderPort jwtTokenProvider,
+            MasterTreeProvider treeProvider,
+            CustomUserDetailsService userDetailsService,
+            OutletRepositoryPort outletRepositoryPort,
+            SessionRevocationRegistry sessionRevocationRegistry,
+            UserAvalonRepositoryPort userAvalonRepositoryPort
+    ) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.treeProvider = treeProvider;
         this.userDetailsService = userDetailsService;
         this.outletRepositoryPort = outletRepositoryPort;
+        this.sessionRevocationRegistry = sessionRevocationRegistry;
+        this.userAvalonRepositoryPort = userAvalonRepositoryPort;
     }
 
     @Override
@@ -61,8 +76,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 2. Validamos el token antes de hacer nada más
                 if (jwtTokenProvider.validateToken(jwt)) {
 
-                    // 3. Extraemos userName y rol desde el token
+                    // 2.1 Verificamos si la sesion del usuario fue revocada (inactivacion/traslado)
                     String username = jwtTokenProvider.extractUsername(jwt);
+                    Long userIdFromJwt = jwtTokenProvider.extractUserId(jwt);
+                    if (userIdFromJwt == null && username != null) {
+                        userIdFromJwt = userAvalonRepositoryPort.findByUserName(username)
+                                .map(UserAvalonDomain::getId)
+                                .orElse(null);
+                    }
+                    Instant issuedAt = jwtTokenProvider.extractIssuedAt(jwt);
+                    if (userIdFromJwt != null && sessionRevocationRegistry.isRevoked(userIdFromJwt, issuedAt)) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"status\": 401, \"message\": \"Sesion revocada por cambio de estado o permisos\", \"data\": null}");
+                        return;
+                    }
+
+                    // 3. Extraemos rol desde el token
                     List<String> rolesFromJwt = jwtTokenProvider.extractRoles(jwt);
 
                     // 4. Si no hay una autenticación activa en el contexto

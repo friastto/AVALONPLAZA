@@ -3,6 +3,7 @@ package org.frias.avalon.domain.company.application.usecase.find;
 import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.domain.company.application.dto.response.CompanyResponse;
 import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,7 @@ import java.util.List;
 
 /**
  * Implementation of FindAllCompaniesUseCase.
- * Returns all registered companies in the platform, filtered by tenant for corporate managers.
+ * Returns active registered companies in the platform, filtered by tenant for corporate managers.
  */
 @Service
 public class FindAllCompaniesUseCaseImpl implements FindAllCompaniesUseCase {
@@ -38,6 +39,11 @@ public class FindAllCompaniesUseCaseImpl implements FindAllCompaniesUseCase {
         MasterTree tree = masterTreeProvider.getTree();
 
         return companyPort.findAll().stream()
+                .filter(domain -> {
+                    if (domain.statusId() == null) return false;
+                    MasterRoot statusNode = tree.getById(domain.statusId());
+                    return tree.is(statusNode, "ACT");
+                })
                 .filter(domain -> isSuperAdmin || (currentTenantId != null && currentTenantId.equals(domain.id())))
                 .map(domain -> CompanyResponse.from(domain, tree))
                 .toList();

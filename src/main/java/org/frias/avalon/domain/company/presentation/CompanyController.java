@@ -20,6 +20,10 @@ import org.frias.avalon.domain.company.application.dto.request.RejectCompanyServ
 import org.frias.avalon.domain.company.application.dto.response.CompanyServiceRequestDetailResponse;
 import org.frias.avalon.domain.company.application.usecase.reject.RejectCompanyServiceRequestUseCase;
 import org.frias.avalon.domain.company.application.usecase.find.*;
+import org.frias.avalon.domain.company.application.dto.request.UpdateCompanyEmployeeStatusRequest;
+import org.frias.avalon.domain.company.application.dto.request.TransferCompanyEmployeeRequest;
+import org.frias.avalon.domain.company.application.usecase.assign.ChangeCompanyEmployeeStatusUseCase;
+import org.frias.avalon.domain.company.application.usecase.assign.TransferCompanyEmployeeUseCase;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +53,8 @@ public class CompanyController {
     private final CreateCompanyServiceRequestUseCase createCompanyServiceRequestUseCase;
     private final FindCompanyServiceRequestDetailUseCase findCompanyServiceRequestDetailUseCase;
     private final RejectCompanyServiceRequestUseCase rejectCompanyServiceRequestUseCase;
+    private final ChangeCompanyEmployeeStatusUseCase changeCompanyEmployeeStatusUseCase;
+    private final TransferCompanyEmployeeUseCase transferCompanyEmployeeUseCase;
 
 
     public CompanyController(
@@ -65,7 +71,9 @@ public class CompanyController {
             AssignCompanyEmployeeUseCase assignCompanyEmployeeUseCase,
             CreateCompanyServiceRequestUseCase createCompanyServiceRequestUseCase,
             FindCompanyServiceRequestDetailUseCase findCompanyServiceRequestDetailUseCase,
-            RejectCompanyServiceRequestUseCase rejectCompanyServiceRequestUseCase
+            RejectCompanyServiceRequestUseCase rejectCompanyServiceRequestUseCase,
+            ChangeCompanyEmployeeStatusUseCase changeCompanyEmployeeStatusUseCase,
+            TransferCompanyEmployeeUseCase transferCompanyEmployeeUseCase
     ) {
 
         this.createCompanyUseCase = createCompanyUseCase;
@@ -82,6 +90,8 @@ public class CompanyController {
         this.createCompanyServiceRequestUseCase = createCompanyServiceRequestUseCase;
         this.findCompanyServiceRequestDetailUseCase = findCompanyServiceRequestDetailUseCase;
         this.rejectCompanyServiceRequestUseCase = rejectCompanyServiceRequestUseCase;
+        this.changeCompanyEmployeeStatusUseCase = changeCompanyEmployeeStatusUseCase;
+        this.transferCompanyEmployeeUseCase = transferCompanyEmployeeUseCase;
     }
 
 
@@ -290,5 +300,39 @@ public class CompanyController {
                         "Company employee assigned successfully",
                         response
                 ));
+    }
+
+    /**
+     * PUT /api/v1/companies/{companyId}/employees/{userId}/status - Updates an employee's employment status in company or outlet.
+     */
+    @PutMapping("/{companyId}/employees/{userId}/status")
+    public ResponseEntity<ApiResponse<CompanyEmployeeResponse>> updateEmployeeStatus(
+            @PathVariable Long companyId,
+            @PathVariable Long userId,
+            @Valid @RequestBody UpdateCompanyEmployeeStatusRequest request
+    ) {
+        CompanyEmployeeResponse response = changeCompanyEmployeeStatusUseCase.execute(companyId, userId, request);
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Estado del empleado actualizado exitosamente",
+                response
+        ));
+    }
+
+    /**
+     * PUT /api/v1/companies/{companyId}/employees/{userId}/transfer - Transfers an employee to another outlet within company.
+     */
+    @PutMapping("/{companyId}/employees/{userId}/transfer")
+    public ResponseEntity<ApiResponse<CompanyEmployeeResponse>> transferEmployee(
+            @PathVariable Long companyId,
+            @PathVariable Long userId,
+            @Valid @RequestBody TransferCompanyEmployeeRequest request
+    ) {
+        CompanyEmployeeResponse response = transferCompanyEmployeeUseCase.execute(companyId, userId, request);
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Empleado trasladado de tienda exitosamente",
+                response
+        ));
     }
 }

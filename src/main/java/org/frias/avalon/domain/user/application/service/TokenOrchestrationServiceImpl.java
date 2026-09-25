@@ -55,7 +55,7 @@ public class TokenOrchestrationServiceImpl implements TokenOrchestrationService 
             }
         }
 
-        String accessToken = jwtTokenProvider.generateAccessToken(userDetails, outletId, companyId);
+        String accessToken = jwtTokenProvider.generateAccessToken(userDetails, outletId, companyId, user.getId());
 
         // 2. Generar y persistir Refresh Token
         UUID refreshTokenUuid = jwtTokenProvider.generateRefreshToken();

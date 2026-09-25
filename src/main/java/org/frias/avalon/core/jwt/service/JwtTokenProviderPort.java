@@ -12,6 +12,8 @@ public interface JwtTokenProviderPort {
 
     String generateAccessToken(UserDetails userDetails, Long outletId, Long companyId);
 
+    String generateAccessToken(UserDetails userDetails, Long outletId, Long companyId, Long userId);
+
     String generateAccessTokenFromId(Long userId);
 
     UUID generateRefreshToken();
@@ -29,4 +31,8 @@ public interface JwtTokenProviderPort {
     Long extractCompanyId(String token);
 
     Long extractClaimAsLong(String token, String claimName);
+
+    Instant extractIssuedAt(String token);
+
+    Long extractUserId(String token);
 }
