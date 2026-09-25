@@ -31,6 +31,7 @@ import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -55,6 +56,7 @@ class CreateExchangeUseCaseImplTest {
     private SaleWeightConversionService weightConversionService;
     private CurrentUserProviderPort currentUserProvider;
     private CreditRepositoryPort creditRepositoryPort;
+    private ApplicationEventPublisher eventPublisher;
 
     private MasterTree masterTree;
     private CreateExchangeUseCaseImpl createExchangeUseCase;
@@ -76,6 +78,7 @@ class CreateExchangeUseCaseImplTest {
         weightConversionService = mock(SaleWeightConversionService.class);
         currentUserProvider = mock(CurrentUserProviderPort.class);
         creditRepositoryPort = mock(CreditRepositoryPort.class);
+        eventPublisher = mock(ApplicationEventPublisher.class);
 
         masterTree = mock(MasterTree.class);
         when(masterTreeProvider.getTree()).thenReturn(masterTree);
@@ -90,7 +93,8 @@ class CreateExchangeUseCaseImplTest {
                 masterTreeProvider,
                 weightConversionService,
                 currentUserProvider,
-                creditRepositoryPort
+                creditRepositoryPort,
+                eventPublisher
         );
     }
 

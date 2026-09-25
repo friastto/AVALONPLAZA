@@ -27,11 +27,13 @@ import org.frias.avalon.domain.sale.application.port.ReturnRepositoryPort;
 import org.frias.avalon.domain.sale.application.port.SaleRepositoryPort;
 import org.frias.avalon.domain.sale.domain.ReturnDomain;
 import org.frias.avalon.domain.sale.domain.ReturnItemDomain;
+import org.frias.avalon.domain.notification.application.event.ReturnCreatedEvent;
 import org.frias.avalon.domain.sale.domain.SaleDomain;
 import org.frias.avalon.domain.sale.domain.SaleItemDomain;
 import org.frias.avalon.domain.sale.domain.service.SaleWeightConversionService;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +60,7 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
     private final SaleWeightConversionService weightConversionService;
     private final CurrentUserProviderPort currentUserProvider;
     private final CreditRepositoryPort creditRepositoryPort;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -136,6 +139,7 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
 
         // --- 6. Validate and process returned items ---
         MasterTree masterTree = masterTreeProvider.getTree();
+        List<ReturnDomain> previousReturns = returnRepositoryPort.findByOriginalSaleId(originalSale.getId());
         List<ReturnItemDomain> returnItems = new ArrayList<>();
         List<ReturnItemResponse> itemResponses = new ArrayList<>();
 
@@ -148,6 +152,19 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                     .orElseThrow(() -> new BusinessException(
                             "El producto con ID " + itemReq.productId() +
                             " no está en la venta original. No se puede devolver."));
+
+            // Calculate already returned quantity from historical returns
+            int alreadyReturnedInBaseUnits = previousReturns.stream()
+                    .flatMap(r -> r.getItems().stream())
+                    .filter(ri -> ri.getProductId().equals(itemReq.productId()))
+                    .mapToInt(ReturnItemDomain::getQuantityInBaseUnits)
+                    .sum();
+
+            int availableInBaseUnits = originalItem.getQuantityInBaseUnits() - alreadyReturnedInBaseUnits;
+            if (availableInBaseUnits <= 0) {
+                throw new BusinessException("El producto con ID " + itemReq.productId() +
+                        " ya ha sido devuelto en su totalidad en devoluciones previas.");
+            }
 
             // Get product from catalog
             ProductDomain product = productOutletRepositoryPort.findById(itemReq.productId())
@@ -181,11 +198,12 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                 throw new BusinessException("La cantidad a devolver debe ser mayor a cero: " + product.getName());
             }
 
-            // Validate not exceeding original sale
-            if (qtyInBaseUnits > originalItem.getQuantityInBaseUnits()) {
+            // Validate not exceeding available quantity
+            if (qtyInBaseUnits > availableInBaseUnits) {
+                String availableDisplay = weightConversionService.formatFromBaseUnit(availableInBaseUnits, unitCode);
                 throw new BusinessException(
-                        "La cantidad a devolver (" + qtyInBaseUnits + ") supera lo vendido (" +
-                        originalItem.getQuantityInBaseUnits() + ") para: " + product.getName());
+                        "La cantidad a devolver (" + displayQty + " " + unitCode + ") supera lo vendido o disponible a devolver (" +
+                        availableDisplay + ") para: " + product.getName());
             }
 
             // Calculate return subtotal
@@ -286,7 +304,7 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
         // --- 10. Save Return ---
         ReturnDomain savedReturn = returnRepositoryPort.save(returnDomain);
 
-        return new ReturnResponse(
+        ReturnResponse response = new ReturnResponse(
                 savedReturn.getId(),
                 savedReturn.getReturnCode(),
                 originalSale.getSaleCode(),
@@ -303,6 +321,13 @@ public class CreateReturnUseCaseImpl implements CreateReturnUseCase {
                 savedReturn.getReturnDate(),
                 itemResponses
         );
+
+        String emailToSend = Boolean.TRUE.equals(request.sendEmail()) ? clientDomain.getEmail() : null;
+        if (emailToSend != null && !emailToSend.isBlank()) {
+            eventPublisher.publishEvent(new ReturnCreatedEvent(this, response, emailToSend));
+        }
+
+        return response;
     }
 
     private SaleDomain convertOrderToSaleDomain(OrderDomain order) {

@@ -33,6 +33,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -59,6 +60,7 @@ class CreateReturnUseCaseImplTest {
     private SaleWeightConversionService weightConversionService;
     private CurrentUserProviderPort currentUserProvider;
     private CreditRepositoryPort creditRepositoryPort;
+    private ApplicationEventPublisher eventPublisher;
 
     private CreateReturnUseCaseImpl createReturnUseCase;
 
@@ -81,6 +83,7 @@ class CreateReturnUseCaseImplTest {
         weightConversionService = mock(SaleWeightConversionService.class);
         currentUserProvider = mock(CurrentUserProviderPort.class);
         creditRepositoryPort = mock(CreditRepositoryPort.class);
+        eventPublisher = mock(ApplicationEventPublisher.class);
 
         createReturnUseCase = new CreateReturnUseCaseImpl(
                 returnRepositoryPort,
@@ -93,7 +96,8 @@ class CreateReturnUseCaseImplTest {
                 masterTreeProvider,
                 weightConversionService,
                 currentUserProvider,
-                creditRepositoryPort
+                creditRepositoryPort,
+                eventPublisher
         );
     }
 

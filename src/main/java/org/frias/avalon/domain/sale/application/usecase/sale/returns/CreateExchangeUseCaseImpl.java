@@ -25,6 +25,8 @@ import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 import org.frias.avalon.domain.credit.application.port.CreditRepositoryPort;
 import org.frias.avalon.domain.credit.domain.model.CreditAccountDomain;
 import org.frias.avalon.domain.credit.domain.model.CreditTransactionDomain;
+import org.frias.avalon.domain.notification.application.event.ReturnCreatedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,10 +36,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Caso de uso para intercambios/cambios de producto con cálculo de excedente.
+ * Caso de uso para intercambios/cambios de producto con calculo de excedente.
  *
  * Flujo:
- *  1. Reintegra stock de ítems devueltos.
+ *  1. Reintegra stock de items devueltos.
  *  2. Descuenta stock de los nuevos productos de reemplazo.
  *  3. Calcula netDifference = totalNuevos - totalDevueltos.
  *  4. Si netDifference > 0 (excedente):
@@ -59,6 +61,7 @@ public class CreateExchangeUseCaseImpl implements CreateExchangeUseCase {
     private final SaleWeightConversionService weightConversionService;
     private final CurrentUserProviderPort currentUserProvider;
     private final CreditRepositoryPort creditRepositoryPort;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -97,6 +100,7 @@ public class CreateExchangeUseCaseImpl implements CreateExchangeUseCase {
         }
 
         // --- 3. Procesar Productos Devueltos (Reintegrar Stock) ---
+        List<ReturnDomain> previousReturns = returnRepositoryPort.findByOriginalSaleId(originalSale.getId());
         List<ReturnItemDomain> returnItems = new ArrayList<>();
         List<ReturnItemResponse> returnItemResponses = new ArrayList<>();
         BigDecimal totalReturned = BigDecimal.ZERO;
@@ -106,6 +110,18 @@ public class CreateExchangeUseCaseImpl implements CreateExchangeUseCase {
                     .filter(si -> si.getProductId().equals(itemReq.productId()))
                     .findFirst()
                     .orElseThrow(() -> new BusinessException("El producto con ID " + itemReq.productId() + " no está en la venta original."));
+
+            int alreadyReturnedInBaseUnits = previousReturns.stream()
+                    .flatMap(r -> r.getItems().stream())
+                    .filter(ri -> ri.getProductId().equals(itemReq.productId()))
+                    .mapToInt(ReturnItemDomain::getQuantityInBaseUnits)
+                    .sum();
+
+            int availableInBaseUnits = originalItem.getQuantityInBaseUnits() - alreadyReturnedInBaseUnits;
+            if (availableInBaseUnits <= 0) {
+                throw new BusinessException("El producto con ID " + itemReq.productId() +
+                        " ya ha sido devuelto en su totalidad en devoluciones previas.");
+            }
 
             ProductDomain product = productOutletRepositoryPort.findById(itemReq.productId())
                     .orElseThrow(() -> new ResourceNotFoundException("Producto " + itemReq.productId() + " no encontrado"));
@@ -135,8 +151,11 @@ public class CreateExchangeUseCaseImpl implements CreateExchangeUseCase {
             if (qtyInBaseUnits <= 0)
                 throw new BusinessException("La cantidad a devolver debe ser mayor a cero: " + product.getName());
 
-            if (qtyInBaseUnits > originalItem.getQuantityInBaseUnits())
-                throw new BusinessException("La cantidad a devolver supera la vendida originalmente para: " + product.getName());
+            if (qtyInBaseUnits > availableInBaseUnits) {
+                String availableDisplay = weightConversionService.formatFromBaseUnit(availableInBaseUnits, unitCode);
+                throw new BusinessException("La cantidad a devolver (" + displayQty + " " + unitCode +
+                        ") supera la vendida originalmente o disponible a devolver (" + availableDisplay + ") para: " + product.getName());
+            }
 
             BigDecimal subtotal;
             if (isWeighable) {
@@ -323,8 +342,15 @@ public class CreateExchangeUseCaseImpl implements CreateExchangeUseCase {
                 savedNewSale.getOutletId(), savedNewSale.getEmployeeId(), newSaleItemResponses
         );
 
-        return new ExchangeResponse(
+        ExchangeResponse exchangeResponse = new ExchangeResponse(
                 returnResponse, newSaleResponse, totalReturned, totalNewItems, netDifference, paymentStatusMsg
         );
+
+        String emailToSend = Boolean.TRUE.equals(request.sendEmail()) ? clientDomain.getEmail() : null;
+        if (emailToSend != null && !emailToSend.isBlank()) {
+            eventPublisher.publishEvent(new ReturnCreatedEvent(this, returnResponse, emailToSend));
+        }
+
+        return exchangeResponse;
     }
 }

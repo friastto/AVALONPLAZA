@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Comprobante de Devolucion - Avalon</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 15mm;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #1C1C1C;
+            margin: 0;
+            padding: 0;
+            line-height: 1.4;
+        }
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #00E673;
+            padding-bottom: 15px;
+        }
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00E673;
+            margin: 0 0 5px 0;
+        }
+        .info-section {
+            margin-bottom: 20px;
+            background-color: #F9F9F9;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #00E673;
+        }
+        .info-title {
+            font-weight: bold;
+            font-size: 13px;
+            color: #00E673;
+            margin-bottom: 8px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .table th {
+            background-color: #0A0A0A;
+            color: #FFFFFF;
+            padding: 8px;
+            text-align: left;
+            font-size: 11px;
+        }
+        .table td {
+            padding: 8px;
+            border-bottom: 1px solid #E0E0E0;
+            font-size: 11px;
+        }
+        .total-box {
+            margin-top: 20px;
+            text-align: right;
+            padding: 15px;
+            background-color: #F0FDF4;
+            border-radius: 6px;
+            border: 1px solid #86EFAC;
+        }
+        .total-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #15803D;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #777777;
+            border-top: 1px solid #E5E7EB;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">COMPROBANTE DE DEVOLUCION / NOTA DE AJUSTE</div>
+        <div>Avalon - Sistema POS Multisede</div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-title">Datos de la Transaccion</div>
+        <div><strong>Codigo Devolucion:</strong> {{ returnData.returnCode }}</div>
+        <div><strong>Venta Original (Ticket):</strong> {{ returnData.originalSaleCode }}</div>
+        <div><strong>Fecha:</strong> {{ returnData.returnDate }}</div>
+        <div><strong>Cliente:</strong> {{ returnData.clientName }} (Doc: {{ returnData.clientDocument }})</div>
+        <div><strong>Motivo:</strong> {{ returnData.reason }}</div>
+        <div><strong>Resolucion:</strong> {{ returnData.resolutionType }}</div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cant. Devuelta</th>
+                <th>Precio Unit.</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in returnData.items %}
+            <tr>
+                <td>{{ item.productName }}</td>
+                <td>{{ item.displayQuantity }}</td>
+                <td>${{ item.unitPrice }}</td>
+                <td>${{ item.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="total-box">
+        <div><strong>TOTAL REEMBOLSO / NOTA CREDITO:</strong></div>
+        <div class="total-amount">${{ returnData.totalRefundAmount }}</div>
+    </div>
+
+    <div class="footer">
+        Este documento es un comprobante interno de devolucion generado por Avalon.
+    </div>
+</body>
+</html>

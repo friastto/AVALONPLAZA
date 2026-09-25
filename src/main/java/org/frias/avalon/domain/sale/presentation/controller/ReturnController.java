@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -74,5 +75,13 @@ public class ReturnController {
     ) {
         Page<ReturnResponse> response = findReturnsUseCase.findByOutlet(outletId, pageable);
         return ResponseEntity.ok(new ApiResponse<>(200, "Listado de devoluciones", response));
+    }
+
+    @GetMapping("/sale/{saleId}")
+    public ResponseEntity<ApiResponse<List<ReturnResponse>>> getBySaleId(
+            @PathVariable Long saleId
+    ) {
+        List<ReturnResponse> response = findReturnsUseCase.findByOriginalSaleId(saleId);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Devoluciones asociadas a la venta", response));
     }
 }

@@ -38,6 +38,13 @@ public class FindReturnsUseCaseImpl implements FindReturnsUseCase {
                 .map(this::toResponse);
     }
 
+    @Override
+    public List<ReturnResponse> findByOriginalSaleId(Long originalSaleId) {
+        return returnRepositoryPort.findByOriginalSaleId(originalSaleId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     private ReturnResponse toResponse(ReturnDomain domain) {
         SaleDomain originalSale = saleRepositoryPort.findById(domain.getOriginalSaleId())
                 .orElse(null);

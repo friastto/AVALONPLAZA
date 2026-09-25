@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.domain.notification.domain.service.QrCodeGeneratorService;
 import org.frias.avalon.domain.notification.domain.service.TicketGeneratorService;
+import org.frias.avalon.domain.sale.application.dto.response.ReturnResponse;
 import org.frias.avalon.domain.sale.application.dto.response.SaleResponse;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,6 +72,30 @@ public class TicketGeneratorServiceImpl implements TicketGeneratorService {
             return outputStream.toByteArray();
         } catch (Exception e) {
             throw new BusinessException("Error al generar el PDF del ticket: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public byte[] generateReturnTicketPdf(ReturnResponse returnResponse) {
+        try {
+            Map<String, Object> context = new HashMap<>();
+            context.put("returnData", returnResponse);
+
+            PebbleTemplate compiledTemplate = pebbleEngine.getTemplate("return_ticket");
+            Writer writer = new StringWriter();
+            compiledTemplate.evaluate(writer, context);
+            String htmlContent = writer.toString();
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.useFastMode();
+            builder.withHtmlContent(htmlContent, "/");
+            builder.toStream(outputStream);
+            builder.run();
+
+            return outputStream.toByteArray();
+        } catch (Exception e) {
+            throw new BusinessException("Error al generar el PDF de devolucion: " + e.getMessage());
         }
     }
 }
