@@ -3,14 +3,20 @@ package org.frias.avalon.domain.masterdata.presentation.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.frias.avalon.core.jwt.config.CustomUserDetailsService;
 import org.frias.avalon.core.jwt.service.JwtTokenProviderPort;
+import org.frias.avalon.core.jwt.service.SessionRevocationRegistry;
 import org.frias.avalon.domain.masterdata.application.dto.request.MasterDataNewDto;
 import org.frias.avalon.domain.masterdata.application.dto.response.MasterDataResponseDto;
 import org.frias.avalon.domain.masterdata.application.usecase.changestatus.ChangeStatusUseCase;
 import org.frias.avalon.domain.masterdata.application.usecase.create.CreateAllMasterDataUseCase;
 import org.frias.avalon.domain.masterdata.application.usecase.create.CreateMasterDataUseCase;
+import org.frias.avalon.domain.masterdata.application.usecase.delete.DeleteMasterDataUseCase;
 import org.frias.avalon.domain.masterdata.application.usecase.find.FindAllMasterDataUseCase;
 import org.frias.avalon.domain.masterdata.application.usecase.find.FindMasterDataByIdUseCase;
+import org.frias.avalon.domain.masterdata.application.usecase.find.FindMasterDataChildrenByParentCodeUseCase;
+import org.frias.avalon.domain.masterdata.application.usecase.reparent.ReparentMasterDataUseCase;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
+import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,11 +57,11 @@ class MasterRootControllerTest {
     @MockitoBean
     private FindAllMasterDataUseCase findAllUseCase;
     @MockitoBean
-    private org.frias.avalon.domain.masterdata.application.usecase.delete.DeleteMasterDataUseCase deleteUseCase;
+    private DeleteMasterDataUseCase deleteUseCase;
     @MockitoBean
-    private org.frias.avalon.domain.masterdata.application.usecase.find.FindMasterDataChildrenByParentCodeUseCase findChildrenUseCase;
+    private FindMasterDataChildrenByParentCodeUseCase findChildrenUseCase;
     @MockitoBean
-    private org.frias.avalon.domain.masterdata.application.usecase.reparent.ReparentMasterDataUseCase reparentUseCase;
+    private ReparentMasterDataUseCase reparentUseCase;
 
     // Mocks de dependencias de seguridad
     @MockitoBean
@@ -65,7 +71,11 @@ class MasterRootControllerTest {
     @MockitoBean
     private CustomUserDetailsService userDetailsService;
     @MockitoBean
-    private org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort outletRepositoryPort;
+    private OutletRepositoryPort outletRepositoryPort;
+    @MockitoBean
+    private SessionRevocationRegistry sessionRevocationRegistry;
+    @MockitoBean
+    private UserAvalonRepositoryPort userAvalonRepositoryPort;
 
 
     @Test
