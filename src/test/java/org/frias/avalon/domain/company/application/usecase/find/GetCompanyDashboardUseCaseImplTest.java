@@ -7,7 +7,10 @@ import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.sale.infrastructure.entity.SaleEntity;
 import org.frias.avalon.domain.sale.infrastructure.repository.JpaSaleRepository;
+import org.frias.avalon.domain.cashregister.infrastructure.entity.CashExpenseEntity;
 import org.frias.avalon.domain.cashregister.infrastructure.entity.CashSessionEntity;
+import org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashExpenseRepository;
+import org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashSessionRepository;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
@@ -46,7 +49,10 @@ class GetCompanyDashboardUseCaseImplTest {
     private JpaSaleRepository saleRepository;
 
     @Mock
-    private org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashSessionRepository cashSessionRepository;
+    private JpaCashSessionRepository cashSessionRepository;
+
+    @Mock
+    private JpaCashExpenseRepository cashExpenseRepository;
 
     @Mock
     private TransactionTemplate transactionTemplate;
@@ -202,5 +208,54 @@ class GetCompanyDashboardUseCaseImplTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> useCase.execute(99L, "MES", null));
+    }
+
+    @Test
+    @DisplayName("Should calculate total expenses and deduct from net profit accurately")
+    void shouldCalculateExpensesAndNetProfitAccurately() {
+        // Arrange
+        Long companyId = 1L;
+        CompanyEntity company = new CompanyEntity();
+        company.setId(companyId);
+        company.setName("Empresa Matriz Avalon");
+
+        Outlet outlet1 = new Outlet();
+        outlet1.setId(10L);
+        outlet1.setName("Sede Centro");
+
+        SaleEntity sale1 = SaleEntity.builder()
+                .id(101L)
+                .saleCode(UUID.randomUUID())
+                .outletId(10L)
+                .totalAmount(new BigDecimal("100000.00"))
+                .paymentMethodId(139L)
+                .saleDate(LocalDateTime.now())
+                .build();
+
+        CashSessionEntity closedSession = new CashSessionEntity();
+        closedSession.setId(501L);
+        closedSession.setOutletId(10L);
+        closedSession.setStatus("CLOSED");
+        closedSession.setClosedAt(LocalDateTime.now());
+        closedSession.setActualCash(new BigDecimal("90000.00"));
+
+        CashExpenseEntity expense = new CashExpenseEntity(1L, 501L, new BigDecimal("10000.00"), "Pago proveedor", 1L, LocalDateTime.now());
+
+        given(companyRepository.findById(companyId)).willReturn(Optional.of(company));
+        given(outletRepository.findByCompanyId(companyId)).willReturn(List.of(outlet1));
+        given(saleRepository.findByOutletIdInAndSaleDateBetween(eq(List.of(10L)), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .willReturn(List.of(sale1));
+        given(cashSessionRepository.findByOutletIdOrderByOpenedAtDesc(10L)).willReturn(List.of(closedSession));
+        given(cashExpenseRepository.findByCashSessionIdIn(List.of(501L))).willReturn(List.of(expense));
+
+        // Act
+        CompanyDashboardResponse result = useCase.execute(companyId, "MES", null);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(new BigDecimal("100000.00"), result.totalSales());
+        assertEquals(new BigDecimal("10000.00"), result.totalExpenses());
+        assertEquals(new BigDecimal("90000.00"), result.netProfit());
+        assertEquals(90.0, result.profitMarginPercentage());
     }
 }

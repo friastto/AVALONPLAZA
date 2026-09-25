@@ -9,11 +9,15 @@ import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.sale.infrastructure.entity.SaleEntity;
 import org.frias.avalon.domain.sale.infrastructure.repository.JpaSaleRepository;
+import org.frias.avalon.domain.cashregister.infrastructure.entity.CashExpenseEntity;
 import org.frias.avalon.domain.cashregister.infrastructure.entity.CashSessionEntity;
+import org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashExpenseRepository;
 import org.frias.avalon.domain.cashregister.infrastructure.repository.JpaCashSessionRepository;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -34,10 +38,13 @@ import java.util.stream.Collectors;
 @Service
 public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(GetCompanyDashboardUseCaseImpl.class);
+
     private final JpaCompanyRepository companyRepository;
     private final JpaOutletRepository outletRepository;
     private final JpaSaleRepository saleRepository;
     private final JpaCashSessionRepository cashSessionRepository;
+    private final JpaCashExpenseRepository cashExpenseRepository;
     private final TransactionTemplate transactionTemplate;
     private final MasterTreeProvider masterTreeProvider;
 
@@ -46,6 +53,7 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
             JpaOutletRepository outletRepository,
             JpaSaleRepository saleRepository,
             JpaCashSessionRepository cashSessionRepository,
+            JpaCashExpenseRepository cashExpenseRepository,
             TransactionTemplate transactionTemplate,
             MasterTreeProvider masterTreeProvider
     ) {
@@ -53,6 +61,7 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
         this.outletRepository = outletRepository;
         this.saleRepository = saleRepository;
         this.cashSessionRepository = cashSessionRepository;
+        this.cashExpenseRepository = cashExpenseRepository;
         this.transactionTemplate = transactionTemplate;
         this.masterTreeProvider = masterTreeProvider;
     }
@@ -129,6 +138,7 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
         List<SaleEntity> sales = new ArrayList<>();
         List<CashSessionEntity> allClosedSessions = new ArrayList<>();
         List<CashSessionEntity> allOpenSessions = new ArrayList<>();
+        List<CashExpenseEntity> allExpenses = new ArrayList<>();
 
         try {
             TenantContext.setTenantId(companyId);
@@ -150,6 +160,7 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
 
                         List<CashSessionEntity> sessions = cashSessionRepository.findByOutletIdOrderByOpenedAtDesc(o.getId());
                         if (sessions != null) {
+                            List<Long> outletSessionIds = new ArrayList<>();
                             for (CashSessionEntity cs : sessions) {
                                 if ("CLOSED".equalsIgnoreCase(cs.getStatus())) {
                                     if (finalStart != null && finalEnd != null) {
@@ -159,16 +170,27 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
                                         }
                                     }
                                     allClosedSessions.add(cs);
+                                    if (cs.getId() != null) {
+                                        outletSessionIds.add(cs.getId());
+                                    }
                                 } else if ("OPEN".equalsIgnoreCase(cs.getStatus())) {
                                     allOpenSessions.add(cs);
+                                    if (cs.getId() != null) {
+                                        outletSessionIds.add(cs.getId());
+                                    }
+                                }
+                            }
+                            if (!outletSessionIds.isEmpty()) {
+                                List<CashExpenseEntity> expenses = cashExpenseRepository.findByCashSessionIdIn(outletSessionIds);
+                                if (expenses != null) {
+                                    allExpenses.addAll(expenses);
                                 }
                             }
                         }
                         return null;
                     });
                 } catch (Exception e) {
-                    org.slf4j.LoggerFactory.getLogger(GetCompanyDashboardUseCaseImpl.class)
-                            .warn("Could not query outlet {} in store_{}: {}", o.getId(), o.getId(), e.getMessage());
+                    log.warn("Could not query outlet {} in store_{}: {}", o.getId(), o.getId(), e.getMessage());
                 }
             }
         } finally {
@@ -187,7 +209,11 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
                 ? totalSales.divide(BigDecimal.valueOf(transactionCount), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
-        BigDecimal totalExpenses = BigDecimal.ZERO;
+        BigDecimal totalExpenses = allExpenses.stream()
+                .map(CashExpenseEntity::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         BigDecimal netProfit = totalSales.subtract(totalExpenses);
 
         double profitMarginPercentage = totalSales.compareTo(BigDecimal.ZERO) > 0
@@ -214,20 +240,35 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal openBases = allOpenSessions.stream()
-                .map(s -> s.getInitialBase() != null ? s.getInitialBase() : BigDecimal.ZERO)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         BigDecimal inFlightCash;
         if (allOpenSessions.isEmpty()) {
             inFlightCash = BigDecimal.ZERO;
         } else {
-            BigDecimal unclosedCashSales = totalCashSales.subtract(consolidatedCash);
-            if (unclosedCashSales.compareTo(BigDecimal.ZERO) < 0) {
-                unclosedCashSales = BigDecimal.ZERO;
+            BigDecimal totalInFlight = BigDecimal.ZERO;
+            for (CashSessionEntity openSession : allOpenSessions) {
+                if (openSession.getExpectedCash() != null && openSession.getExpectedCash().compareTo(BigDecimal.ZERO) > 0) {
+                    totalInFlight = totalInFlight.add(openSession.getExpectedCash());
+                } else {
+                    BigDecimal base = openSession.getInitialBase() != null ? openSession.getInitialBase() : BigDecimal.ZERO;
+                    BigDecimal sessionCashSales = sales.stream()
+                            .filter(s -> Objects.equals(s.getOutletId(), openSession.getOutletId()))
+                            .filter(s -> "EFECTIVO".equals(resolvePaymentMethodName(s.getPaymentMethodId())))
+                            .filter(s -> openSession.getOpenedAt() == null || !s.getSaleDate().isBefore(openSession.getOpenedAt()))
+                            .map(SaleEntity::getTotalAmount)
+                            .filter(Objects::nonNull)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal sessionExpenses = allExpenses.stream()
+                            .filter(e -> Objects.equals(e.getCashSessionId(), openSession.getId()))
+                            .map(CashExpenseEntity::getAmount)
+                            .filter(Objects::nonNull)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal netSessionCash = base.add(sessionCashSales).subtract(sessionExpenses);
+                    if (netSessionCash.compareTo(BigDecimal.ZERO) > 0) {
+                        totalInFlight = totalInFlight.add(netSessionCash);
+                    }
+                }
             }
-            inFlightCash = openBases.add(unclosedCashSales);
+            inFlightCash = totalInFlight;
         }
 
         Map<Long, List<SaleEntity>> salesByOutletId = sales.stream()
