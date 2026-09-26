@@ -3,6 +3,8 @@ package org.frias.avalon.domain.product.integration.presentation;
 import org.frias.avalon.core.jwt.service.JwtTokenProviderPort;
 import org.frias.avalon.core.tenant.FlywayMultiTenantService;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.company.infrastructure.entity.CompanyEntity;
+import org.frias.avalon.domain.company.infrastructure.repository.JpaCompanyRepository;
 import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.product.application.dto.request.ProductNewDataRequest;
@@ -52,16 +54,35 @@ class ProductOutletControllerIntegrationTest {
     @Autowired
     private JpaOutletRepository jpaOutletRepository;
 
+    @Autowired
+    private JpaCompanyRepository companyRepository;
+
     private Long testOutletId;
 
     @BeforeEach
     void setUp() {
+        Long rawStatusId = masterDataRepositoryPort.getIdByCode("ACT");
+        final Long actStatusId = (rawStatusId != null) ? rawStatusId : 1L;
+
+        CompanyEntity company = companyRepository.findAll().stream().findFirst().orElseGet(() -> {
+            CompanyEntity newCompany = CompanyEntity.builder()
+                    .nit("NIT-TEST-" + System.currentTimeMillis())
+                    .name("Test Company E2E")
+                    .email("companytest@avalon.com")
+                    .statusId(actStatusId)
+                    .defaultCashThresholdAmount(new BigDecimal("1000.00"))
+                    .build();
+            return companyRepository.save(newCompany);
+        });
+
+        final Long companyId = company.getId();
+
         Outlet outlet = jpaOutletRepository.findAll().stream().findFirst().orElseGet(() -> {
             Outlet newOutlet = new Outlet();
             newOutlet.setName("Tienda Test E2E");
             newOutlet.setAddress("Calle Test 123");
-            newOutlet.setCompanyId(1L);
-            newOutlet.setStatusId(1L);
+            newOutlet.setCompanyId(companyId);
+            newOutlet.setStatusId(actStatusId);
             return jpaOutletRepository.save(newOutlet);
         });
         testOutletId = outlet.getId();
