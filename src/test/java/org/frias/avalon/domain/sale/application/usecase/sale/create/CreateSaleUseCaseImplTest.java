@@ -21,6 +21,8 @@ import org.frias.avalon.domain.sale.application.dto.request.SaleItemRequest;
 import org.frias.avalon.domain.sale.application.dto.response.SaleResponse;
 import org.frias.avalon.domain.sale.application.port.SaleRepositoryPort;
 import org.frias.avalon.domain.sale.domain.SaleDomain;
+import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
+import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.sale.domain.service.SaleWeightConversionService;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
@@ -30,10 +32,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -61,10 +64,11 @@ class CreateSaleUseCaseImplTest {
     @Mock private CurrentUserProviderPort currentUserProvider;
     @Mock private CreditRepositoryPort creditRepositoryPort;
     @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private OutletRepositoryPort outletRepositoryPort;
+    @Mock private PlatformTransactionManager transactionManager;
 
     @Mock private MasterTree masterTree;
 
-    @InjectMocks
     private CreateSaleUseCaseImpl useCase;
 
     private static final Long OUTLET_ID = 4L;
@@ -76,9 +80,31 @@ class CreateSaleUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
+        TransactionStatus transactionStatus = mock(TransactionStatus.class);
+        lenient().when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
+
+        OutletDomain mockOutlet = mock(OutletDomain.class);
+        lenient().when(mockOutlet.getId()).thenReturn(OUTLET_ID);
+        lenient().when(mockOutlet.getCompanyId()).thenReturn(10L);
+        lenient().when(outletRepositoryPort.findById(any())).thenReturn(Optional.of(mockOutlet));
+
         lenient().when(masterTreeProvider.getTree()).thenReturn(masterTree);
         MasterRoot actStatus = new MasterRoot(ACTIVE_STATUS_ID, "ACT", "Activo", null, 1L);
         lenient().when(masterTree.getByCode("ACT")).thenReturn(actStatus);
+
+        useCase = new CreateSaleUseCaseImpl(
+                saleRepositoryPort,
+                productOutletRepositoryPort,
+                personRepositoryPort,
+                userAvalonRepositoryPort,
+                masterTreeProvider,
+                weightConversionService,
+                currentUserProvider,
+                creditRepositoryPort,
+                eventPublisher,
+                outletRepositoryPort,
+                transactionManager
+        );
     }
 
     // --- Metodos Auxiliares de Configuracion ---

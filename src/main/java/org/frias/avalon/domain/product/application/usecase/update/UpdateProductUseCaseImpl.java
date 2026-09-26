@@ -1,13 +1,15 @@
 package org.frias.avalon.domain.product.application.usecase.update;
 
-import lombok.RequiredArgsConstructor;
 import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.core.exeptions.DomainValidationException;
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
 import org.frias.avalon.core.permissions.CurrentUserProviderPort;
+import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
+import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.product.application.dto.request.ProductUpdateRequest;
 import org.frias.avalon.domain.product.application.dto.response.ProductResponse;
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
@@ -17,17 +19,19 @@ import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.mapper.ProductOutletMapper;
 import org.frias.avalon.domain.product.presentation.ProductWebSocketPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 
 /**
- * Caso de uso para actualizar los detalles de un producto existente.
- * Valida la existencia, unidades de medida y aplica reglas de aislamiento de tienda (Tenant Isolation).
- * Emite notificacion reactiva por WebSocket para sincronizacion instantanea de clientes.
+ * Use case to update details of an existing product.
+ * Supports multi-tenant isolation, 3-level RBAC dynamic resolution and reactive WebSocket notification.
  */
 @Service
-@RequiredArgsConstructor
 public class UpdateProductUseCaseImpl implements UpdateProductUseCase {
 
     private final ProductOutletRepositoryPort productOutletRepositoryPort;
@@ -37,65 +41,135 @@ public class UpdateProductUseCaseImpl implements UpdateProductUseCase {
     private final ProductOutletMapper productOutletMapper;
     private final CurrentUserProviderPort currentUserProvider;
     private final ProductWebSocketPublisher productWebSocketPublisher;
+    private final JpaOutletRepository jpaOutletRepository;
+    private final TransactionTemplate transactionTemplate;
+
+    public UpdateProductUseCaseImpl(
+            ProductOutletRepositoryPort productOutletRepositoryPort,
+            MasterTreeProvider masterTreeProvider,
+            QuantityParserService quantityParserService,
+            UnitConversionService unitConversionService,
+            ProductOutletMapper productOutletMapper,
+            CurrentUserProviderPort currentUserProvider,
+            ProductWebSocketPublisher productWebSocketPublisher,
+            JpaOutletRepository jpaOutletRepository,
+            PlatformTransactionManager transactionManager) {
+        this.productOutletRepositoryPort = productOutletRepositoryPort;
+        this.masterTreeProvider = masterTreeProvider;
+        this.quantityParserService = quantityParserService;
+        this.unitConversionService = unitConversionService;
+        this.productOutletMapper = productOutletMapper;
+        this.currentUserProvider = currentUserProvider;
+        this.productWebSocketPublisher = productWebSocketPublisher;
+        this.jpaOutletRepository = jpaOutletRepository;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    }
 
     @Override
-    @Transactional
     public ProductResponse execute(Long productId, ProductUpdateRequest request) {
-        // 1. Buscar el producto existente
-        ProductDomain productDomain = productOutletRepositoryPort.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("El producto con ID " + productId + " no existe."));
+        Long previousOutletId = TenantContext.getTenantOutletId();
+        Long previousTenantId = TenantContext.getTenantId();
 
-        // --- 1.1. Validar Encapsulación de Tienda (Tenant Isolation) ---
-        boolean isSystemAdmin = currentUserProvider.hasRole("ROLE_ADMIN") || currentUserProvider.hasRole("ROLE_ADMINTI");
-        if (!isSystemAdmin) {
-            Long tenantOutletId = currentUserProvider.getCurrentOutletId();
-            if (tenantOutletId == null) {
-                throw new BusinessException("No se detectó una tienda asociada en el contexto del empleado actual.");
+        try {
+            boolean isGlobalAdmin = currentUserProvider.hasRole("ROLE_ADMIN") || currentUserProvider.hasRole("ROLE_ADMINTI");
+            boolean isCompanyAdmin = currentUserProvider.hasRole("ROLE_GERGEN");
+            Long userOutletId = currentUserProvider.getCurrentOutletId();
+            Long userTenantId = currentUserProvider.getCurrentTenantId();
+
+            if (!isGlobalAdmin && !isCompanyAdmin && userOutletId == null) {
+                throw new BusinessException("No se detecto una tienda asociada en el contexto del empleado actual.");
             }
-            if (!tenantOutletId.equals(productDomain.getOutletId())) {
+
+            // Case 1: Standard store employee with explicit outlet context
+            if (userOutletId != null) {
+                Outlet employeeOutlet = jpaOutletRepository.findById(userOutletId).orElse(null);
+                if (employeeOutlet != null && employeeOutlet.getCompanyId() != null) {
+                    TenantContext.setTenantId(employeeOutlet.getCompanyId());
+                }
+                TenantContext.setTenantOutletId(userOutletId);
+
+                return updateInCurrentTenant(productId, request, userOutletId, false);
+            }
+
+            // Case 2: Global Admin or Company Admin without fixed outletId
+            // Try searching through available stores
+            List<Outlet> outlets = jpaOutletRepository.findAll();
+            for (Outlet outlet : outlets) {
+                if (isCompanyAdmin && userTenantId != null && !userTenantId.equals(outlet.getCompanyId())) {
+                    continue;
+                }
+
+                if (outlet.getCompanyId() != null) {
+                    TenantContext.setTenantId(outlet.getCompanyId());
+                }
+                TenantContext.setTenantOutletId(outlet.getId());
+
+                try {
+                    ProductResponse response = updateInCurrentTenant(productId, request, outlet.getId(), true);
+                    if (response != null) {
+                        return response;
+                    }
+                } catch (ResourceNotFoundException ignored) {
+                    // Try next outlet
+                }
+            }
+
+            throw new ResourceNotFoundException("El producto con ID " + productId + " no existe.");
+        } finally {
+            TenantContext.setTenantId(previousTenantId);
+            TenantContext.setTenantOutletId(previousOutletId);
+        }
+    }
+
+    private ProductResponse updateInCurrentTenant(Long productId, ProductUpdateRequest request, Long targetOutletId, boolean allowNotFound) {
+        return transactionTemplate.execute(status -> {
+            Optional<ProductDomain> productOpt = productOutletRepositoryPort.findById(productId);
+            if (productOpt.isEmpty()) {
+                if (allowNotFound) {
+                    throw new ResourceNotFoundException("El producto no existe en esta tienda.");
+                }
+                throw new ResourceNotFoundException("El producto con ID " + productId + " no existe.");
+            }
+
+            ProductDomain productDomain = productOpt.get();
+
+            if (targetOutletId != null && !targetOutletId.equals(productDomain.getOutletId())) {
                 throw new BusinessException("Acceso denegado: No tienes permisos para actualizar productos de otra tienda.");
             }
-        }
 
-        // 2. Parsear y validar la cantidad usando el Application Service
-        BigDecimal validQuantity = quantityParserService.parseAndValidate(request.stockQuantity());
+            BigDecimal validQuantity = quantityParserService.parseAndValidate(request.stockQuantity());
 
-        // 3. Validar la unidad de medida contra el MasterData
-        MasterTree masterTree = masterTreeProvider.getTree();
-        MasterRoot unitNode = masterTree.getById(request.stockUnitId());
-        
-        if (unitNode == null) {
-            throw new DomainValidationException("El ID de la unidad de medida proporcionado no existe.");
-        }
-        if (!masterTree.isChildOf(unitNode, "UNIT")) {
-            throw new DomainValidationException("El ID proporcionado no es una unidad de medida válida.");
-        }
+            MasterTree masterTree = masterTreeProvider.getTree();
+            MasterRoot unitNode = masterTree.getById(request.stockUnitId());
 
-        // 4. Usar el Domain Service para convertir la cantidad a la unidad base
-        String unitCode = unitNode.getShortName();
-        Integer stockInBaseUnits = unitConversionService.convertToSmallestUnit(validQuantity, unitCode);
+            if (unitNode == null) {
+                throw new DomainValidationException("El ID de la unidad de medida proporcionado no existe.");
+            }
+            if (!masterTree.isChildOf(unitNode, "UNIT")) {
+                throw new DomainValidationException("El ID proporcionado no es una unidad de medida valida.");
+            }
 
-        // 5. Aplicar los cambios al modelo de dominio (Rich Domain Model)
-        productDomain.updateDetails(
-                request.name(),
-                request.description(),
-                stockInBaseUnits,
-                request.stockUnitId(),
-                request.imageUrl(),
-                request.price()
-        );
+            String unitCode = unitNode.getShortName();
+            Integer stockInBaseUnits = unitConversionService.convertToSmallestUnit(validQuantity, unitCode);
 
-        // 6. Guardar los cambios
-        ProductDomain updatedProduct = productOutletRepositoryPort.save(productDomain);
+            productDomain.updateDetails(
+                    request.name(),
+                    request.description(),
+                    stockInBaseUnits,
+                    request.stockUnitId(),
+                    request.imageUrl(),
+                    request.price()
+            );
 
-        // 7. Mapear y devolver
-        ProductResponse response = productOutletMapper.toResponse(updatedProduct);
+            ProductDomain updatedProduct = productOutletRepositoryPort.save(productDomain);
+            ProductResponse response = productOutletMapper.toResponse(updatedProduct);
 
-        // 8. Notificar reactivamente a los clientes conectados por WebSocket
-        if (productWebSocketPublisher != null && response != null) {
-            productWebSocketPublisher.broadcastProductStockChanged(response.outletId(), response);
-        }
+            if (productWebSocketPublisher != null && response != null) {
+                productWebSocketPublisher.broadcastProductStockChanged(response.outletId(), response);
+            }
 
-        return response;
+            return response;
+        });
     }
 }

@@ -3,6 +3,8 @@ package org.frias.avalon.domain.product.integration.presentation;
 import org.frias.avalon.core.jwt.service.JwtTokenProviderPort;
 import org.frias.avalon.core.tenant.FlywayMultiTenantService;
 import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepositoryPort;
+import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
+import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.product.application.dto.request.ProductNewDataRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,14 +14,21 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.springframework.transaction.annotation.Transactional;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -40,29 +49,42 @@ class ProductOutletControllerIntegrationTest {
     @Autowired
     private FlywayMultiTenantService flywayMultiTenantService;
 
+    @Autowired
+    private JpaOutletRepository jpaOutletRepository;
+
+    private Long testOutletId;
+
     @BeforeEach
     void setUp() {
-        flywayMultiTenantService.migrateTenantSchema("store_4");
+        Outlet outlet = jpaOutletRepository.findAll().stream().findFirst().orElseGet(() -> {
+            Outlet newOutlet = new Outlet();
+            newOutlet.setName("Tienda Test E2E");
+            newOutlet.setAddress("Calle Test 123");
+            newOutlet.setCompanyId(1L);
+            newOutlet.setStatusId(1L);
+            return jpaOutletRepository.save(newOutlet);
+        });
+        testOutletId = outlet.getId();
+        flywayMultiTenantService.migrateTenantSchema("store_" + testOutletId);
     }
 
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        org.springframework.security.core.userdetails.UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+        UserDetails userDetails = User.builder()
                 .username("admin_test")
                 .password("password")
                 .authorities("ROLE_GERENTE", "GERENTE")
                 .build();
-        String token = jwtTokenProvider.generateAccessToken(userDetails, 4L);
+        String token = jwtTokenProvider.generateAccessToken(userDetails, testOutletId);
         headers.setBearerAuth(token);
         return headers;
     }
 
     @Test
-    @DisplayName("Flujo Completo: Debería crear un Producto correctamente (E2E)")
+    @DisplayName("Flujo Completo: Deberia crear un Producto correctamente (E2E)")
     void createProduct_EndToEnd() {
         // Arrange
-        // Buscamos un ID real de unidad (ej. "KG") dinámicamente desde la BD de pruebas
         Long unitId = masterDataRepositoryPort.getIdByCode("KG");
         assertNotNull(unitId, "El ID de la unidad 'KG' debe existir en la BD");
 
@@ -70,12 +92,12 @@ class ProductOutletControllerIntegrationTest {
         ProductNewDataRequest requestDto = new ProductNewDataRequest(
                 uniqueBarcode,
                 "Producto Prueba E2E",
-                "Descripción de prueba",
+                "Descripcion de prueba",
                 "2.5", // 2.5 KG
                 unitId,
                 "http://imagen.url",
                 new BigDecimal("150.00"),
-                4L // outletId valido de pruebas
+                testOutletId
         );
 
         HttpEntity<ProductNewDataRequest> requestEntity = new HttpEntity<>(requestDto, createHeaders());
@@ -85,16 +107,15 @@ class ProductOutletControllerIntegrationTest {
         System.out.println("Product response status: " + response.getStatusCode() + ", body: " + response.getBody());
 
         // Assert
-        assertTrue(response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED, "Debería retornar 200 OK o 201 CREATED");
+        assertTrue(response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED, "Deberia retornar 200 OK o 201 CREATED");
         assertTrue(response.getBody().contains("Producto Prueba E2E"), "El cuerpo debe contener el nombre del producto");
-        assertTrue(response.getBody().contains("2.5 KG"), "El cuerpo debe contener el stock formateado por el servicio de conversión");
+        assertTrue(response.getBody().contains("2.5 KG"), "El cuerpo debe contener el stock formateado por el servicio de conversion");
     }
 
     @Test
-    @DisplayName("Flujo Completo: Debería fallar la validación si el DTO es inválido (E2E)")
+    @DisplayName("Flujo Completo: Deberia fallar la validacion si el DTO es invalido (E2E)")
     void createProduct_ValidationError_EndToEnd() {
         // Arrange
-        // Precio negativo y nombre vacío para disparar @Valid
         ProductNewDataRequest invalidDto = new ProductNewDataRequest(
                 "",
                 "", 
@@ -103,7 +124,7 @@ class ProductOutletControllerIntegrationTest {
                 1L,
                 "url",
                 new BigDecimal("-10.0"), 
-                1L
+                testOutletId
         );
         HttpEntity<ProductNewDataRequest> requestEntity = new HttpEntity<>(invalidDto, createHeaders());
 
@@ -111,6 +132,6 @@ class ProductOutletControllerIntegrationTest {
         ResponseEntity<String> response = restTemplate.postForEntity("/avalon/products/create", requestEntity, String.class);
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Debería retornar 400 Bad Request por fallo de @Valid");
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Deberia retornar 400 Bad Request por fallo de @Valid");
     }
 }

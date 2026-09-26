@@ -12,6 +12,8 @@ import org.frias.avalon.domain.credit.domain.model.CreditAccountDomain;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
+import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +22,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,6 +47,12 @@ class CreditUseCaseTest {
     @Mock
     private MasterTreeProvider masterTreeProvider;
 
+    @Mock
+    private JpaOutletRepository jpaOutletRepository;
+
+    @Mock
+    private PlatformTransactionManager transactionManager;
+
     private CreateCreditAccountUseCaseImpl createCreditAccountUseCase;
     private FindCreditAccountByClientUseCaseImpl findCreditAccountUseCase;
     private UpdateCreditLimitUseCaseImpl updateCreditLimitUseCase;
@@ -52,10 +62,20 @@ class CreditUseCaseTest {
 
     @BeforeEach
     void setUp() {
+        TransactionStatus transactionStatus = mock(TransactionStatus.class);
+        lenient().when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
+
+        Outlet mockOutlet = new Outlet();
+        mockOutlet.setId(1L);
+        mockOutlet.setCompanyId(10L);
+        lenient().when(jpaOutletRepository.findById(1L)).thenReturn(Optional.of(mockOutlet));
+
         createCreditAccountUseCase = new CreateCreditAccountUseCaseImpl(
                 creditRepositoryPort,
                 personRepositoryPort,
-                masterTreeProvider
+                masterTreeProvider,
+                jpaOutletRepository,
+                transactionManager
         );
 
         findCreditAccountUseCase = new FindCreditAccountByClientUseCaseImpl(

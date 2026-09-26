@@ -7,6 +7,8 @@ import org.frias.avalon.domain.masterdata.domain.repository.MasterDataRepository
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.notification.application.port.EmailSenderPort;
+import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
+import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
@@ -76,6 +78,9 @@ public class CreateSaleWithEmailIntegrationTest {
     @MockitoBean
     private EmailSenderPort emailSenderPort;
 
+    @MockitoBean
+    private OutletRepositoryPort outletRepositoryPort;
+
     @Test
     @DisplayName("Should create sale and asynchronously publish email event triggering EmailSenderPort")
     public void testCreateSaleAndSendEmail() {
@@ -85,6 +90,12 @@ public class CreateSaleWithEmailIntegrationTest {
         String clientDoc = "999888777";
         String clientEmail = "cliente.test@avalon.com";
         String sellerUsername = "test_seller_user";
+
+        // Mock Outlet
+        OutletDomain mockOutlet = Mockito.mock(OutletDomain.class);
+        when(mockOutlet.getId()).thenReturn(outletId);
+        when(mockOutlet.getCompanyId()).thenReturn(1L);
+        when(outletRepositoryPort.findById(outletId)).thenReturn(Optional.of(mockOutlet));
 
         // 1. Mock Security Context
         UserContext mockContext = new UserContext(sellerUsername, List.of("ROLE_ADMINTI"), outletId);

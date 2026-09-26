@@ -1,29 +1,33 @@
 package org.frias.avalon.domain.product.application.usecase.create;
 
 import org.frias.avalon.core.exeptions.DomainValidationException;
+import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
+import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.product.application.dto.request.ProductNewDataRequest;
 import org.frias.avalon.domain.product.application.dto.response.ProductResponse;
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
 import org.frias.avalon.domain.product.application.service.QuantityParserService;
 import org.frias.avalon.domain.product.domain.ProductDomain;
+import org.frias.avalon.domain.product.domain.repository.BarcodeRepositoryPort;
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.mapper.ProductOutletMapper;
-import org.frias.avalon.domain.product.domain.repository.BarcodeRepositoryPort;
 import org.frias.avalon.domain.product.presentation.ProductWebSocketPublisher;
-import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,8 +57,11 @@ class CreateProductOutletUseCaseImplTest {
     private CurrentUserProviderPort currentUserProvider;
     @Mock
     private ProductWebSocketPublisher productWebSocketPublisher;
+    @Mock
+    private OutletRepositoryPort outletRepositoryPort;
+    @Mock
+    private PlatformTransactionManager transactionManager;
 
-    @InjectMocks
     private CreateProductOutletUseCaseImpl createProductUseCase;
 
     private ProductNewDataRequest validRequestDto;
@@ -63,8 +70,16 @@ class CreateProductOutletUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
-        lenient().when(currentUserProvider.hasRole(anyString())).thenReturn(true); // Permitir admin en tests
-        lenient().when(barcodeRepositoryPort.findByCode(any())).thenReturn(java.util.Optional.empty());
+        TransactionStatus transactionStatus = mock(TransactionStatus.class);
+        lenient().when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
+
+        OutletDomain mockOutlet = mock(OutletDomain.class);
+        lenient().when(mockOutlet.getId()).thenReturn(100L);
+        lenient().when(mockOutlet.getCompanyId()).thenReturn(10L);
+        lenient().when(outletRepositoryPort.findById(any())).thenReturn(Optional.of(mockOutlet));
+
+        lenient().when(currentUserProvider.hasRole(anyString())).thenReturn(true);
+        lenient().when(barcodeRepositoryPort.findByCode(any())).thenReturn(Optional.empty());
 
         mockActiveNode = new MasterRoot(1L, "ACT", "Activo", null, 1L);
         lenient().when(masterTreeProvider.getTree()).thenReturn(masterTree);
@@ -75,49 +90,55 @@ class CreateProductOutletUseCaseImplTest {
                 "Test Product",
                 "Description",
                 "1.3",
-                50L, // stockUnitId
+                50L,
                 "url",
                 new BigDecimal("10.0"),
-                100L // outletId
+                100L
         );
 
         mockUnitNode = new MasterRoot(50L, "KG", "Kilogramos", 10L, 1L);
+
+        createProductUseCase = new CreateProductOutletUseCaseImpl(
+                productOutletRepositoryPort,
+                productOutletMapper,
+                unitConversionService,
+                masterTreeProvider,
+                quantityParserService,
+                barcodeRepositoryPort,
+                currentUserProvider,
+                productWebSocketPublisher,
+                outletRepositoryPort,
+                transactionManager
+        );
     }
 
     @Test
     @DisplayName("Deberia crear un producto exitosamente tras parsear y validar la unidad")
     void shouldCreateProductSuccessfully() {
-        // Arrange
         Integer convertedStock = 1500;
         BigDecimal parsedQuantity = new BigDecimal("1.5");
-        ProductResponse expectedResponse = new ProductResponse(1L, "Test Product", "Description", "1.5 KG", "0.0 KG", "0.0 KG", "url", null, new BigDecimal("10.0"), 100L, null, "12345",null, null,null);
+        ProductResponse expectedResponse = new ProductResponse(1L, "Test Product", "Description", "1.5 KG", "0.0 KG", "0.0 KG", "url", null, new BigDecimal("10.0"), 100L, null, "12345", null, null, null);
 
-        // Simular el nuevo servicio de parsing
         given(quantityParserService.parseAndValidate(validRequestDto.stockQuantity())).willReturn(parsedQuantity);
-        
         given(masterTree.getById(validRequestDto.stockUnitId())).willReturn(mockUnitNode);
         given(masterTree.isChildOf(mockUnitNode, "UNIT")).willReturn(true);
-        
-        // La fabrica de conversion ahora recibe el BigDecimal parseado
         given(unitConversionService.convertToSmallestUnit(parsedQuantity, "KG")).willReturn(convertedStock);
-        
+
         given(productOutletRepositoryPort.save(any(ProductDomain.class))).willAnswer(invocation -> {
             ProductDomain arg = invocation.getArgument(0);
             return ProductDomain.fromPersistence(1L, arg.getName(), arg.getDescription(), arg.getStock(), arg.getUnitMeasureId(), arg.getImageUrl(), arg.getPrice(), arg.getOutletId(), arg.getStatusId(), arg.getCreatedAt(), arg.getUpdatedAt(), arg.getVersion());
         });
         given(productOutletMapper.toResponse(any(ProductDomain.class), any())).willReturn(expectedResponse);
 
-        // Act
         ProductResponse result = createProductUseCase.execute(validRequestDto);
 
-        // Assert
         assertNotNull(result);
         assertEquals(expectedResponse, result);
 
         ArgumentCaptor<ProductDomain> captor = ArgumentCaptor.forClass(ProductDomain.class);
         verify(productOutletRepositoryPort).save(captor.capture());
         ProductDomain savedDomain = captor.getValue();
-        
+
         assertEquals(convertedStock, savedDomain.getStock());
         assertEquals(validRequestDto.stockUnitId(), savedDomain.getUnitMeasureId());
         assertEquals(1L, savedDomain.getStatusId());
@@ -126,30 +147,23 @@ class CreateProductOutletUseCaseImplTest {
     @Test
     @DisplayName("Deberia lanzar excepcion si la cantidad tiene un formato invalido")
     void shouldThrowExceptionIfQuantityFormatIsInvalid() {
-        // Arrange
-        // Simulamos que el parser falla (ej. si el usuario mando "0.0.5")
         given(quantityParserService.parseAndValidate(validRequestDto.stockQuantity()))
-            .willThrow(new DomainValidationException("Invalid number format for quantity"));
+                .willThrow(new DomainValidationException("Invalid number format for quantity"));
 
-        // Act & Assert
         DomainValidationException exception = assertThrows(DomainValidationException.class, () -> {
             createProductUseCase.execute(validRequestDto);
         });
 
         assertEquals("Invalid number format for quantity", exception.getMessage());
-        
-        // Verificamos que no se intento hacer nada mas despues de fallar el parsing
         verifyNoInteractions(unitConversionService, productOutletRepositoryPort, productOutletMapper);
     }
 
     @Test
     @DisplayName("Deberia lanzar excepcion si el ID de la unidad no existe")
     void shouldThrowExceptionIfUnitIdDoesNotExist() {
-        // Arrange
         given(quantityParserService.parseAndValidate(validRequestDto.stockQuantity())).willReturn(new BigDecimal("1.5"));
         given(masterTree.getById(validRequestDto.stockUnitId())).willReturn(null);
 
-        // Act & Assert
         DomainValidationException exception = assertThrows(DomainValidationException.class, () -> {
             createProductUseCase.execute(validRequestDto);
         });
@@ -161,12 +175,10 @@ class CreateProductOutletUseCaseImplTest {
     @Test
     @DisplayName("Deberia lanzar excepcion si el ID no es hijo de UNIT")
     void shouldThrowExceptionIfIdIsNotAUnit() {
-        // Arrange
         given(quantityParserService.parseAndValidate(validRequestDto.stockQuantity())).willReturn(new BigDecimal("1.5"));
         given(masterTree.getById(validRequestDto.stockUnitId())).willReturn(mockUnitNode);
         given(masterTree.isChildOf(mockUnitNode, "UNIT")).willReturn(false);
 
-        // Act & Assert
         DomainValidationException exception = assertThrows(DomainValidationException.class, () -> {
             createProductUseCase.execute(validRequestDto);
         });

@@ -6,6 +6,8 @@ import org.frias.avalon.core.permissions.CurrentUserProviderPort;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
+import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.product.application.dto.request.ProductUpdateRequest;
 import org.frias.avalon.domain.product.application.dto.response.ProductResponse;
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
@@ -18,16 +20,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,8 +53,11 @@ class UpdateProductUseCaseImplTest {
     private CurrentUserProviderPort currentUserProvider;
     @Mock
     private ProductWebSocketPublisher productWebSocketPublisher;
+    @Mock
+    private JpaOutletRepository jpaOutletRepository;
+    @Mock
+    private PlatformTransactionManager transactionManager;
 
-    @InjectMocks
     private UpdateProductUseCaseImpl updateProductUseCase;
 
     private MasterTree mockMasterTree;
@@ -57,8 +65,23 @@ class UpdateProductUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
+        TransactionStatus transactionStatus = mock(TransactionStatus.class);
+        lenient().when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
+
         mockMasterTree = mock(MasterTree.class);
         mockUnitNode = MasterRoot.create("UND", "UNIDAD", 100L, 1L);
+
+        updateProductUseCase = new UpdateProductUseCaseImpl(
+                productOutletRepositoryPort,
+                masterTreeProvider,
+                quantityParserService,
+                unitConversionService,
+                productOutletMapper,
+                currentUserProvider,
+                productWebSocketPublisher,
+                jpaOutletRepository,
+                transactionManager
+        );
     }
 
     @Test
@@ -104,8 +127,15 @@ class UpdateProductUseCaseImplTest {
                 LocalDateTime.now()
         );
 
-        when(productOutletRepositoryPort.findById(productId)).thenReturn(Optional.of(existingProduct));
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
+        when(currentUserProvider.getCurrentOutletId()).thenReturn(null);
+
+        Outlet mockOutlet = new Outlet();
+        mockOutlet.setId(outletId);
+        mockOutlet.setCompanyId(10L);
+        when(jpaOutletRepository.findAll()).thenReturn(List.of(mockOutlet));
+
+        when(productOutletRepositoryPort.findById(productId)).thenReturn(Optional.of(existingProduct));
         when(quantityParserService.parseAndValidate("15")).thenReturn(new BigDecimal("15"));
         when(masterTreeProvider.getTree()).thenReturn(mockMasterTree);
         when(mockMasterTree.getById(200L)).thenReturn(mockUnitNode);
@@ -134,7 +164,9 @@ class UpdateProductUseCaseImplTest {
                 new BigDecimal("2000.00")
         );
 
-        when(productOutletRepositoryPort.findById(productId)).thenReturn(Optional.empty());
+        when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(true);
+        when(currentUserProvider.getCurrentOutletId()).thenReturn(null);
+        when(jpaOutletRepository.findAll()).thenReturn(List.of());
 
         assertThrows(ResourceNotFoundException.class, () -> updateProductUseCase.execute(productId, request));
         verify(productWebSocketPublisher, never()).broadcastProductStockChanged(any(), any());
@@ -164,10 +196,16 @@ class UpdateProductUseCaseImplTest {
                 1L
         );
 
-        when(productOutletRepositoryPort.findById(productId)).thenReturn(Optional.of(productOtherOutlet));
         when(currentUserProvider.hasRole("ROLE_ADMIN")).thenReturn(false);
         when(currentUserProvider.hasRole("ROLE_ADMINTI")).thenReturn(false);
-        when(currentUserProvider.getCurrentOutletId()).thenReturn(1L); // Tienda 1 intentando editar Tienda 2
+        when(currentUserProvider.hasRole("ROLE_GERGEN")).thenReturn(false);
+        when(currentUserProvider.getCurrentOutletId()).thenReturn(1L);
+
+        Outlet employeeOutlet = new Outlet();
+        employeeOutlet.setId(1L);
+        employeeOutlet.setCompanyId(10L);
+        when(jpaOutletRepository.findById(1L)).thenReturn(Optional.of(employeeOutlet));
+        when(productOutletRepositoryPort.findById(productId)).thenReturn(Optional.of(productOtherOutlet));
 
         assertThrows(BusinessException.class, () -> updateProductUseCase.execute(productId, request));
         verify(productWebSocketPublisher, never()).broadcastProductStockChanged(any(), any());

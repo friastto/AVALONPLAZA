@@ -6,12 +6,18 @@ import org.frias.avalon.domain.inventory.application.dto.StockAdjustmentResponse
 import org.frias.avalon.domain.inventory.application.event.StockAdjustmentNotificationEvent;
 import org.frias.avalon.domain.inventory.infrastructure.entity.StockMovementEntity;
 import org.frias.avalon.domain.inventory.infrastructure.repository.JpaStockMovementRepository;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
+import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
+import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
 import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -26,8 +32,10 @@ class StockAdjustmentUseCaseImplTest {
     private JpaProductOutletRepository productOutletRepository;
     private JpaStockMovementRepository stockMovementRepository;
     private ApplicationEventPublisher eventPublisher;
-    private org.frias.avalon.domain.product.domain.service.UnitConversionService unitConversionService;
-    private org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider masterTreeProvider;
+    private UnitConversionService unitConversionService;
+    private MasterTreeProvider masterTreeProvider;
+    private JpaOutletRepository jpaOutletRepository;
+    private PlatformTransactionManager transactionManager;
 
     private StockAdjustmentUseCaseImpl stockAdjustmentUseCase;
 
@@ -36,15 +44,27 @@ class StockAdjustmentUseCaseImplTest {
         productOutletRepository = mock(JpaProductOutletRepository.class);
         stockMovementRepository = mock(JpaStockMovementRepository.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
-        unitConversionService = mock(org.frias.avalon.domain.product.domain.service.UnitConversionService.class);
-        masterTreeProvider = mock(org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider.class);
+        unitConversionService = mock(UnitConversionService.class);
+        masterTreeProvider = mock(MasterTreeProvider.class);
+        jpaOutletRepository = mock(JpaOutletRepository.class);
+        transactionManager = mock(PlatformTransactionManager.class);
+
+        TransactionStatus transactionStatus = mock(TransactionStatus.class);
+        lenient().when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
+
+        Outlet mockOutlet = new Outlet();
+        mockOutlet.setId(1L);
+        mockOutlet.setCompanyId(10L);
+        lenient().when(jpaOutletRepository.findById(1L)).thenReturn(Optional.of(mockOutlet));
 
         stockAdjustmentUseCase = new StockAdjustmentUseCaseImpl(
                 productOutletRepository,
                 stockMovementRepository,
                 eventPublisher,
                 unitConversionService,
-                masterTreeProvider
+                masterTreeProvider,
+                jpaOutletRepository,
+                transactionManager
         );
     }
 
