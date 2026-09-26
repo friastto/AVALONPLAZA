@@ -299,6 +299,14 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
 
         BigDecimal currentExpectedCashInStore = activeBases.add(totalCash).subtract(totalExpenses).subtract(totalPickups);
 
+        BigDecimal netDiscrepancy = BigDecimal.ZERO;
+        for (CashSessionDomain s : allSessions) {
+            if ("CLOSED".equals(s.getStatus()) && s.getDifference() != null) {
+                netDiscrepancy = netDiscrepancy.add(s.getDifference());
+            }
+        }
+        BigDecimal actualCashInStore = currentExpectedCashInStore.add(netDiscrepancy);
+
         int closedCount = (int) allSessions.stream().filter(s -> "CLOSED".equals(s.getStatus())).count();
 
         OutletDomain outlet = outletRepositoryPort.findById(outletId).orElse(null);
@@ -327,7 +335,9 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
                 activeSessions,
                 totalPickups,
                 cashThresholdAmount,
-                thresholdExceeded
+                thresholdExceeded,
+                netDiscrepancy,
+                actualCashInStore
         );
     }
 
@@ -352,6 +362,8 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
                 .totalPickups(domain.getTotalPickups())
                 .cashThresholdAmount(domain.getCashThresholdAmount())
                 .thresholdExceeded(domain.getThresholdExceeded())
+                .netCashDiscrepancy(domain.getNetCashDiscrepancy())
+                .actualCashInStore(domain.getActualCashInStore())
                 .build();
     }
 

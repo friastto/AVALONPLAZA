@@ -21,6 +21,8 @@ public class OutletCashSummaryDomain {
     private final BigDecimal totalPickups;
     private final BigDecimal cashThresholdAmount;
     private final Boolean thresholdExceeded;
+    private final BigDecimal netCashDiscrepancy;
+    private final BigDecimal actualCashInStore;
 
     public OutletCashSummaryDomain(
             Long outletId,
@@ -37,6 +39,31 @@ public class OutletCashSummaryDomain {
             BigDecimal cashThresholdAmount,
             Boolean thresholdExceeded
     ) {
+        this(
+                outletId, totalCashSales, totalDigitalSales, totalCardSales, totalCreditSales,
+                totalExpenses, currentExpectedCashInStore, activeSessionsCount, closedSessionsCount,
+                activeSessions, totalPickups, cashThresholdAmount, thresholdExceeded,
+                BigDecimal.ZERO, currentExpectedCashInStore
+        );
+    }
+
+    public OutletCashSummaryDomain(
+            Long outletId,
+            BigDecimal totalCashSales,
+            BigDecimal totalDigitalSales,
+            BigDecimal totalCardSales,
+            BigDecimal totalCreditSales,
+            BigDecimal totalExpenses,
+            BigDecimal currentExpectedCashInStore,
+            int activeSessionsCount,
+            int closedSessionsCount,
+            List<CashSessionDomain> activeSessions,
+            BigDecimal totalPickups,
+            BigDecimal cashThresholdAmount,
+            Boolean thresholdExceeded,
+            BigDecimal netCashDiscrepancy,
+            BigDecimal actualCashInStore
+    ) {
         this.outletId = outletId;
         this.totalCashSales = totalCashSales != null ? totalCashSales : BigDecimal.ZERO;
         this.totalDigitalSales = totalDigitalSales != null ? totalDigitalSales : BigDecimal.ZERO;
@@ -50,6 +77,8 @@ public class OutletCashSummaryDomain {
         this.totalPickups = totalPickups != null ? totalPickups : BigDecimal.ZERO;
         this.cashThresholdAmount = cashThresholdAmount;
         this.thresholdExceeded = thresholdExceeded != null ? thresholdExceeded : false;
+        this.netCashDiscrepancy = netCashDiscrepancy != null ? netCashDiscrepancy : BigDecimal.ZERO;
+        this.actualCashInStore = actualCashInStore != null ? actualCashInStore : this.currentExpectedCashInStore;
     }
 
     public Long getOutletId() {
@@ -102,5 +131,13 @@ public class OutletCashSummaryDomain {
 
     public Boolean getThresholdExceeded() {
         return thresholdExceeded;
+    }
+
+    public BigDecimal getNetCashDiscrepancy() {
+        return netCashDiscrepancy;
+    }
+
+    public BigDecimal getActualCashInStore() {
+        return actualCashInStore;
     }
 }

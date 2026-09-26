@@ -297,6 +297,16 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
 
         outletSalesList.sort((a, b) -> b.totalSales().compareTo(a.totalSales()));
 
+        BigDecimal totalReturnedBases = allClosedSessions.stream()
+                .map(CashSessionEntity::getInitialBase)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal netDiscrepancy = allClosedSessions.stream()
+                .map(CashSessionEntity::getDifference)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         return new CompanyDashboardResponse(
                 companyId,
                 company.getName(),
@@ -313,7 +323,10 @@ public class GetCompanyDashboardUseCaseImpl implements GetCompanyDashboardUseCas
                 consolidatedCash,
                 inFlightCash,
                 allClosedSessions.size(),
-                allOpenSessions.size()
+                allOpenSessions.size(),
+                totalCashSales,
+                totalReturnedBases,
+                netDiscrepancy
         );
     }
 

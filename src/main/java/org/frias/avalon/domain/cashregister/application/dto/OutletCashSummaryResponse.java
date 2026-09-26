@@ -24,6 +24,8 @@ public class OutletCashSummaryResponse {
     private BigDecimal totalPickups;
     private BigDecimal cashThresholdAmount;
     private Boolean thresholdExceeded;
+    private BigDecimal netCashDiscrepancy;
+    private BigDecimal actualCashInStore;
 
     public static OutletCashSummaryResponse fromDomain(OutletCashSummaryDomain domain) {
         if (domain == null) return null;
@@ -45,6 +47,8 @@ public class OutletCashSummaryResponse {
                 .totalPickups(domain.getTotalPickups())
                 .cashThresholdAmount(domain.getCashThresholdAmount())
                 .thresholdExceeded(domain.getThresholdExceeded())
+                .netCashDiscrepancy(domain.getNetCashDiscrepancy())
+                .actualCashInStore(domain.getActualCashInStore())
                 .build();
     }
 }

@@ -23,6 +23,9 @@ import java.util.Map;
  * @param inFlightCash            Estimated cash currently in transit across OPEN cash sessions.
  * @param closedSessionsCount     Number of closed and audited cash sessions.
  * @param openSessionsCount       Number of active / open cash sessions.
+ * @param totalCashSales          Sales strictly registered with cash payment method.
+ * @param totalReturnedBases      Initial bases returned upon closing cash sessions.
+ * @param netDiscrepancy          Net sum of session differences (surplus or shortage).
  */
 public record CompanyDashboardResponse(
         Long companyId,
@@ -40,6 +43,32 @@ public record CompanyDashboardResponse(
         BigDecimal consolidatedCash,
         BigDecimal inFlightCash,
         int closedSessionsCount,
-        int openSessionsCount
+        int openSessionsCount,
+        BigDecimal totalCashSales,
+        BigDecimal totalReturnedBases,
+        BigDecimal netDiscrepancy
 ) {
+    public CompanyDashboardResponse(
+            Long companyId,
+            String companyName,
+            String period,
+            Long selectedOutletId,
+            BigDecimal totalSales,
+            BigDecimal totalExpenses,
+            BigDecimal netProfit,
+            Double profitMarginPercentage,
+            Long transactionCount,
+            BigDecimal averageTicket,
+            Map<String, BigDecimal> salesByPaymentMethod,
+            List<OutletSalesPerformanceDto> outletSales,
+            BigDecimal consolidatedCash,
+            BigDecimal inFlightCash,
+            int closedSessionsCount,
+            int openSessionsCount
+    ) {
+        this(companyId, companyName, period, selectedOutletId, totalSales, totalExpenses, netProfit,
+                profitMarginPercentage, transactionCount, averageTicket, salesByPaymentMethod, outletSales,
+                consolidatedCash, inFlightCash, closedSessionsCount, openSessionsCount,
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
+    }
 }
