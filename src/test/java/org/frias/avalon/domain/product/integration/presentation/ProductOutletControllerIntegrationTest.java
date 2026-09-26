@@ -8,10 +8,12 @@ import org.frias.avalon.domain.company.infrastructure.repository.JpaCompanyRepos
 import org.frias.avalon.domain.outlet.infraestructure.entities.Outlet;
 import org.frias.avalon.domain.outlet.infraestructure.repository.JpaOutletRepository;
 import org.frias.avalon.domain.product.application.dto.request.ProductNewDataRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -55,6 +57,9 @@ class ProductOutletControllerIntegrationTest {
     @Autowired
     private JpaCompanyRepository companyRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private Long testOutletId;
 
     @BeforeEach
@@ -85,6 +90,17 @@ class ProductOutletControllerIntegrationTest {
         });
         testOutletId = outlet.getId();
         flywayMultiTenantService.migrateTenantSchema("store_" + testOutletId);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (testOutletId != null) {
+            try {
+                jdbcTemplate.execute("DELETE FROM store_" + testOutletId + ".barcode WHERE product_outlet IN (SELECT id FROM store_" + testOutletId + ".product_outlet WHERE local_name = 'Producto Prueba E2E')");
+                jdbcTemplate.execute("DELETE FROM store_" + testOutletId + ".product_outlet WHERE local_name = 'Producto Prueba E2E'");
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private HttpHeaders createHeaders() {
