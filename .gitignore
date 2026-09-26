@@ -39,6 +39,9 @@ env
 #reglas de agentes
 .md
 
+run_backend.ps1
+
+
 # Archivos de configuración con datos sensibles
 src/main/resources/application-local.properties
 

@@ -1,17 +1,28 @@
 package org.frias.avalon.domain.product.infraestructure.entity;
 
-
-import jakarta.persistence.*;
-import lombok.*;
-import org.frias.avalon.domain.masterdata.infraestructure.persistence.entity.MasterData;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/*
-@Entity
-@Table(name = "products")
-
+/**
+ * Entidad JPA para el Catalogo Global Maestro de Avalon (Nivel 1).
+ * Almacenada en el esquema 'public.products'.
+ * Sigue la regla arquitectonica de claves foraneas planas sin JOINs pesados a master_data.
  */
+@Entity
+@Table(name = "products", schema = "public")
 @NoArgsConstructor
 @AllArgsConstructor
 @Setter
@@ -28,16 +39,25 @@ public class Product {
 
     private String description;
 
-    private MasterData category;
+    @Column(name = "barcode")
+    private String barcode;
 
-    private MasterData unitMeasure;
+    @Column(name = "category_id")
+    private Long categoryId;
 
+    @Column(name = "unit_measure_id")
+    private Long unitMeasureId;
+
+    @Column(name = "image_url")
     private String imageUrl;
 
-    private MasterData status;
+    @Column(name = "status_id")
+    private Long statusId;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist
