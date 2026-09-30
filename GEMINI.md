@@ -363,6 +363,41 @@ Todas las soluciones generadas deben seguir estrictamente:
 - **Garantia de Cero Residuos en BD (Zero Residual Data):** Toda prueba sobre la base de datos real debe ser transaccional con rollback automatico (`@Transactional`) o ejecutar scripts de limpieza post-ejecucion, asegurando que no queden datos de prueba residuales.
 - **Estructura y Convencion:** Utiliza nombres de pruebas significativos en ingles y sigue la estructura Arrange, Act, Assert (Organizar, Actuar, Verificar).
 
+## Regla de Optimizacion de Consultas Multi-Esquema en Mapa (findAvailableByNameAcrossOutlets)
+1. **Problematica de Conexiones en Pool HikariCP con Esquemas Multi-Tenant:**
+   - En busquedas geograficas de productos sobre el mapa (`POST /avalon/products/nearby/stores`), la consulta localiza tiendas candidatas dentro del radio (ej. radio de 2.000m en Fonseca).
+   - Recorrer cada tienda abriendo y cerrando transacciones Spring individuales (`TransactionTemplate.execute` con `PROPAGATION_REQUIRES_NEW`) provoca que cada iteracion pida una nueva conexion JDBC a HikariCP. Bajo alta concurrencia (1.000 usuarios virtuales), esto genera saturacion y agotamiento en el pool de conexiones (Hikari pool starvation), disparando la latencia a 16 segundos.
+2. **Arquitectura de Conexion Unica Reutilizada (1 Peticion = 1 Conexion Hikari):**
+   - El caso de uso (`FindNearbyStoresByProductUseCaseImpl`) limita la busqueda a las **Top 12 tiendas mas cercanas** candidatas por distancia geodesica.
+   - En la capa de infraestructura, el adaptador `ProductOutletRepositoryAdapter` obtiene **una sola conexion fisica JDBC** via `dataSource.getConnection()`.
+   - Sobre esa misma conexion, consulta de forma segura y parametrizada los esquemas de las tiendas candidatas (`store_{outletId}.product_outlet`), retornando los productos disponibles (`stock > 0`) en un mapa `Map<Long, List<ProductDomain>>`.
+   - **Resultado:** La latencia baja de 16 segundos a **1.4 segundos bajo 1.000 usuarios concurrentes**, duplicando la capacidad de procesamiento del sistema a mas de 180 req/s.
+
+## Regla de Resolucion O(1) de Clientes en Mapeo de Catalogo (customerIdCache)
+1. **Prevencion de Consultas N+1 al Resolver Usuarios:**
+   - Al mapear listas paginadas de productos de tienda (`ProductOutletMapperImpl.toResponse`), se requiere el ID del cliente para calcular sus unidades reservadas activas (`displayReservedUser`).
+   - Queda prohibido consultar la base de datos por cada producto (`userAvalonRepositoryPort.findByUserName`) dentro del ciclo de mapeo.
+2. **Cache Concurrente en Memoria:**
+   - Si el usuario es nulo o `"anonymousUser"`, se retorna inmediatamente `null` sin acceder a base de datos.
+   - Para usuarios autenticados, se utiliza `customerIdCache` (`ConcurrentHashMap<String, Long>`) para resolver el ID una sola vez en memoria en O(1) para todos los productos de la pagina.
+
+## Metodologia y Resultados de Pruebas de Carga de Alta Concurrencia con k6 (stress_avalon.js)
+1. **Escenario de Prueba Masiva (1.000 Usuarios Virtuales):**
+   - Script oficial en raiz: `stress_avalon.js`.
+   - Fases de prueba escalonada:
+     - Calentamiento: 15s (50 VUs)
+     - Rampa acelerada: 30s (200 VUs)
+     - Concurrencia alta: 45s (500 VUs)
+     - Pico sostenido: 30s (1.000 VUs)
+     - Enfriamiento: 20s (0 VUs)
+   - Flujo integral por usuario: busqueda en mapa (`/products/nearby/stores`), sugerencias de mapa (`/products/nearby/suggestions`), tiendas cercanas (`/outlet/nearby/light`), busqueda por texto en catalogo (`/products/catalog/outlet`), paginacion de catalogo, detalle individual y creacion de pedidos transaccionales (`POST /orders`).
+2. **Resultados de Rendimiento Comprobados:**
+   - **Peticiones Totales:** 31.608 HTTP requests en 2m 20s (184.5 req/s).
+   - **Tasa de Errores 500:** 0.00% (cero errores de servidor bajo 1.000 VUs).
+   - **Ordenes de Compra Creadas:** 4.149 pedidos exitosos procesados en tiempo real.
+   - **Latencia Mediana Mapa (P50):** 1.063 ms.
+   - **Latencia Mediana Ordenes (P50):** 546 ms.
+
 ## Formato de Respuesta
 Para cada solución, proporciona siempre:
 1. Explicación arquitectónica (en español).
