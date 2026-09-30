@@ -4,6 +4,8 @@ import org.frias.avalon.domain.product.domain.ProductDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -52,4 +54,14 @@ public interface ProductOutletRepositoryPort {
      * @return A Page of product domain models with stock > 0.
      */
     Page<ProductDomain> findAvailableByName(String name, Long outletId, Pageable pageable);
+
+    /**
+     * Recupera productos disponibles filtrados por nombre a traves de multiples tiendas
+     * optimizando el acceso en una sola conexion JDBC.
+     * @param name Nombre o fragmento a buscar.
+     * @param outletIds Lista de identificadores de tiendas a consultar.
+     * @param limitPerOutlet Maximo de productos por tienda.
+     * @return Mapa de outletId a la lista de productos encontrados.
+     */
+    Map<Long, List<ProductDomain>> findAvailableByNameAcrossOutlets(String name, List<Long> outletIds, int limitPerOutlet);
 }

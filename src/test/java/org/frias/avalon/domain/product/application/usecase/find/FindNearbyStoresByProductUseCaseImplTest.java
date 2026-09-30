@@ -16,18 +16,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -39,7 +36,6 @@ class FindNearbyStoresByProductUseCaseImplTest {
     private UnitConversionService unitConversionService;
     private MasterTreeProvider masterTreeProvider;
     private MasterTree masterTree;
-    private PlatformTransactionManager transactionManager;
 
     private FindNearbyStoresByProductUseCaseImpl useCase;
 
@@ -51,17 +47,12 @@ class FindNearbyStoresByProductUseCaseImplTest {
         masterTreeProvider = mock(MasterTreeProvider.class);
         masterTree = mock(MasterTree.class);
         when(masterTreeProvider.getTree()).thenReturn(masterTree);
-        transactionManager = mock(PlatformTransactionManager.class);
-
-        TransactionStatus transactionStatus = mock(TransactionStatus.class);
-        when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
 
         useCase = new FindNearbyStoresByProductUseCaseImpl(
                 outletRepositoryPort,
                 productOutletRepositoryPort,
                 unitConversionService,
-                masterTreeProvider,
-                transactionManager
+                masterTreeProvider
         );
     }
 
@@ -95,13 +86,9 @@ class FindNearbyStoresByProductUseCaseImplTest {
 
         LocalDateTime now = LocalDateTime.now();
         ProductDomain p1 = ProductDomain.fromPersistence(101L, "Limon Mandarina", "Desc", 1000, 1L, null, BigDecimal.TEN, 1L, 1L, now, now);
-        Page<ProductDomain> page1 = new PageImpl<>(List.of(p1));
-        Page<ProductDomain> emptyPage = new PageImpl<>(List.of());
 
-        when(productOutletRepositoryPort.findAvailableByName(eq("limon"), eq(1L), any(Pageable.class)))
-                .thenReturn(page1);
-        when(productOutletRepositoryPort.findAvailableByName(eq("limon"), eq(2L), any(Pageable.class)))
-                .thenReturn(emptyPage);
+        when(productOutletRepositoryPort.findAvailableByNameAcrossOutlets(eq("limon"), anyList(), anyInt()))
+                .thenReturn(Map.of(1L, List.of(p1)));
 
         when(unitConversionService.convertFromSmallestUnit(1000, 1L)).thenReturn("1.000 KG");
         MasterRoot unitNode = MasterRoot.fromPersistence(1L, "KG", "Kilogramo", 100L, 1L);
