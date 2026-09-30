@@ -46,7 +46,9 @@ public class FindProductCatalogByOutletUseCaseImpl implements FindProductCatalog
     @Override
     public Page<ProductResponse> execute(Long outletId, String name, Long categoryId, Pageable pageable) {
         // --- Validar Encapsulacion de Tienda (Tenant Isolation) ---
-        boolean isConsumer = currentUserProvider.hasRole("ROLE_CLIENT") || currentUserProvider.hasRole("ROLE_CONSUMER");
+        boolean isConsumer = currentUserProvider.hasRole("ROLE_CLIENT")
+                || currentUserProvider.hasRole("ROLE_CONSUMER")
+                || currentUserProvider.hasRole("ROLE_CONSMR");
         boolean isSystemAdmin = currentUserProvider.hasRole("ROLE_ADMIN") || currentUserProvider.hasRole("ROLE_ADMINTI");
 
         if (!isSystemAdmin && !isConsumer) {

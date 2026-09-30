@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -33,6 +35,23 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
     private final JpaOrderRepository jpaOrderRepository;
     private final CurrentUserProviderPort currentUserProvider;
     private final UserAvalonRepositoryPort userAvalonRepositoryPort;
+
+    private final Map<String, Long> customerIdCache = new ConcurrentHashMap<>();
+
+    private Long getCustomerId(String username) {
+        if (username == null || "anonymousUser".equalsIgnoreCase(username)) {
+            return null;
+        }
+        if (customerIdCache.size() > 5000) {
+            customerIdCache.clear();
+        }
+        Long cached = customerIdCache.computeIfAbsent(username, u ->
+                userAvalonRepositoryPort.findByUserName(u)
+                        .map(UserAvalonDomain::getId)
+                        .orElse(-1L)
+        );
+        return (cached != null && cached > 0) ? cached : null;
+    }
 
     @Override
     public ProductDomain toDomain(ProductOutlet entity) {
@@ -117,9 +136,8 @@ public class ProductOutletMapperImpl implements ProductOutletMapper {
 
             UserContext userCtx = currentUserProvider.getCurrentUserContext();
             if (userCtx != null && userCtx.username() != null) {
-                Optional<UserAvalonDomain> userOpt = userAvalonRepositoryPort.findByUserName(userCtx.username());
-                if (userOpt.isPresent()) {
-                    Long customerId = userOpt.get().getId();
+                Long customerId = getCustomerId(userCtx.username());
+                if (customerId != null) {
                     Integer userSum = jpaOrderRepository.sumQuantityByProductOutletIdAndCustomerIdAndStatusIn(domain.getId(), customerId, activeStatusIds);
                     if (userSum != null) {
                         reservedUserUnits = userSum;
