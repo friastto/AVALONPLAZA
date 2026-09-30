@@ -1,6 +1,8 @@
 package org.frias.avalon.domain.product.application.usecase.find;
 
 import org.frias.avalon.core.tenant.TenantContext;
+import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
+import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.outlet.domain.model.OutletLocationInfo;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.product.application.dto.request.NearbyStoresByProductRequestDto;
@@ -8,6 +10,7 @@ import org.frias.avalon.domain.product.application.dto.response.NearbyStoreProdu
 import org.frias.avalon.domain.product.application.dto.response.ProductStockDto;
 import org.frias.avalon.domain.product.application.port.ProductOutletRepositoryPort;
 import org.frias.avalon.domain.product.domain.ProductDomain;
+import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -23,15 +26,21 @@ public class FindNearbyStoresByProductUseCaseImpl implements FindNearbyStoresByP
 
     private final OutletRepositoryPort outletRepositoryPort;
     private final ProductOutletRepositoryPort productOutletRepositoryPort;
+    private final UnitConversionService unitConversionService;
+    private final MasterTreeProvider masterTreeProvider;
     private final TransactionTemplate transactionTemplate;
 
     public FindNearbyStoresByProductUseCaseImpl(
             OutletRepositoryPort outletRepositoryPort,
             ProductOutletRepositoryPort productOutletRepositoryPort,
+            UnitConversionService unitConversionService,
+            MasterTreeProvider masterTreeProvider,
             PlatformTransactionManager transactionManager
     ) {
         this.outletRepositoryPort = outletRepositoryPort;
         this.productOutletRepositoryPort = productOutletRepositoryPort;
+        this.unitConversionService = unitConversionService;
+        this.masterTreeProvider = masterTreeProvider;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
@@ -74,7 +83,22 @@ public class FindNearbyStoresByProductUseCaseImpl implements FindNearbyStoresByP
                         if (products != null && products.hasContent()) {
                             List<ProductStockDto> items = new ArrayList<>();
                             for (ProductDomain p : products.getContent()) {
-                                items.add(new ProductStockDto(p.getName(), p.getStock()));
+                                String displayStock;
+                                String unitMeasure = null;
+                                if (p.getUnitMeasureId() != null) {
+                                    try {
+                                        displayStock = unitConversionService.convertFromSmallestUnit(p.getStock(), p.getUnitMeasureId());
+                                        MasterRoot unitNode = masterTreeProvider.getTree().getById(p.getUnitMeasureId());
+                                        if (unitNode != null) {
+                                            unitMeasure = unitNode.getShortName();
+                                        }
+                                    } catch (Exception e) {
+                                        displayStock = p.getStock() != null ? p.getStock().toString() : "0";
+                                    }
+                                } else {
+                                    displayStock = p.getStock() != null ? p.getStock().toString() : "0";
+                                }
+                                items.add(new ProductStockDto(p.getName(), p.getStock(), displayStock, unitMeasure));
                             }
                             return items;
                         }
