@@ -18,6 +18,8 @@ import org.frias.avalon.domain.user.application.usecase.login.LoginUseCase;
 import org.frias.avalon.domain.user.application.usecase.register.RegisterUserUseCase;
 import org.frias.avalon.domain.user.application.usecase.find.FindOutletStaffUseCase;
 import org.frias.avalon.domain.user.application.dtos.response.StaffMemberResponse;
+import org.frias.avalon.domain.user.application.dtos.response.UserProfileResponseDto;
+import org.frias.avalon.domain.user.application.usecase.profile.GetUserProfileUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,8 +40,21 @@ public class UserAvalonController {
     private final AssignPersonToUserUseCase assignmentPerson;
     private final RegisterUserUseCase registerUserUseCase;
     private final FindOutletStaffUseCase findOutletStaffUseCase;
+    private final GetUserProfileUseCase getUserProfileUseCase;
 
-    public UserAvalonController(CreateUserAvalonUseCase createUser, ChangeStatusUserAvalonUseCase changeStatusUser, AssignmentRoleUseCase assignmentRole, GetAllUserAvalonUseCase getAllUserAvalonUseCase, FindByUserNameUseCase findByUserName, LoginUseCase loginUseCase, AssignmentRoleConsumerSelfUseCase consumerSelfUseCase, AssignPersonToUserUseCase assignmentPerson, RegisterUserUseCase registerUserUseCase, FindOutletStaffUseCase findOutletStaffUseCase) {
+    public UserAvalonController(
+            CreateUserAvalonUseCase createUser,
+            ChangeStatusUserAvalonUseCase changeStatusUser,
+            AssignmentRoleUseCase assignmentRole,
+            GetAllUserAvalonUseCase getAllUserAvalonUseCase,
+            FindByUserNameUseCase findByUserName,
+            LoginUseCase loginUseCase,
+            AssignmentRoleConsumerSelfUseCase consumerSelfUseCase,
+            AssignPersonToUserUseCase assignmentPerson,
+            RegisterUserUseCase registerUserUseCase,
+            FindOutletStaffUseCase findOutletStaffUseCase,
+            GetUserProfileUseCase getUserProfileUseCase
+    ) {
         this.createUser = createUser;
         this.changeStatusUser = changeStatusUser;
         this.assignmentRole = assignmentRole;
@@ -50,6 +65,7 @@ public class UserAvalonController {
         this.assignmentPerson = assignmentPerson;
         this.registerUserUseCase = registerUserUseCase;
         this.findOutletStaffUseCase = findOutletStaffUseCase;
+        this.getUserProfileUseCase = getUserProfileUseCase;
     }
 
     @PostMapping("/register")
@@ -176,6 +192,28 @@ public class UserAvalonController {
                         200,
                         "Personal de la tienda obtenido exitosamente",
                         staff
+                ));
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<UserProfileResponseDto>> getCurrentUserProfile() {
+        UserProfileResponseDto profile = getUserProfileUseCase.executeCurrent();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(
+                        200,
+                        "Perfil de usuario obtenido exitosamente",
+                        profile
+                ));
+    }
+
+    @GetMapping("/profile/{identifier}")
+    public ResponseEntity<ApiResponse<UserProfileResponseDto>> getUserProfile(@PathVariable String identifier) {
+        UserProfileResponseDto profile = getUserProfileUseCase.execute(identifier);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse<>(
+                        200,
+                        "Perfil de usuario obtenido exitosamente",
+                        profile
                 ));
     }
 }
