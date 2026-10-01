@@ -102,6 +102,15 @@ El español es el único idioma permitido para todas las explicaciones y descrip
    - Queda terminantemente prohibido exponer los gramos internos crudos (ej. responder `90` o `1500`) al usuario final o a la aplicacion movil en las respuestas de la API.
    - Todo DTO de salida (`ProductResponse.displayStock`, `SaleItemResponse.displayQuantity`, `OrderItemResponse.displayQuantity`) debe convertir el entero base almacenado de vuelta a la expresion legible y entendible en la unidad de medida del producto mediante `UnitConversionService.convertFromSmallestUnit(...)` (ej. `"0.200 LB"`, `"1.500 KG"`, `"2 UND"`), garantizando claridad para el cliente y para la mesa de empaque.
 
+## Modulo Integral de PQRS y Radicacion de Plataforma (/avalon/pqrs)
+1. **Esquema de Base de Datos Global (public.pqrs):**
+   - Gestionado mediante migracion Flyway `V26__create_pqrs_table.sql`.
+   - Almacena radicados de toda la plataforma con claves foraneas opcionales a `user_avalon`, `orders` y `outlet`.
+   - Generacion automatica de radicado unico inmutable auditado: `PQRS-YYYYMMDD-XXXXX`.
+2. **Control de Acceso y Endpoints REST:**
+   - Radicacion abierta / publica (`POST /avalon/pqrs`): Cualquier usuario autenticado o cliente puede enviar peticiones, quejas, reclamos o sugerencias.
+   - Gestion ejecutiva (`GET /avalon/pqrs`, `GET /avalon/pqrs/stats`, `PATCH /avalon/pqrs/{id}/status`): Restringido estrictamente a roles de Administrador de Plataforma (`ADMINTI`, `ADMINSYS`, `ADMIN`) para resolucion y registro de notas de respuesta.
+
 ## Diagrama de Arquitectura de la API (ApiAvalon)
 
 ```mermaid
