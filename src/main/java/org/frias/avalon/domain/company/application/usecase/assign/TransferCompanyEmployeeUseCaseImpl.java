@@ -2,6 +2,9 @@ package org.frias.avalon.domain.company.application.usecase.assign;
 
 import org.frias.avalon.core.exeptions.BusinessException;
 import org.frias.avalon.core.exeptions.ResourceNotFoundException;
+import org.frias.avalon.core.jwt.service.SessionRevocationRegistry;
+import org.frias.avalon.domain.cashregister.application.port.CashSessionRepositoryPort;
+import org.frias.avalon.domain.cashregister.domain.CashSessionDomain;
 import org.frias.avalon.domain.company.application.dto.request.TransferCompanyEmployeeRequest;
 import org.frias.avalon.domain.company.application.dto.response.CompanyEmployeeResponse;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
@@ -11,17 +14,17 @@ import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.person.domain.model.PersonDomain;
 import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
+import org.frias.avalon.domain.user.application.dtos.response.SessionSyncMessage;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
-import org.frias.avalon.core.jwt.service.SessionRevocationRegistry;
-import org.frias.avalon.domain.user.application.dtos.response.SessionSyncMessage;
 import org.frias.avalon.domain.user.presentation.UserSessionWebSocketPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,6 +35,7 @@ public class TransferCompanyEmployeeUseCaseImpl implements TransferCompanyEmploy
     private final OutletRepositoryPort outletPort;
     private final UserAvalonRepositoryPort userPort;
     private final PersonRepositoryPort personPort;
+    private final CashSessionRepositoryPort cashSessionPort;
     private final MasterTreeProvider masterTreeProvider;
     private final SessionRevocationRegistry sessionRevocationRegistry;
     private final UserSessionWebSocketPublisher userSessionWebSocketPublisher;
@@ -41,6 +45,7 @@ public class TransferCompanyEmployeeUseCaseImpl implements TransferCompanyEmploy
             OutletRepositoryPort outletPort,
             UserAvalonRepositoryPort userPort,
             PersonRepositoryPort personPort,
+            CashSessionRepositoryPort cashSessionPort,
             MasterTreeProvider masterTreeProvider,
             SessionRevocationRegistry sessionRevocationRegistry,
             UserSessionWebSocketPublisher userSessionWebSocketPublisher
@@ -49,6 +54,7 @@ public class TransferCompanyEmployeeUseCaseImpl implements TransferCompanyEmploy
         this.outletPort = outletPort;
         this.userPort = userPort;
         this.personPort = personPort;
+        this.cashSessionPort = cashSessionPort;
         this.masterTreeProvider = masterTreeProvider;
         this.sessionRevocationRegistry = sessionRevocationRegistry;
         this.userSessionWebSocketPublisher = userSessionWebSocketPublisher;
@@ -59,12 +65,20 @@ public class TransferCompanyEmployeeUseCaseImpl implements TransferCompanyEmploy
     public CompanyEmployeeResponse execute(Long companyId, Long userId, TransferCompanyEmployeeRequest request) {
         MasterTree tree = masterTreeProvider.getTree();
 
-        // 1. Validar que la tienda destino exista y pertenezca a la empresa
-        OutletDomain targetOutlet = outletPort.findById(request.targetOutletId())
-                .orElseThrow(() -> new ResourceNotFoundException("Tienda destino no encontrada con ID: " + request.targetOutletId()));
+        boolean isFloating = Boolean.TRUE.equals(request.isFloating());
 
-        if (!companyId.equals(targetOutlet.getCompanyId())) {
-            throw new BusinessException("La tienda destino no pertenece a la misma empresa");
+        // 1. Validar tienda destino
+        OutletDomain targetOutlet = null;
+        if (!isFloating) {
+            if (request.targetOutletId() == null) {
+                throw new BusinessException("Debe seleccionar una tienda destino o marcar al empleado como personal flotante");
+            }
+            targetOutlet = outletPort.findById(request.targetOutletId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Tienda destino no encontrada con ID: " + request.targetOutletId()));
+
+            if (!companyId.equals(targetOutlet.getCompanyId())) {
+                throw new BusinessException("La tienda destino no pertenece a la misma empresa");
+            }
         }
 
         // 2. Obtener todas las tiendas de la empresa para ubicar la asignacion previa
@@ -86,26 +100,51 @@ public class TransferCompanyEmployeeUseCaseImpl implements TransferCompanyEmploy
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Asignacion laboral no encontrada para el empleado en esta empresa"));
 
-        // 4. Trasladar al empleado reasignando su outletId
-        targetAssignment.changeOutlet(targetOutlet.getId());
+        Long sourceOutletId = targetAssignment.getOutletId();
+
+        // 4. Validar que no tenga caja de turno abierta en la sede origen
+        if (sourceOutletId != null) {
+            Optional<CashSessionDomain> activeCashSession = cashSessionPort.findActiveSession(sourceOutletId, userId);
+            if (activeCashSession.isPresent()) {
+                CashSessionDomain session = activeCashSession.get();
+                OutletDomain sourceOutlet = outletPort.findById(sourceOutletId).orElse(null);
+                String storeName = sourceOutlet != null ? sourceOutlet.getName() : "Sede #" + sourceOutletId;
+                throw new BusinessException(
+                        "No se puede trasladar al empleado. Tiene una sesion de caja de turno ABIERTA (ID: "
+                                + session.getId() + ") en la tienda origen (" + storeName + "). "
+                                + "Debe realizar el arqueo y cierre de caja antes de efectuar el traslado."
+                );
+            }
+        }
+
+        // 5. Aplicar reasignacion de tienda o fijar como flotante multi-sede
+        if (isFloating) {
+            targetAssignment.changeOutlet(null);
+            targetAssignment.changeCompany(companyId);
+        } else {
+            targetAssignment.changeOutlet(targetOutlet.getId());
+        }
         roleAssignmentPort.update(targetAssignment);
 
-        // 4.1 Revocar sesion previa del usuario para forzar reautenticacion / refresh
+        // 6. Revocar sesion previa del usuario para forzar reautenticacion / refresh
         sessionRevocationRegistry.revokeUser(userId);
 
-        // 4.2 Notificar al cliente movil en tiempo real a traves del canal STOMP
+        // 7. Notificar al cliente movil en tiempo real a traves del canal STOMP
+        Long targetOutletId = targetOutlet != null ? targetOutlet.getId() : null;
+        String eventType = isFloating ? "FLOATING_ASSIGNED" : "TRANSFERRED";
+
         userSessionWebSocketPublisher.broadcastSessionSync(
                 userId,
                 new SessionSyncMessage(
-                        "TRANSFERRED",
+                        eventType,
                         userId,
                         "ACT",
-                        targetOutlet.getId(),
+                        targetOutletId,
                         System.currentTimeMillis()
                 )
         );
 
-        // 5. Enriquecer respuesta
+        // 8. Enriquecer respuesta
         UserAvalonDomain user = userPort.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + userId));
 
@@ -137,6 +176,10 @@ public class TransferCompanyEmployeeUseCaseImpl implements TransferCompanyEmploy
             }
         }
 
+        String outletDisplayName = isFloating
+                ? "Personal Flotante (Multi-Sede)"
+                : (targetOutlet != null ? targetOutlet.getName() : "Sede Corporativa / Empresa");
+
         return new CompanyEmployeeResponse(
                 user.getId(),
                 user.getUserName(),
@@ -150,8 +193,8 @@ public class TransferCompanyEmployeeUseCaseImpl implements TransferCompanyEmploy
                 roleCode,
                 roleName,
                 category,
-                targetOutlet.getId(),
-                targetOutlet.getName(),
+                targetOutletId,
+                outletDisplayName,
                 targetAssignment.getStatus(),
                 statusName,
                 typeIdCode

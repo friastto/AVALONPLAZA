@@ -1,11 +1,15 @@
 package org.frias.avalon.domain.company.application.dto.request;
 
-import jakarta.validation.constraints.NotNull;
-
 /**
- * DTO for transferring an employee to another store/outlet within the same company.
+ * DTO for transferring an employee to another store/outlet within the same company,
+ * or assigning floating multi-outlet scope.
  */
 public record TransferCompanyEmployeeRequest(
-        @NotNull(message = "El ID de la tienda destino es obligatorio")
-        Long targetOutletId
-) {}
+        Long targetOutletId,
+        Boolean isFloating,
+        String transferReason
+) {
+    public TransferCompanyEmployeeRequest(Long targetOutletId) {
+        this(targetOutletId, false, null);
+    }
+}
