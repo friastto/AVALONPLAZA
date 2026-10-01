@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
@@ -71,6 +72,10 @@ public class SecurityConfig {
 
                         // Lectura pública de catálogos específicos para formularios de registro (ej. tipos de documento IDENT, géneros GEN)
                         .requestMatchers("/avalon/masterdata/{parentCode}/children").permitAll()
+
+                        // Modulo de PQRS: Radicacion publica y gestion para administradores de plataforma
+                        .requestMatchers(HttpMethod.POST, "/avalon/pqrs", "/api/v1/pqrs").permitAll()
+                        .requestMatchers("/avalon/pqrs/**", "/api/v1/pqrs/**").hasAnyRole("ADMINTI", "ADMINSYS", "ADMIN")
 
 
 
