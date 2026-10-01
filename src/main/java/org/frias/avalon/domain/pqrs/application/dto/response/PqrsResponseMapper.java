@@ -50,6 +50,7 @@ public class PqrsResponseMapper {
         if (upper.startsWith("QUE")) return "QUE";
         if (upper.startsWith("REC")) return "REC";
         if (upper.startsWith("SUG")) return "SUG";
+        if (upper.startsWith("FEL")) return "FEL";
         return upper;
     }
 
@@ -60,6 +61,7 @@ public class PqrsResponseMapper {
             case "QUE" -> "Queja";
             case "REC" -> "Reclamo";
             case "SUG" -> "Sugerencia";
+            case "FEL" -> "Felicitacion";
             default -> code;
         };
     }

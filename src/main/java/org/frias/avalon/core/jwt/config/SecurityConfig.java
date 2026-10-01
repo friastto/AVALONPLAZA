@@ -73,8 +73,9 @@ public class SecurityConfig {
                         // Lectura pública de catálogos específicos para formularios de registro (ej. tipos de documento IDENT, géneros GEN)
                         .requestMatchers("/avalon/masterdata/{parentCode}/children").permitAll()
 
-                        // Modulo de PQRS: Radicacion publica y gestion para administradores de plataforma
+                        // Modulo de PQRS: Radicacion abierta, consulta del propio usuario autenticado y gestion para administradores
                         .requestMatchers(HttpMethod.POST, "/avalon/pqrs", "/api/v1/pqrs").permitAll()
+                        .requestMatchers("/avalon/pqrs/my", "/api/v1/pqrs/my").authenticated()
                         .requestMatchers("/avalon/pqrs/**", "/api/v1/pqrs/**").hasAnyRole("ADMINTI", "ADMINSYS", "ADMIN")
 
 

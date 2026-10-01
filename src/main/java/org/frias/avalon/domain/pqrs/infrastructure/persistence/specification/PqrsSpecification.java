@@ -37,4 +37,13 @@ public class PqrsSpecification {
             );
         };
     }
+
+    public static Specification<PqrsEntity> hasUserId(Long userId) {
+        return (root, query, cb) -> {
+            if (userId == null) {
+                return cb.disjunction();
+            }
+            return cb.equal(root.get("userId"), userId);
+        };
+    }
 }

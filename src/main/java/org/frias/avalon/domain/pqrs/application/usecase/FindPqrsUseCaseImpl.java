@@ -1,6 +1,7 @@
 package org.frias.avalon.domain.pqrs.application.usecase;
 
 import lombok.RequiredArgsConstructor;
+import org.frias.avalon.core.jwt.util.SecurityUtils;
 import org.frias.avalon.domain.pqrs.application.dto.response.PqrsResponse;
 import org.frias.avalon.domain.pqrs.application.dto.response.PqrsResponseMapper;
 import org.frias.avalon.domain.pqrs.application.port.PqrsRepositoryPort;
@@ -28,6 +29,19 @@ public class FindPqrsUseCaseImpl implements FindPqrsUseCase {
     @Transactional(readOnly = true)
     public Page<PqrsResponse> findAll(String statusCode, String typeCode, String search, Pageable pageable) {
         Page<PqrsDomain> domains = pqrsRepositoryPort.findAll(statusCode, typeCode, search, pageable);
+        return domains.map(this::mapDomainToResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PqrsResponse> findMyPqrs(Pageable pageable) {
+        String currentLogin = SecurityUtils.getCurrentUserLogin();
+        if (currentLogin == null || currentLogin.isBlank() || "anonymousUser".equalsIgnoreCase(currentLogin)) {
+            throw new IllegalStateException("Debes iniciar sesion para consultar tus PQRS");
+        }
+        UserAvalonDomain user = userAvalonRepositoryPort.findByUserName(currentLogin)
+                .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado con login: " + currentLogin));
+        Page<PqrsDomain> domains = pqrsRepositoryPort.findByUserId(user.getId(), pageable);
         return domains.map(this::mapDomainToResponse);
     }
 

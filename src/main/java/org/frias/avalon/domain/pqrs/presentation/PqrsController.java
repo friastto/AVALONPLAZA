@@ -39,6 +39,19 @@ public class PqrsController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponse<Page<PqrsResponse>>> getMyPqrs(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<PqrsResponse> page = findPqrsUseCase.findMyPqrs(pageable);
+        ApiResponse<Page<PqrsResponse>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Listado de PQRS del usuario obtenido exitosamente",
+                page
+        );
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<Page<PqrsResponse>>> getAllPqrs(
             @RequestParam(required = false) String statusCode,

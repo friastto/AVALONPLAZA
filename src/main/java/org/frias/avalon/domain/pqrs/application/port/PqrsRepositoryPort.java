@@ -11,5 +11,6 @@ public interface PqrsRepositoryPort {
     Optional<PqrsDomain> findById(Long id);
     Optional<PqrsDomain> findByTicketNumber(String ticketNumber);
     Page<PqrsDomain> findAll(String statusCode, String typeCode, String search, Pageable pageable);
+    Page<PqrsDomain> findByUserId(Long userId, Pageable pageable);
     long countByStatusCode(String statusCode);
 }

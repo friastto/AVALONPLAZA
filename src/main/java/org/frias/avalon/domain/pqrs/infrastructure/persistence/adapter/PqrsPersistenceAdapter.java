@@ -49,6 +49,12 @@ public class PqrsPersistenceAdapter implements PqrsRepositoryPort {
     }
 
     @Override
+    public Page<PqrsDomain> findByUserId(Long userId, Pageable pageable) {
+        Specification<PqrsEntity> spec = PqrsSpecification.hasUserId(userId);
+        return jpaPqrsRepository.findAll(spec, pageable).map(pqrsMapper::toDomain);
+    }
+
+    @Override
     public long countByStatusCode(String statusCode) {
         return jpaPqrsRepository.countByStatusCode(statusCode);
     }

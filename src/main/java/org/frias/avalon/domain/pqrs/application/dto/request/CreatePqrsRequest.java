@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreatePqrsRequest {
 
-    @NotBlank(message = "El tipo de PQRS es obligatorio (PETICION, QUEJA, RECLAMO, SUGERENCIA)")
+    @NotBlank(message = "El tipo de PQRS es obligatorio (PETICION, QUEJA, RECLAMO, SUGERENCIA, FELICITACION)")
     private String typeCode;
 
     @NotBlank(message = "El asunto es obligatorio")

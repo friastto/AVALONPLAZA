@@ -8,6 +8,7 @@ import java.util.Map;
 
 public interface FindPqrsUseCase {
     Page<PqrsResponse> findAll(String statusCode, String typeCode, String search, Pageable pageable);
+    Page<PqrsResponse> findMyPqrs(Pageable pageable);
     PqrsResponse findById(Long id);
     Map<String, Object> getPqrsStats();
 }
