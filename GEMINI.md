@@ -23,9 +23,8 @@ El español es el único idioma permitido para todas las explicaciones y descrip
   1. `Build & Compile (JDK 25)`
   2. `Integration Tests & Quality (JaCoCo)`
   3. `Docker Build & Container Registry`
-  4. `CD Deployment`
-
-
+  4. `CD Deployment (Railway AVALONPLAZA via Wait for CI)`
+- **Infraestructura de Produccion:** Alojada en Railway (`https://avalonplaza-production.up.railway.app`) con PostgreSQL 17 + extension PostGIS activa y despliegue continuo automatico sin caidas.
 
 ## Archivo de Referencia Obligatorio (masterData.txt)
 - `masterData.txt`: Documento de referencia permanente en la raíz con la jerarquía del árbol de datos maestros. NUNCA debe ser eliminado.

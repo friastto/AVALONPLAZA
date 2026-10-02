@@ -32,7 +32,7 @@ USER 1001:1001
 # Exponer el puerto configurado (8900)
 EXPOSE 8900
 
-# Variables de entorno recomendadas de la JVM para contenedores en Render (512MB RAM)
+# Variables de entorno recomendadas de la JVM para contenedores en Railway / Produccion (512MB RAM)
 ENV JAVA_OPTS="-Xms64m -Xmx260m -XX:MaxMetaspaceSize=110m -Xss512k -XX:ReservedCodeCacheSize=48m -XX:+UseSerialGC -XX:+UseContainerSupport"
 
 # Comando de inicio
