@@ -40,6 +40,17 @@ El español es el único idioma permitido para todas las explicaciones y descrip
 - **Nivel 2 (Gerencia de Empresa - GERGEN):** Acceso limitado al ambito de su `company_id`. Autoridad para aprobar sugerencias de productos (`/avalon/products/suggestions/{id}/approve`), configurar umbrales corporativos y listar el consolidado multi-sede.
 - **Nivel 3 (Operativo de Tienda - ADMOULT, GERENTE, CJTURNO, VENDEDOR):** Acceso encapsulado por `TenantContext` al esquema de su tienda (`company_{id}` / `outlet_{id}`). Operaciones: ejecucion de ventas POS, sesiones de caja, arqueos a ciegas en 3 pasos y creacion de sugerencias de producto (`PENDING`).
 
+## Modalidades de Solicitud de Servicios Comerciales y NIT por Tienda
+1. **Modalidad Persona Natural (`PERSONA_NATURAL`):**
+   - El solicitante es un tendero o comerciante independiente sin personeria juridica societaria.
+   - La persona se valida contra `public.person` via CC y OTP; su numero de documento y nombre completo se asignan como NIT y razon social comercial.
+   - El solicitante se registra directamente como administrador general (`GERGEN`) de sus tiendas.
+2. **Modalidad Empresa u Organizacion (`EMPRESA`):**
+   - Requiere personeria juridica con NIT corporativo (`companyNit`), razon social de la empresa y verificacion obligatoria de identidad del representante/gerente.
+3. **NIT Unico por Tienda Outlet (`storeNit`):**
+   - Cada tienda fisica (`public.outlet`) cuenta con su propio `nit` independiente del NIT de la empresa.
+   - Se valida unicidad estricta (`outletPort.findByNit(storeNit)`) impidiendo tiendas duplicadas en la plataforma.
+
 ## Regla de Validacion Hibrida con MasterTree (BD Plana + Validacion In-Memory O(1))
 1. **Consultas a BD sin JOINs Maestros (I/O Minimo y Cero Sobrecarga):**
    - Las consultas SQL / JPA hacia tablas transaccionales u operativas (`person`, `user_avalon`, `outlet`, `product_outlet`, `orders`, etc.) deben recuperar unicamente las filas con sus claves foraneas numericas planas (`status_id`, `type_identification_id`, `role_id`, `sex_id`, etc.).
@@ -109,6 +120,29 @@ El español es el único idioma permitido para todas las explicaciones y descrip
 2. **Control de Acceso y Endpoints REST:**
    - Radicacion abierta / publica (`POST /avalon/pqrs`): Cualquier usuario autenticado o cliente puede enviar peticiones, quejas, reclamos o sugerencias.
    - Gestion ejecutiva (`GET /avalon/pqrs`, `GET /avalon/pqrs/stats`, `PATCH /avalon/pqrs/{id}/status`): Restringido estrictamente a roles de Administrador de Plataforma (`ADMINTI`, `ADMINSYS`, `ADMIN`) para resolucion y registro de notas de respuesta.
+
+## Modulo de Suscripciones por Tienda y Pasarela Wompi (/avalon/subscriptions, /avalon/webhooks/wompi)
+1. **Modelo de Suscripcion por Tienda (`outlet_id`):**
+   - Cada tienda fisica paga su suscripcion de forma individual (`public.outlet_subscription`).
+   - El Dueno de Empresa (`GERGEN`) es el responsable de monitorear y gestionar los pagos consolidados de todas sus tiendas.
+   - **Acceso Total al 100% desde el Inicio:** Cero capado de caracteristicas funcionales. Tanto en periodo de prueba como en suscripcion activa, el usuario dispone de todas las herramientas (POS, menudeo por gramos/COP, arqueos ciegos, pedidos omnicanal y balances).
+2. **Estados Maestros en MasterTree (`masterData.txt`):**
+   - `SUB_TRIAL`: Periodo de prueba gratuito (30 dias iniciales al aprobar la tienda).
+   - `SUB_ACT`: Suscripcion al dia con acceso total.
+   - `SUB_GRACE`: Periodo de gracia de 7 dias post-vencimiento (operacion habilitada con alerta de pago urgente).
+   - `SUB_SUSP`: Suspendida por falta de pago tras agotarse los 7 dias de gracia.
+   - `SUB_CANC`: Cancelada definitivamente.
+3. **Politica de Bloqueo y Modo Solo Lectura:**
+   - **Aislamiento por Tienda:** Si una tienda entra en `SUB_SUSP`, solo esa tienda se bloquea operativamente; las demas tiendas al dia de la misma empresa continuan operando con normalidad.
+   - **Operaciones Mutadoras Bloqueadas (HTTP 402 Payment Required):** `POST /sales`, `POST /cash-register/open`, `POST /orders` son rechazados cuando la tienda esta en `SUB_SUSP`.
+   - **Consultas de Lectura Permitidas (HTTP 200 OK):** `GET /products`, `GET /sales/history`, `GET /cash-register/sessions` continuan accesibles para auditoria y resguardo de datos del tendero.
+4. **Seguridad Criptografica con Pasarela Wompi Colombia:**
+   - **Checksum de Integridad (SHA-256):** Toda intencion de pago (`POST /avalon/subscriptions/outlets/{id}/checkout-session`) genera una firma inmutable usando el `integrity_secret` de Wompi (`reference + amount_in_cents + currency + integrity_secret`).
+   - **Webhook Seguro Idempotente (`POST /avalon/webhooks/wompi`):** Valida la firma del evento usando el `events_secret`. Procesa transacciones `APPROVED` extendiendo `current_period_end` por 30 dias y transicionando el estado a `SUB_ACT` con garantia de no duplicidad.
+5. **Aceptacion Unica de Politicas de Empresa (`public.company`):**
+   - Campos `policies_accepted` (boolean), `policies_accepted_at` (timestamp) y `policies_version`.
+   - Al ser aprobada la empresa, `policies_accepted` inicia en `false`.
+   - El endpoint `POST /avalon/companies/accept-policies` registra la aceptacion auditada y no permite reaparicion del modal en el cliente.
 
 ## Diagrama de Arquitectura de la API (ApiAvalon)
 

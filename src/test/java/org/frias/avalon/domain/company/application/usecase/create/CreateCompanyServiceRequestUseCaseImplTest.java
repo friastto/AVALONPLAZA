@@ -7,8 +7,11 @@ import org.frias.avalon.domain.company.domain.port.CompanyRepositoryPort;
 import org.frias.avalon.domain.masterdata.domain.model.MasterRoot;
 import org.frias.avalon.domain.masterdata.domain.model.MasterTree;
 import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
+import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
+import org.frias.avalon.domain.person.domain.model.PersonDomain;
+import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
@@ -45,6 +48,9 @@ class CreateCompanyServiceRequestUseCaseImplTest {
     private UserAvalonRepositoryPort userRepository;
 
     @Mock
+    private PersonRepositoryPort personPort;
+
+    @Mock
     private RoleAssignmentRepositoryPort roleAssignmentRepository;
 
     @Mock
@@ -71,6 +77,7 @@ class CreateCompanyServiceRequestUseCaseImplTest {
         );
 
         given(companyPort.findByNit("900999888-1")).willReturn(Optional.empty());
+        given(outletPort.findByNit("900999888-1")).willReturn(Optional.empty());
 
         UserAvalonDomain applicant = new UserAvalonDomain(
                 200L,
@@ -81,7 +88,6 @@ class CreateCompanyServiceRequestUseCaseImplTest {
                 1L
         );
         given(userRepository.findById(200L)).willReturn(Optional.of(applicant));
-
 
         MasterRoot rvwNode = new MasterRoot(2L, "RVW", "EN REVISION", null, 1L);
         MasterRoot inaNode = new MasterRoot(3L, "INA", "INACTIVO", null, 1L);
@@ -135,6 +141,116 @@ class CreateCompanyServiceRequestUseCaseImplTest {
     }
 
     @Test
+    @DisplayName("Deberia crear la solicitud para Persona Natural resolviendo CC y nombre de persona")
+    void shouldCreateServiceRequestForPersonaNaturalSuccessfully() {
+        // Arrange
+        CreateCompanyServiceRequestDto request = new CreateCompanyServiceRequestDto(
+                "PERSONA_NATURAL",
+                null, // Se resuelve de la persona
+                null, // Se resuelve de la CC de la persona
+                null, // Se resuelve del email de la persona
+                "Abarrotes Don Pedro",
+                "STORE-NIT-777",
+                "Calle 10 # 5-20",
+                "3009876543",
+                10.88,
+                -72.90,
+                200L,
+                "token-nat-123"
+        );
+
+        UserAvalonDomain applicant = new UserAvalonDomain(
+                200L,
+                300L,
+                "pedro_user",
+                "salt",
+                "hashed",
+                1L
+        );
+        given(userRepository.findById(200L)).willReturn(Optional.of(applicant));
+
+        PersonDomain person = PersonDomain.createBasic(
+                35L,
+                "1098765432",
+                "Pedro",
+                "Gomez",
+                "Calle 10 # 5-20",
+                1L,
+                3009876543L,
+                "pedro@gmail.com",
+                1L
+        );
+        given(personPort.findById(300L)).willReturn(Optional.of(person));
+
+        given(companyPort.findByNit("1098765432")).willReturn(Optional.empty());
+        given(outletPort.findByNit("STORE-NIT-777")).willReturn(Optional.empty());
+
+        MasterRoot rvwNode = new MasterRoot(2L, "RVW", "EN REVISION", null, 1L);
+        MasterRoot inaNode = new MasterRoot(3L, "INA", "INACTIVO", null, 1L);
+        MasterRoot actNode = new MasterRoot(1L, "ACT", "ACTIVO", null, 1L);
+        MasterRoot gergenRole = new MasterRoot(50L, "GERGEN", "GERENTE GENERAL", null, 1L);
+        MasterTree tree = new MasterTree(List.of(rvwNode, inaNode, actNode, gergenRole));
+        given(masterTreeProvider.getTree()).willReturn(tree);
+
+        CompanyDomain savedCompany = new CompanyDomain(
+                15L,
+                "1098765432",
+                "PEDRO GOMEZ",
+                "pedro@gmail.com",
+                2L,
+                BigDecimal.ZERO,
+                LocalDateTime.now(),
+                null
+        );
+        given(companyPort.save(any(CompanyDomain.class))).willReturn(savedCompany);
+
+        // Act
+        CompanyResponse response = useCase.execute(request);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(15L, response.id());
+        assertEquals("1098765432", response.nit());
+
+        ArgumentCaptor<OutletDomain> outletCaptor = ArgumentCaptor.forClass(OutletDomain.class);
+        verify(outletPort).save(outletCaptor.capture());
+        OutletDomain savedOutlet = outletCaptor.getValue();
+        assertEquals("Abarrotes Don Pedro", savedOutlet.getName());
+        assertEquals("STORE-NIT-777", savedOutlet.getNit());
+        assertEquals(15L, savedOutlet.getCompanyId());
+    }
+
+    @Test
+    @DisplayName("Deberia fallar si el storeNit ya existe")
+    void shouldThrowExceptionWhenStoreNitAlreadyExists() {
+        CreateCompanyServiceRequestDto request = new CreateCompanyServiceRequestDto(
+                "EMPRESA",
+                "Mi Empresa",
+                "900111222-3",
+                "contacto@empresa.com",
+                "Tienda 1",
+                "STORE-DUPLICATE",
+                "Calle 1",
+                "3101234567",
+                4.6,
+                -74.0,
+                200L,
+                null
+        );
+
+        UserAvalonDomain applicant = new UserAvalonDomain(200L, 300L, "usr", "s", "h", 1L);
+        given(userRepository.findById(200L)).willReturn(Optional.of(applicant));
+        given(companyPort.findByNit("900111222-3")).willReturn(Optional.empty());
+
+        OutletDomain existingOutlet = OutletDomain.create("Existente", "Dir", "123", "STORE-DUPLICATE", 1L, new LocationDomain(4.0, -74.0));
+        given(outletPort.findByNit("STORE-DUPLICATE")).willReturn(Optional.of(existingOutlet));
+
+        assertThrows(IllegalStateException.class, () -> useCase.execute(request));
+        verify(companyPort, never()).save(any());
+        verify(outletPort, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Deberia fallar si el NIT ya existe")
     void shouldThrowExceptionWhenNitAlreadyExists() {
         CreateCompanyServiceRequestDto request = new CreateCompanyServiceRequestDto(
@@ -149,6 +265,9 @@ class CreateCompanyServiceRequestUseCaseImplTest {
                 200L,
                 null
         );
+
+        UserAvalonDomain applicant = new UserAvalonDomain(200L, 300L, "usr", "s", "h", 1L);
+        given(userRepository.findById(200L)).willReturn(Optional.of(applicant));
 
         CompanyDomain existing = new CompanyDomain(1L, "900999888-1", "Otra", null, 1L, BigDecimal.ZERO, null, null);
         given(companyPort.findByNit("900999888-1")).willReturn(Optional.of(existing));

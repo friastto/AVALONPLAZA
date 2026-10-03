@@ -11,6 +11,8 @@ import org.frias.avalon.domain.masterdata.domain.service.MasterTreeProvider;
 import org.frias.avalon.domain.outlet.domain.model.LocationDomain;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
+import org.frias.avalon.domain.person.domain.model.PersonDomain;
+import org.frias.avalon.domain.person.domain.port.PersonRepositoryPort;
 import org.frias.avalon.domain.user.domain.model.RoleAssignmentDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.RoleAssignmentRepositoryPort;
@@ -26,6 +28,7 @@ public class CreateCompanyServiceRequestUseCaseImpl implements CreateCompanyServ
     private final CompanyRepositoryPort companyPort;
     private final OutletRepositoryPort outletPort;
     private final UserAvalonRepositoryPort userRepository;
+    private final PersonRepositoryPort personPort;
     private final RoleAssignmentRepositoryPort roleAssignmentRepository;
     private final MasterTreeProvider masterTreeProvider;
 
@@ -33,12 +36,14 @@ public class CreateCompanyServiceRequestUseCaseImpl implements CreateCompanyServ
             CompanyRepositoryPort companyPort,
             OutletRepositoryPort outletPort,
             UserAvalonRepositoryPort userRepository,
+            PersonRepositoryPort personPort,
             RoleAssignmentRepositoryPort roleAssignmentRepository,
             MasterTreeProvider masterTreeProvider
     ) {
         this.companyPort = companyPort;
         this.outletPort = outletPort;
         this.userRepository = userRepository;
+        this.personPort = personPort;
         this.roleAssignmentRepository = roleAssignmentRepository;
         this.masterTreeProvider = masterTreeProvider;
     }
@@ -46,34 +51,100 @@ public class CreateCompanyServiceRequestUseCaseImpl implements CreateCompanyServ
     @Override
     @Transactional
     public CompanyResponse execute(CreateCompanyServiceRequestDto request) {
-        // 1. Validar unicidad del NIT
-        companyPort.findByNit(request.companyNit()).ifPresent(existing -> {
-            throw new IllegalStateException("Company with NIT " + request.companyNit() + " already exists");
-        });
-
-        // 2. Validar que el usuario solicitante exista
+        // 1. Validar que el usuario solicitante exista
         UserAvalonDomain applicant = userRepository.findById(request.applicantUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario solicitante no encontrado con id: " + request.applicantUserId()));
 
+        PersonDomain applicantPerson = (applicant.getPersonId() != null)
+                ? personPort.findById(applicant.getPersonId()).orElse(null)
+                : null;
+
+        // 2. Determinar tipo de solicitud (PERSONA_NATURAL vs EMPRESA)
+        String requestType = (request.requestType() != null && !request.requestType().isBlank())
+                ? request.requestType().trim().toUpperCase()
+                : "EMPRESA";
+        boolean isPersonaNatural = "PERSONA_NATURAL".equals(requestType);
+
+        String finalCompanyNit;
+        String finalCompanyName;
+        String finalCompanyEmail;
+
+        if (isPersonaNatural) {
+            // Resolver NIT desde identificacion personal o campo provisto
+            if (request.companyNit() != null && !request.companyNit().isBlank()) {
+                finalCompanyNit = request.companyNit().trim();
+            } else if (applicantPerson != null && applicantPerson.getNumberid() != null && !applicantPerson.getNumberid().isBlank()) {
+                finalCompanyNit = applicantPerson.getNumberid().trim();
+            } else {
+                throw new IllegalArgumentException("El numero de identificacion personal es obligatorio para persona natural");
+            }
+
+            // Resolver nombre de la empresa / titular
+            if (request.companyName() != null && !request.companyName().isBlank()) {
+                finalCompanyName = request.companyName().trim();
+            } else if (applicantPerson != null && applicantPerson.getName() != null) {
+                String lastName = applicantPerson.getLastName() != null ? " " + applicantPerson.getLastName().trim() : "";
+                finalCompanyName = applicantPerson.getName().trim() + lastName;
+            } else {
+                finalCompanyName = request.storeName().trim();
+            }
+
+            // Resolver email
+            if (request.companyEmail() != null && !request.companyEmail().isBlank()) {
+                finalCompanyEmail = request.companyEmail().trim();
+            } else if (applicantPerson != null && applicantPerson.getEmail() != null) {
+                finalCompanyEmail = applicantPerson.getEmail().trim();
+            } else {
+                finalCompanyEmail = null;
+            }
+        } else {
+            // Para EMPRESA / Organizacion, NIT y Nombre son estrictamente requeridos
+            if (request.companyNit() == null || request.companyNit().isBlank()) {
+                throw new IllegalArgumentException("El NIT de la empresa es obligatorio");
+            }
+            if (request.companyName() == null || request.companyName().isBlank()) {
+                throw new IllegalArgumentException("El nombre de la empresa es obligatorio");
+            }
+            finalCompanyNit = request.companyNit().trim();
+            finalCompanyName = request.companyName().trim();
+            finalCompanyEmail = (request.companyEmail() != null && !request.companyEmail().isBlank())
+                    ? request.companyEmail().trim()
+                    : null;
+        }
+
+        // 3. Validar unicidad del NIT de la empresa / titular
+        companyPort.findByNit(finalCompanyNit).ifPresent(existing -> {
+            throw new IllegalStateException("Ya existe una empresa o titular registrado con el NIT/Documento " + finalCompanyNit);
+        });
+
+        // 4. Validar y resolver el NIT de la tienda inicial (storeNit)
+        String finalStoreNit = (request.storeNit() != null && !request.storeNit().isBlank())
+                ? request.storeNit().trim()
+                : finalCompanyNit;
+
+        outletPort.findByNit(finalStoreNit).ifPresent(existing -> {
+            throw new IllegalStateException("Ya existe una tienda registrada con el NIT " + finalStoreNit);
+        });
+
         MasterTree tree = masterTreeProvider.getTree();
 
-        // 3. Resolver estado inicial de la empresa (RVW / revision)
+        // 5. Resolver estado inicial de la empresa (RVW / revision)
         MasterRoot rvwNode = tree.getByCode("RVW");
         Long companyStatusId = (rvwNode != null) ? rvwNode.getId() : tree.getByCodeOrThrow("ACT").getId();
 
-        // 4. Resolver estado inactivo/pendiente para outlet y rol
+        // 6. Resolver estado inactivo/pendiente para outlet y rol
         MasterRoot inaNode = tree.getByCode("INA");
         if (inaNode == null) {
             inaNode = tree.getByCode("INACT");
         }
         Long inactiveStatusId = (inaNode != null) ? inaNode.getId() : tree.getByCodeOrThrow("ACT").getId();
 
-        // 5. Crear y guardar la empresa en public.company
+        // 7. Crear y guardar la entidad Company
         CompanyDomain toSave = new CompanyDomain(
                 null,
-                request.companyNit().trim(),
-                request.companyName().trim(),
-                request.companyEmail() != null ? request.companyEmail().trim() : null,
+                finalCompanyNit,
+                finalCompanyName,
+                finalCompanyEmail,
                 companyStatusId,
                 BigDecimal.ZERO,
                 null,
@@ -81,7 +152,7 @@ public class CreateCompanyServiceRequestUseCaseImpl implements CreateCompanyServ
         );
         CompanyDomain savedCompany = companyPort.save(toSave);
 
-        // 6. Crear la tienda inicial en public.outlet con coordenadas GPS
+        // 8. Crear la tienda inicial en public.outlet con su storeNit propio y coordenadas GPS
         Double lat = request.latitude() != null ? request.latitude() : 4.60971;
         Double lon = request.longitude() != null ? request.longitude() : -74.08175;
         LocationDomain location = new LocationDomain(lat, lon);
@@ -94,7 +165,7 @@ public class CreateCompanyServiceRequestUseCaseImpl implements CreateCompanyServ
                 request.storeName().trim(),
                 request.storeAddress().trim(),
                 phone,
-                request.companyNit().trim(),
+                finalStoreNit,
                 inactiveStatusId,
                 location,
                 BigDecimal.ZERO,
@@ -102,7 +173,7 @@ public class CreateCompanyServiceRequestUseCaseImpl implements CreateCompanyServ
         );
         outletPort.save(outletDomain);
 
-        // 7. Crear postulacion de rol GERGEN inactivo (se activara al aprobarse la empresa)
+        // 9. Crear postulacion de rol GERGEN inactivo (se activara al aprobarse la empresa)
         MasterRoot gergenRole = tree.getByCodeOrThrow("GERGEN");
         RoleAssignmentDomain roleAssignment = RoleAssignmentDomain.createCompanyRole(
                 applicant.getId(),
@@ -115,3 +186,4 @@ public class CreateCompanyServiceRequestUseCaseImpl implements CreateCompanyServ
         return CompanyResponse.from(savedCompany, tree);
     }
 }
+
