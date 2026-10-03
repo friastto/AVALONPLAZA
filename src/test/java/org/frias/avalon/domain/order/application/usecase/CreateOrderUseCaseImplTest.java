@@ -12,6 +12,7 @@ import org.frias.avalon.domain.order.application.port.OrderRepositoryPort;
 import org.frias.avalon.domain.order.domain.OrderDomain;
 import org.frias.avalon.domain.order.infrastructure.persistence.mapper.OrderMapper;
 import org.frias.avalon.domain.order.presentation.controller.OrderWebSocketController;
+import org.frias.avalon.domain.subscription.application.usecase.ValidateOutletSubscriptionActiveUseCase;
 import org.frias.avalon.domain.product.domain.service.UnitConversionService;
 import org.frias.avalon.domain.product.infraestructure.entity.ProductOutlet;
 import org.frias.avalon.domain.product.infraestructure.repository.JpaProductOutletRepository;
@@ -47,6 +48,7 @@ class CreateOrderUseCaseImplTest {
     private MasterTreeProvider masterTreeProvider;
     private UnitConversionService unitConversionService;
     private OutletRepositoryPort outletRepositoryPort;
+    private ValidateOutletSubscriptionActiveUseCase validateSubscriptionUseCase;
     private PlatformTransactionManager transactionManager;
     private JpaOrderRepository jpaOrderRepository;
 
@@ -64,6 +66,7 @@ class CreateOrderUseCaseImplTest {
         masterTreeProvider = mock(MasterTreeProvider.class);
         unitConversionService = mock(UnitConversionService.class);
         outletRepositoryPort = mock(OutletRepositoryPort.class);
+        validateSubscriptionUseCase = mock(ValidateOutletSubscriptionActiveUseCase.class);
         transactionManager = mock(PlatformTransactionManager.class);
 
         TransactionStatus transactionStatus = mock(TransactionStatus.class);
@@ -91,6 +94,7 @@ class CreateOrderUseCaseImplTest {
                 masterTreeProvider,
                 unitConversionService,
                 outletRepositoryPort,
+                validateSubscriptionUseCase,
                 transactionManager
         );
     }

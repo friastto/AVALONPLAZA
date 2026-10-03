@@ -76,6 +76,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
+    @ExceptionHandler(SubscriptionSuspendedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleSubscriptionSuspended(SubscriptionSuspendedException e) {
+        ApiResponse<Object> response = new ApiResponse<>(
+                402,
+                e.getMessage(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(response);
+    }
+
     /*// 2. Violación de integridad (FK, UNIQUE, NOT NULL)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<String> handleDataIntegrity(DataIntegrityViolationException e) {

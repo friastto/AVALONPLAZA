@@ -25,6 +25,9 @@ import org.frias.avalon.domain.company.application.dto.request.TransferCompanyEm
 import org.frias.avalon.domain.company.application.usecase.assign.ChangeCompanyEmployeeStatusUseCase;
 import org.frias.avalon.domain.company.application.usecase.assign.TransferCompanyEmployeeUseCase;
 import org.frias.avalon.domain.outlet.application.dto.response.OutletResponseDto;
+import org.frias.avalon.domain.subscription.application.dto.request.AcceptPoliciesRequestDto;
+import org.frias.avalon.domain.subscription.application.usecase.AcceptCompanyPoliciesUseCase;
+import org.frias.avalon.core.tenant.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,6 +58,7 @@ public class CompanyController {
     private final RejectCompanyServiceRequestUseCase rejectCompanyServiceRequestUseCase;
     private final ChangeCompanyEmployeeStatusUseCase changeCompanyEmployeeStatusUseCase;
     private final TransferCompanyEmployeeUseCase transferCompanyEmployeeUseCase;
+    private final AcceptCompanyPoliciesUseCase acceptCompanyPoliciesUseCase;
 
 
     public CompanyController(
@@ -73,7 +77,8 @@ public class CompanyController {
             FindCompanyServiceRequestDetailUseCase findCompanyServiceRequestDetailUseCase,
             RejectCompanyServiceRequestUseCase rejectCompanyServiceRequestUseCase,
             ChangeCompanyEmployeeStatusUseCase changeCompanyEmployeeStatusUseCase,
-            TransferCompanyEmployeeUseCase transferCompanyEmployeeUseCase
+            TransferCompanyEmployeeUseCase transferCompanyEmployeeUseCase,
+            AcceptCompanyPoliciesUseCase acceptCompanyPoliciesUseCase
     ) {
 
         this.createCompanyUseCase = createCompanyUseCase;
@@ -92,6 +97,7 @@ public class CompanyController {
         this.rejectCompanyServiceRequestUseCase = rejectCompanyServiceRequestUseCase;
         this.changeCompanyEmployeeStatusUseCase = changeCompanyEmployeeStatusUseCase;
         this.transferCompanyEmployeeUseCase = transferCompanyEmployeeUseCase;
+        this.acceptCompanyPoliciesUseCase = acceptCompanyPoliciesUseCase;
     }
 
 
@@ -333,6 +339,25 @@ public class CompanyController {
                 HttpStatus.OK.value(),
                 "Empleado trasladado de tienda exitosamente",
                 response
+        ));
+    }
+
+    /**
+     * POST /api/v1/companies/accept-policies - Audits and accepts company terms and legal conditions.
+     */
+    @PostMapping("/accept-policies")
+    public ResponseEntity<ApiResponse<String>> acceptPolicies(
+            @RequestBody(required = false) AcceptPoliciesRequestDto request
+    ) {
+        Long companyId = TenantContext.getTenantId();
+        if (companyId == null) {
+            throw new IllegalArgumentException("No se encontro el identificador de compania en la sesion");
+        }
+        acceptCompanyPoliciesUseCase.execute(companyId, request);
+        return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Politicas y terminos comerciales aceptados exitosamente",
+                "OK"
         ));
     }
 }

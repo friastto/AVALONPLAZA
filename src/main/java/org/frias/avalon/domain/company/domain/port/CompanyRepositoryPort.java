@@ -28,4 +28,7 @@ public interface CompanyRepositoryPort {
 
     /** Updates default cash threshold amount for a company. */
     void updateDefaultThreshold(Long companyId, java.math.BigDecimal thresholdAmount);
+
+    /** Audits and accepts company terms and policies. */
+    void acceptPolicies(Long companyId, String policiesVersion);
 }

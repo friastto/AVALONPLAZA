@@ -23,6 +23,7 @@ import org.frias.avalon.domain.sale.application.port.SaleRepositoryPort;
 import org.frias.avalon.domain.sale.domain.SaleDomain;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
+import org.frias.avalon.domain.subscription.application.usecase.ValidateOutletSubscriptionActiveUseCase;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -58,6 +59,7 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
     private final UserAvalonRepositoryPort userAvalonRepositoryPort;
     private final CompanyRepositoryPort companyRepositoryPort;
     private final MasterTreeProvider masterTreeProvider;
+    private final ValidateOutletSubscriptionActiveUseCase validateSubscriptionUseCase;
 
     private String resolvePaymentCategory(Long paymentMethodId, MasterTree tree) {
         if (paymentMethodId == null || tree == null) return "MPG_CASH";
@@ -93,6 +95,9 @@ public class CashSessionUseCaseImpl implements CashSessionUseCasePort {
     @Override
     @Transactional
     public CashSessionDomain openSession(Long outletId, Long employeeId, BigDecimal initialBase) {
+        if (validateSubscriptionUseCase != null) {
+            validateSubscriptionUseCase.execute(outletId);
+        }
         Optional<CashSessionDomain> active = cashSessionRepositoryPort.findActiveSession(outletId, employeeId);
         if (active.isPresent()) {
             throw new BusinessException("El empleado ya tiene una sesión de caja abierta en esta tienda");

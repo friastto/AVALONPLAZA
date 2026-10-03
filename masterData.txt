@@ -80,6 +80,13 @@ MASTER DATA - ESTRUCTURA REFACTORIZADA (JSON PARA API)
 			{"fullName": "RECLAMO_RECHAZADO", "shortName": "CLM_REC", "parentShortName": "STSCLM", "statusId": "ACT"},
 			{"fullName": "RECLAMO_RESUELTO", "shortName": "CLM_SOL", "parentShortName": "STSCLM", "statusId": "ACT"},
 
+		{"fullName": "STS_SUBSCRIPTIONS", "shortName": "STSSUB", "parentShortName": "ROOTSTS", "statusId": "ACT"},
+			{"fullName": "PRUEBA_GRATUITA", "shortName": "SUB_TRIAL", "parentShortName": "STSSUB", "statusId": "ACT"},
+			{"fullName": "ACTIVA", "shortName": "SUB_ACT", "parentShortName": "STSSUB", "statusId": "ACT"},
+			{"fullName": "PERIODO_GRACIA", "shortName": "SUB_GRACE", "parentShortName": "STSSUB", "statusId": "ACT"},
+			{"fullName": "SUSPENDIDA", "shortName": "SUB_SUSP", "parentShortName": "STSSUB", "statusId": "ACT"},
+			{"fullName": "CANCELADA", "shortName": "SUB_CANC", "parentShortName": "STSSUB", "statusId": "ACT"},
+
 	// ==========================================
 	// 2. GENERO
 	// ==========================================

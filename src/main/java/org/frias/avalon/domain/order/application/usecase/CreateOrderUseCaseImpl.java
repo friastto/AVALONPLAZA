@@ -27,6 +27,7 @@ import org.frias.avalon.core.tenant.TenantContext;
 import org.frias.avalon.domain.outlet.domain.model.OutletDomain;
 import org.frias.avalon.domain.outlet.domain.port.OutletRepositoryPort;
 import org.frias.avalon.domain.order.infrastructure.persistence.repository.JpaOrderRepository;
+import org.frias.avalon.domain.subscription.application.usecase.ValidateOutletSubscriptionActiveUseCase;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -54,6 +55,7 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
     private final MasterTreeProvider masterTreeProvider;
     private final UnitConversionService unitConversionService;
     private final OutletRepositoryPort outletRepositoryPort;
+    private final ValidateOutletSubscriptionActiveUseCase validateSubscriptionUseCase;
     private final TransactionTemplate transactionTemplate;
 
     public CreateOrderUseCaseImpl(
@@ -67,6 +69,7 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
             MasterTreeProvider masterTreeProvider,
             UnitConversionService unitConversionService,
             OutletRepositoryPort outletRepositoryPort,
+            ValidateOutletSubscriptionActiveUseCase validateSubscriptionUseCase,
             PlatformTransactionManager transactionManager) {
         this.orderRepositoryPort = orderRepositoryPort;
         this.jpaProductOutletRepository = jpaProductOutletRepository;
@@ -78,6 +81,7 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
         this.masterTreeProvider = masterTreeProvider;
         this.unitConversionService = unitConversionService;
         this.outletRepositoryPort = outletRepositoryPort;
+        this.validateSubscriptionUseCase = validateSubscriptionUseCase;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
@@ -89,6 +93,9 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
 
         try {
             if (request.getOutletId() != null) {
+                if (validateSubscriptionUseCase != null) {
+                    validateSubscriptionUseCase.execute(request.getOutletId());
+                }
                 OutletDomain outlet = outletRepositoryPort.findById(request.getOutletId())
                         .orElseThrow(() -> new ResourceNotFoundException("Tienda con ID " + request.getOutletId() + " no encontrada"));
                 if (outlet.getCompanyId() != null) {

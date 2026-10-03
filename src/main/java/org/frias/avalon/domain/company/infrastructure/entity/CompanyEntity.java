@@ -37,6 +37,17 @@ public class CompanyEntity {
     @Column(name = "default_cash_threshold_amount", precision = 19, scale = 2)
     private BigDecimal defaultCashThresholdAmount;
 
+    @Column(name = "policies_accepted", nullable = false)
+    @Builder.Default
+    private Boolean policiesAccepted = false;
+
+    @Column(name = "policies_accepted_at")
+    private LocalDateTime policiesAcceptedAt;
+
+    @Column(name = "policies_version", length = 20)
+    @Builder.Default
+    private String policiesVersion = "v1.0";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

@@ -30,6 +30,7 @@ import org.frias.avalon.domain.sale.domain.SaleItemDomain;
 import org.frias.avalon.domain.sale.domain.service.SaleWeightConversionService;
 import org.frias.avalon.domain.user.domain.model.UserAvalonDomain;
 import org.frias.avalon.domain.user.domain.port.UserAvalonRepositoryPort;
+import org.frias.avalon.domain.subscription.application.usecase.ValidateOutletSubscriptionActiveUseCase;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -54,6 +55,7 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
     private final CreditRepositoryPort creditRepositoryPort;
     private final ApplicationEventPublisher eventPublisher;
     private final OutletRepositoryPort outletRepositoryPort;
+    private final ValidateOutletSubscriptionActiveUseCase validateSubscriptionUseCase;
     private final TransactionTemplate transactionTemplate;
 
     public CreateSaleUseCaseImpl(
@@ -67,6 +69,7 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
             CreditRepositoryPort creditRepositoryPort,
             ApplicationEventPublisher eventPublisher,
             OutletRepositoryPort outletRepositoryPort,
+            ValidateOutletSubscriptionActiveUseCase validateSubscriptionUseCase,
             PlatformTransactionManager transactionManager) {
         this.saleRepositoryPort = saleRepositoryPort;
         this.productOutletRepositoryPort = productOutletRepositoryPort;
@@ -78,6 +81,7 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
         this.creditRepositoryPort = creditRepositoryPort;
         this.eventPublisher = eventPublisher;
         this.outletRepositoryPort = outletRepositoryPort;
+        this.validateSubscriptionUseCase = validateSubscriptionUseCase;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
@@ -88,6 +92,11 @@ public class CreateSaleUseCaseImpl implements CreateSaleUseCase {
         Long previousTenantId = TenantContext.getTenantId();
 
         try {
+            // --- 0. Validar Suscripcion Activa de la Tienda (Anti-Mora) ---
+            if (validateSubscriptionUseCase != null && request.outletId() != null) {
+                validateSubscriptionUseCase.execute(request.outletId());
+            }
+
             // --- 1. Resolver Tienda y Validar Encapsulacion de Tienda (Tenant Isolation & RBAC) ---
             OutletDomain outlet = outletRepositoryPort.findById(request.outletId())
                     .orElseThrow(() -> new ResourceNotFoundException("La tienda con ID " + request.outletId() + " no existe."));

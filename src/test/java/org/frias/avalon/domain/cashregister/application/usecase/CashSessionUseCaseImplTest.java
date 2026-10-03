@@ -55,6 +55,7 @@ class CashSessionUseCaseImplTest {
     private UserAvalonRepositoryPort userAvalonRepositoryPort;
     private CompanyRepositoryPort companyRepositoryPort;
     private MasterTreeProvider masterTreeProvider;
+    private org.frias.avalon.domain.subscription.application.usecase.ValidateOutletSubscriptionActiveUseCase validateSubscriptionUseCase;
 
     private CashSessionUseCaseImpl cashSessionUseCase;
 
@@ -67,6 +68,7 @@ class CashSessionUseCaseImplTest {
         userAvalonRepositoryPort = mock(UserAvalonRepositoryPort.class);
         companyRepositoryPort = mock(CompanyRepositoryPort.class);
         masterTreeProvider = mock(MasterTreeProvider.class);
+        validateSubscriptionUseCase = mock(org.frias.avalon.domain.subscription.application.usecase.ValidateOutletSubscriptionActiveUseCase.class);
 
         MasterRoot actNode = new MasterRoot(10L, "ACT", "ACTIVO", null, 1L);
         MasterRoot efeNode = new MasterRoot(139L, "EFE", "EFECTIVO", null, 1L);
@@ -83,7 +85,8 @@ class CashSessionUseCaseImplTest {
                 personRepositoryPort,
                 userAvalonRepositoryPort,
                 companyRepositoryPort,
-                masterTreeProvider
+                masterTreeProvider,
+                validateSubscriptionUseCase
         );
     }
 

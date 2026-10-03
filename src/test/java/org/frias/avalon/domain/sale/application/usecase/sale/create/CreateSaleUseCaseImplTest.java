@@ -65,6 +65,7 @@ class CreateSaleUseCaseImplTest {
     @Mock private CreditRepositoryPort creditRepositoryPort;
     @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private OutletRepositoryPort outletRepositoryPort;
+    @Mock private org.frias.avalon.domain.subscription.application.usecase.ValidateOutletSubscriptionActiveUseCase validateSubscriptionUseCase;
     @Mock private PlatformTransactionManager transactionManager;
 
     @Mock private MasterTree masterTree;
@@ -103,6 +104,7 @@ class CreateSaleUseCaseImplTest {
                 creditRepositoryPort,
                 eventPublisher,
                 outletRepositoryPort,
+                validateSubscriptionUseCase,
                 transactionManager
         );
     }

@@ -61,6 +61,18 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
         });
     }
 
+    @Override
+    public void acceptPolicies(Long companyId, String policiesVersion) {
+        jpa.findById(companyId).ifPresent(entity -> {
+            entity.setPoliciesAccepted(true);
+            entity.setPoliciesAcceptedAt(java.time.LocalDateTime.now());
+            if (policiesVersion != null && !policiesVersion.isBlank()) {
+                entity.setPoliciesVersion(policiesVersion);
+            }
+            jpa.save(entity);
+        });
+    }
+
     // --- Internal mappers (no separate MapStruct needed for simple flat entity) ---
 
     private CompanyEntity toEntity(CompanyDomain domain) {
@@ -71,6 +83,9 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
                 .email(domain.email())
                 .statusId(domain.statusId())
                 .defaultCashThresholdAmount(domain.defaultCashThresholdAmount())
+                .policiesAccepted(domain.policiesAccepted() != null ? domain.policiesAccepted() : false)
+                .policiesAcceptedAt(domain.policiesAcceptedAt())
+                .policiesVersion(domain.policiesVersion() != null ? domain.policiesVersion() : "v1.0")
                 .build();
     }
 
@@ -82,6 +97,9 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
                 entity.getEmail(),
                 entity.getStatusId(),
                 entity.getDefaultCashThresholdAmount(),
+                entity.getPoliciesAccepted(),
+                entity.getPoliciesAcceptedAt(),
+                entity.getPoliciesVersion(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

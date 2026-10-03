@@ -78,6 +78,13 @@ public class SecurityConfig {
                         .requestMatchers("/avalon/pqrs/my", "/api/v1/pqrs/my").authenticated()
                         .requestMatchers("/avalon/pqrs/**", "/api/v1/pqrs/**").hasAnyRole("ADMINTI", "ADMINSYS", "ADMIN")
 
+                        // Pasarela Wompi Webhook (publico para recepcion de eventos de pasarela)
+                        .requestMatchers(HttpMethod.POST, "/avalon/webhooks/wompi", "/api/v1/webhooks/wompi").permitAll()
+
+                        // Modulo de Suscripciones por Tienda y Aceptacion de Politicas
+                        .requestMatchers("/avalon/companies/accept-policies", "/api/v1/companies/accept-policies").authenticated()
+                        .requestMatchers("/avalon/subscriptions/**", "/api/v1/subscriptions/**").authenticated()
+
 
 
 

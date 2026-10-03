@@ -48,3 +48,6 @@ src/main/resources/application-local.properties
 # Enlace al proyecto frontend
 /AvalonMovilApp/
 
+stress_*.js
+seed_*.sql
+
